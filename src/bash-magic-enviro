@@ -9,6 +9,11 @@ C_YELLOW='\033[1;1;33m'  # Yellow (and bold)
 C_RED='\033[1;31m'       # Red (and bold)
 C_NC='\033[0m'           # No Color
 
+# Sets 'fake' boolean
+declare -i BOOL=(0 1)
+false=${BOOL[0]}
+true=${BOOL[1]}
+
 
 #--
 # FUNCTIONS
@@ -32,7 +37,6 @@ bme_eval_dir() {
 	# this conditional matches when we out of a project's root directory
 		if [ "${PWD##$PROJECT_DIR}" == "$PWD" ] && [[ -n ${PROJECT_DIR+x} ]]; then
 			clean_project
-			unset -f clean_project
 		fi
 	fi
 }
@@ -40,7 +44,27 @@ bme_eval_dir() {
 
 # Loads a project's configuration
 load_project() {
-	echo "FIRST TIME PROJECT LOAD"
+local module
+# A bit of debug: I need to know the place I'm stored, so I can find other includes, relative to me
+# 	echo "See what follows: $0"
+# 	echo "See what follows: $_"
+# 	echo "See what follows: ${BASH_SOURCE}"  # This is the good one! ~/bin/bash-magic-enviro
+# 	echo "See what follows: ${BASH_SOURCE[0]}"
+# 	echo "See what follows: ${BASH_SOURCE[${#BASH_SOURCE[@]} - 1]}"
+	echo -e "${C_GREEN}LOADING:${C_NC} project ${C_BOLD}'${PROJECT_NAME}'${C_NC} environment..."
+	if [[ -n ${BME_MODULES+x} ]]; then
+		for module in "${BME_MODULES[@]}"; do
+			if [ -r "${BASH_SOURCE}_modules/${module}.module" ]; then
+				source "${BASH_SOURCE}_modules/${module}.module"
+				${module}_load
+				ACTIVE_MODULES+="${module}"
+			else
+				echo -en "\t${C_YELLOW}WARNING:${C_NC} Couldn't find module ${C_BOLD}'${module}'${C_NC}. "
+				echo -e "File ${C_BOLD}'${BASH_SOURCE}_modules/${module}.module'${C_NC} couldn't be found."
+			fi
+		done
+	fi
+	echo -e "Project ${C_BOLD}'${PROJECT_NAME}'${C_NC} ${C_GREEN}loaded!${C_NC}\n"
 }
 
 
@@ -49,16 +73,19 @@ clean_project() {
 	echo -en "${C_GREEN}CLEANING:${C_NC} "
 	local project_name="${PROJECT_NAME}"
 	
-	# unsets project loader
-	unset -f load_project
+# Active modules
+	if [[ -n ${ACTIVE_MODULES+x} ]]; then
+		for module in "${ACTIVE_MODULES[@]}"; do
+			${module}_unload
+			unset -f ${module}_load
+			unset -f ${module}_unload
+		done
+	fi
+	unset ACTIVE_MODULES
+	unset module
 # Final clean
 	unset PROJECT_NAME
 	unset PROJECT_DIR
-	echo -e "project ${C_BOLD}'${project_name}'${C_NC} cleaned!"
-	# ...and colors
-	unset C_BOLD
-	unset C_GREEN
-	unset C_YELLOW
-	unset C_RED
-	unset C_NC
+	unset BME_MODULES
+	echo -e "Project ${C_BOLD}'${project_name}'${C_NC} ${C_GREEN}cleaned!${C_NC}"
 }

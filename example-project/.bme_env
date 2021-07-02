@@ -6,4 +6,9 @@
 # 'MAIN' .bme_env file at the root of your project
 #---
 # Set your project name (must be unique)
-export PROJECT_NAME='bme-example-project'
+PROJECT_NAME='bme-example-project'
+
+# Module activation (modules are disabled by default, so uncomment those you want to enable
+BME_MODULES=(
+# 	'bindir'  # adds project's bin/ dir to $PATH
+)

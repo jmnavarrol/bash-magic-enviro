@@ -54,9 +54,9 @@ check:
 	else \
 		echo -e "\t$${C_BOLD}~/bin$${C_NC} in PATH: $${C_GREEN}OK$${C_NC}"; \
 	fi
-	@echo -e "Now you can proceed with $${C_BOLD}'make install'$${C_NC}."; \
 	
 dev: check
+# Symlinks the main script
 	@if ! [ -L ${DESTDIR}/${SCRIPT} ]; then \
 		if [ -e ${DESTDIR}/${SCRIPT} ]; then \
 			echo -en "$${C_YELLOW}WARNING:$${C_NC} about to delete $${C_BOLD}'${DESTDIR}/${SCRIPT}$${C_NC}'... "; \
@@ -68,10 +68,28 @@ dev: check
 		( cd ${DESTDIR} && ln -s $${current_pwd}/src/${SCRIPT} ${SCRIPT} ); \
 		echo -e "$${C_GREEN}DONE$${C_NC}"; \
 	fi
+# Then, the modules
+	@if ! [ -L ${DESTDIR}/${SCRIPT}_modules ]; then \
+		if [ -e ${DESTDIR}/${SCRIPT}_modules ]; then \
+			echo -en "$${C_YELLOW}WARNING:$${C_NC} about to delete $${C_BOLD}'${DESTDIR}/${SCRIPT}_modules$${C_NC}'... "; \
+			rm -rf "$(DESTDIR)/$(SCRIPT)_modules"; \
+			echo -e "$${C_GREEN}DONE$${C_NC}"; \
+		fi; \
+		echo -en "Creating $${C_BOLD}'${DESTDIR}/${SCRIPT}_modules'$${C_NC} symlink for development... "; \
+		current_pwd=$${PWD}; \
+		( cd ${DESTDIR} && ln -s $${current_pwd}/src/${SCRIPT}_modules ${SCRIPT}_modules ); \
+		echo -e "$${C_GREEN}DONE$${C_NC}"; \
+	fi
 	
-install: check src/$(SCRIPT)
+install: check
 	install --mode=0640 src/$(SCRIPT) $(DESTDIR)/$(SCRIPT)
-
+	@if [ -L "$(DESTDIR)/$(SCRIPT)_modules" ]; then \
+		echo -en "$${C_YELLOW}WARNING:$${C_NC} about to delete $${C_BOLD}'$(DESTDIR)/$(SCRIPT)_modules$${C_NC}'... "; \
+		rm -rf "$(DESTDIR)/$(SCRIPT)_modules"; \
+		echo -e "$${C_GREEN}DONE$${C_NC}"; \
+	fi
+	install --target-directory="$(DESTDIR)/$(SCRIPT)_modules" --mode=0640 -D src/$(SCRIPT)_modules/*
+	
 uninstall:
 	rm -f "$(DESTDIR)/$(SCRIPT)"
 	@echo -e "$${C_BOLD}'magic enviro'$${C_NC} script uninstalled: $${C_GREEN}OK$${C_NC}"
