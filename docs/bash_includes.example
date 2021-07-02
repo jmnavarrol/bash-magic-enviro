@@ -9,7 +9,7 @@ if [ -d ~/bin ]; then
 fi
 
 # By the "export" below, the function 'bme_eval_dir' is run every time we change directories
-# Then, it's a matter of what you include within the '.bme_enviro' file of each directory
+# Then, it's a matter of what you include within the '.bme_env' file of each directory
 bme_eval_dir() {
 	if [ "$PWD" != "$MYOLDPWD" ]; then
 		MYOLDPWD="$PWD"
