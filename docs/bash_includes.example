@@ -8,12 +8,11 @@ if [ -d ~/bin ]; then
 	PATH=~/bin:$PATH
 fi
 
-# By the "export" below, the function 'bme_eval_dir' is run every time we change directories
+# By the "export" below, the function 'bme_load' is run every time we change directories
 # Then, it's a matter of what you include within the '.bme_env' file of each directory
-bme_eval_dir() {
-	if [ "$PWD" != "$MYOLDPWD" ]; then
-		MYOLDPWD="$PWD"
-		test -e .bme_env && source .bme_env
-	fi
-}
-export PROMPT_COMMAND=bme_eval_dir
+if ! source bash-magic-enviro; then
+	echo "Please make sure 'bash-magic-enviro' is installed and in your path!"
+	return -1
+else
+	export PROMPT_COMMAND=bme_eval_dir
+fi

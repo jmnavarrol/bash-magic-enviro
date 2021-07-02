@@ -2,10 +2,63 @@
 #
 # This file is meant to be sourced, not run
 
+# Style table
+C_BOLD='\033[1m'         # Bold text
+C_GREEN='\033[1;32m'     # Green (and bold)
+C_YELLOW='\033[1;1;33m'  # Yellow (and bold)
+C_RED='\033[1;31m'       # Red (and bold)
+C_NC='\033[0m'           # No Color
 
 
 #--
-# MAIN
+# FUNCTIONS
 #--
-# A bit of debug: I need to know the place I'm stored so I can set relative searchs
-echo "See where am I stored: ${BASH_SOURCE}"
+# Main BME loader (it runs each time we change directory as per PROMPT_COMMAND)
+bme_eval_dir() {
+	if [ "$PWD" != "$MYOLDPWD" ]; then
+		MYOLDPWD="$PWD"
+		if [ -e .bme_env ]; then
+			source .bme_env
+			# PROJECT_NAME must be the first thing to be set!!!
+			if [[ -z ${PROJECT_NAME+x} ]]; then
+				echo -e "${C_RED}ERROR:${C_NC} You didn't ${C_BOLD}'export PROJECT_NAME=[current_project_name]'${C_NC}!"
+				return -1
+			elif [[ -z ${PROJECT_DIR+x} ]]; then
+			# If PROJECT_DIR is not set, it's because we just entered a new project enviroment
+				export PROJECT_DIR="$PWD"
+				load_project
+			fi
+		fi
+	# this conditional matches when we out of a project's root directory
+		if [ "${PWD##$PROJECT_DIR}" == "$PWD" ] && [[ -n ${PROJECT_DIR+x} ]]; then
+			clean_project
+			unset -f clean_project
+		fi
+	fi
+}
+
+
+# Loads a project's configuration
+load_project() {
+	echo "FIRST TIME PROJECT LOAD"
+}
+
+
+# Cleans project's environment
+clean_project() {
+	echo -en "${C_GREEN}CLEANING:${C_NC} "
+	local project_name="${PROJECT_NAME}"
+	
+	# unsets project loader
+	unset -f load_project
+# Final clean
+	unset PROJECT_NAME
+	unset PROJECT_DIR
+	echo -e "project ${C_BOLD}'${project_name}'${C_NC} cleaned!"
+	# ...and colors
+	unset C_BOLD
+	unset C_GREEN
+	unset C_YELLOW
+	unset C_RED
+	unset C_NC
+}
