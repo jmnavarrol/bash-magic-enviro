@@ -3,8 +3,40 @@ Bash Magic Enviro
 
 An opinionated Bash configuration tool for development environments.
 
-**Contents:**
-1. [license](#license)
+This tool allows to set *"isolated"* per-project Bash environments.
+
+**Contents:**<a name="contents"></a>
+1. [Requirements](#requirements)
+1. [Install](#install)
+   1. [update your Bash prompt](#prompt)
+1. [License](#license)
+
+----
+
+## Requirements<a name="requirements"></a>
+* **[Bash](https://www.gnu.org/software/bash/) >= 5**.  Make sure you are using a full Bash shell.
+
+<sub>[back to contents](#contents).</sub>
+
+## Install<a name="install"></a>
+First of all clone this repository, then follow the steps below.
+
+### update your Bash prompt<a name="prompt"></a>
+This tool works by means of updating your Bash prompt so it can process (source) files it finds each time you traverse a directory on the console.  For this to happen, you need to define a new shell function and then make your *"prompt command"* to run it each time you `cd` into a new directory.
+1. Create your own *~/bash_includes* file using [this 'bash_includes.example](./docs/bash_includes.example) as reference.  It provides two features:
+   1. It adds your `~/bin` directory to your $PATH (if it exists).  This way, the helper functions provided by this repository can be found and eventually loaded (of course, if you already added `~/bin` to your $PATH by other means, you won't need to do it here again).
+   1. The critical part: it alters your Bash prompt exporting the **bme_eval_dir** function, which is the one that makes possible looking up for *.bme_env* files.  
+You can/should also use your *~/bash_includes* file to export your personal project-related variables, like *secrets*, *tokens* and other data that shouldn't be checked-in to source code management systems (make sure you protect this file with restrictive permissions).
+1. Add to the end of your `~/.bashrc` file (or whatever other file you know it gets processed/sourced at login):
+   ```bash
+   # Other includes
+   if [ -f ~/bash_includes ]; then
+   	. ~/bash_includes
+   fi
+   ```
+
+Once you open a new terminal, changes will be loaded.
+<sub>[back to contents](#contents).</sub>
 
 ----
 
@@ -12,3 +44,5 @@ An opinionated Bash configuration tool for development environments.
 Bash Magic Enviro is made available under the terms of the **GPLv3**.
 
 See the [license file](./LICENSE) that accompanies this distribution for the full text of the license.
+
+<sub>[back to contents](#contents).</sub>

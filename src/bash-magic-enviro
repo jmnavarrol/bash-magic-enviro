@@ -1,0 +1,11 @@
+# Main Bash Magic Enviro manager
+#
+# This file is meant to be sourced, not run
+
+
+
+#--
+# MAIN
+#--
+# A bit of debug: I need to know the place I'm stored so I can set relative searchs
+echo "See where am I stored: ${BASH_SOURCE}"
