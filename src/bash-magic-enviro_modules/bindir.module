@@ -4,14 +4,14 @@
 # Checks for project's bin directory to be in path
 bindir_load() {
 	if ! [[ -d ${PROJECT_DIR}/bin ]]; then
-		echo -e "\t${C_YELLOW}WARNING:${C_NC} ${C_BOLD}bin/ directory requested, but not found.${C_NC}"
+		bme_log "${C_BOLD}'${PROJECT_DIR}/bin/${C_NC} directory requested, but not found." warning 1
 		mkdir ${PROJECT_DIR}/bin
-		echo -e "\t${C_GREEN}INFO:${C_NC} ${C_BOLD}'${PROJECT_DIR}/bin'${C_NC} ${C_GREEN}created${C_NC}."
+		bme_log "${C_BOLD}'${PROJECT_DIR}/bin'${C_NC} created." info 1
 	fi
 	# Adds ${PROJECT_DIR}/bin if not already there
 	if ! [[ "$PATH" =~ (^|:)"${PROJECT_DIR}/bin"(:|$) ]]; then
 		PATH="${PROJECT_DIR}/bin":$PATH
-		echo -e "\t${C_GREEN}INFO:${C_NC} ${C_BOLD}'${PROJECT_DIR}/bin'${C_NC} added to local path."
+		bme_log "${C_BOLD}'${PROJECT_DIR}/bin'${C_NC} added to local path." info 1
 	fi
 }
 

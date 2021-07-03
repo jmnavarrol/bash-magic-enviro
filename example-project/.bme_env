@@ -10,5 +10,5 @@ PROJECT_NAME='bme-example-project'
 
 # Module activation (modules are disabled by default, so uncomment those you want to enable
 BME_MODULES=(
-# 	'bindir'  # adds project's bin/ dir to $PATH
+	bindir  # adds project's bin/ dir to $PATH
 )

@@ -26,7 +26,7 @@ bme_eval_dir() {
 			source .bme_env
 			# PROJECT_NAME must be the first thing to be set!!!
 			if [[ -z ${PROJECT_NAME+x} ]]; then
-				echo -e "${C_RED}ERROR:${C_NC} You didn't ${C_BOLD}'export PROJECT_NAME=[current_project_name]'${C_NC}!"
+				bme_log "You didn't set ${C_BOLD}'PROJECT_NAME=[your_project_name]'${C_NC} in your ${C_BOLD}'.bme_env'${C_NC} file." fatal
 				return -1
 			elif [[ -z ${PROJECT_DIR+x} ]]; then
 			# If PROJECT_DIR is not set, it's because we just entered a new project enviroment
@@ -42,6 +42,53 @@ bme_eval_dir() {
 }
 
 
+# Logger function
+# 1st param: 'log_message': the log message itself
+# 2st param: 'log_type': log prefix, i.e.: ERROR, WARNING, empty string...
+# 3st param: 'log_level': sets the indentation level of the log output, starting '0'
+bme_log() {
+local log_message="${1}"
+local log_type="${2^^}"
+local log_level=${3:-0}
+local full_message=''
+# 	echo "log_message: ${log_message}"
+# 	echo "log_type: ${log_type}"
+# 	echo "log_level: ${log_level}"
+
+	if [ -z "$log_message" ]; then
+		echo -e "${C_RED}FATAL:${C_NC} ${C_BOLD}'${FUNCNAME[0]}'${C_NC} called in code from ${C_BOLD}'${FUNCNAME[1]}'${C_NC} with no message."
+		return -1
+	fi
+# Sets indentation level
+	for (( i=0; i < ${log_level}; i++ )); do
+		full_message+='\t'
+	done
+	unset i
+# Then, message type
+	case "$log_type" in
+		FATAL)
+			full_message+="${C_RED}${log_type}:${C_NC} "
+		;;
+		WARNING)
+			full_message+="${C_YELLOW}${log_type}:${C_NC} "
+		;;
+		INFO \
+		| LOADING | CLEANING)
+			full_message+="${C_GREEN}${log_type}:${C_NC} "
+		;;
+		*)
+			if [ -n "$log_type" ]; then
+				full_message+="${C_BOLD}${log_type}:${C_NC} "
+			fi
+		;;
+	esac
+# Finally, the message itself
+	full_message+="${log_message}"
+	
+	echo -e "${full_message}"
+}
+
+
 # Loads a project's configuration
 load_project() {
 local module
@@ -51,7 +98,8 @@ local module
 # 	echo "See what follows: ${BASH_SOURCE}"  # This is the good one! ~/bin/bash-magic-enviro
 # 	echo "See what follows: ${BASH_SOURCE[0]}"
 # 	echo "See what follows: ${BASH_SOURCE[${#BASH_SOURCE[@]} - 1]}"
-	echo -e "${C_GREEN}LOADING:${C_NC} project ${C_BOLD}'${PROJECT_NAME}'${C_NC} environment..."
+
+	bme_log "project ${C_BOLD}'${PROJECT_NAME}'${C_NC} environment..." loading
 	if [[ -n ${BME_MODULES+x} ]]; then
 		for module in "${BME_MODULES[@]}"; do
 			if [ -r "${BASH_SOURCE}_modules/${module}.module" ]; then
@@ -59,18 +107,16 @@ local module
 				${module}_load
 				ACTIVE_MODULES+="${module}"
 			else
-				echo -en "\t${C_YELLOW}WARNING:${C_NC} Couldn't find module ${C_BOLD}'${module}'${C_NC}. "
-				echo -e "File ${C_BOLD}'${BASH_SOURCE}_modules/${module}.module'${C_NC} couldn't be found."
+				bme_log "Couldn't load ${C_BOLD}'${module}'${C_NC} module.\n\t\tFile ${C_BOLD}'${BASH_SOURCE}_modules/${module}.module'${C_NC} couldn't be found." warning 1
 			fi
 		done
 	fi
-	echo -e "Project ${C_BOLD}'${PROJECT_NAME}'${C_NC} ${C_GREEN}loaded!${C_NC}\n"
+	bme_log "Project ${C_BOLD}'${PROJECT_NAME}'${C_NC} ${C_GREEN}loaded!${C_NC}\n"
 }
 
 
 # Cleans project's environment
 clean_project() {
-	echo -en "${C_GREEN}CLEANING:${C_NC} "
 	local project_name="${PROJECT_NAME}"
 	
 # Active modules
@@ -87,5 +133,5 @@ clean_project() {
 	unset PROJECT_NAME
 	unset PROJECT_DIR
 	unset BME_MODULES
-	echo -e "Project ${C_BOLD}'${project_name}'${C_NC} ${C_GREEN}cleaned!${C_NC}"
+	bme_log "Project ${C_BOLD}'${project_name}'${C_NC} ${C_GREEN}cleaned!${C_NC}" cleaning
 }
