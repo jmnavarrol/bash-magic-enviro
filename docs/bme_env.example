@@ -6,9 +6,9 @@
 # 'MAIN' .bme_env file at the root of your project
 #---
 # Uncomment and set your project name (must be unique)
-#BME_PROJECT_NAME='my-project-name'
+#PROJECT_NAME='my-project-name'
 
-# Module activation (modules are disabled by default, so uncomment those you want to enable
+# Modules' activation (modules are disabled by default, so uncomment those you want to enable
 BME_MODULES=(
-# 	'bindir'  # adds project's bin/ dir to $PATH
+# 	bindir  # adds project's bin/ dir to $PATH
 )

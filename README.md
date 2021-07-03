@@ -11,10 +11,12 @@ This tool allows to set *"isolated"* per-project Bash environments.
    1. [update your Bash prompt](#prompt)
    1. [install Bash Magic Enviro](#install)
    1. [set your project's *"main"* *.bme_env* file](#project)
-1. [Available modules](#modules)
+1. [Available features and modules](#modules)
+   * [logging function](#log)
    * [colored output](#colors)
    * [load project's bin dir](#bindir)
 1. [Development](#development)
+   * [modules' development](#dev-modules)
 1. [License](#license)
 
 ----
@@ -65,11 +67,21 @@ See also the included [example project](./example-project).
 
 <sub>[back to contents](#contents).</sub>
 
-## Available modules<a name="modules"></a>
-Modules are *"turned off"* by default, but you can *"turn on"* those you need (see [example environment file file](./docs/bme_env.example)).  On top of this README, you can also check your *~/bin/bash-magic-enviro_modules/* dir: each file within has the exact name of one option you can activate.
+## Available features and modules<a name="modules"></a>
+Features are always active and can't be turned off.
+
+Modules are *"turned off"* by default, but you can *"turn on"* those you need (see [example environment file](./docs/bme_env.example)).  On top of this README, you can also check your *~/bin/bash-magic-enviro_modules/* dir: each file within has the exact name of one module you can activate.
+
+### logging function<a name="log"></a>
+**Feature** (always on).  A function named **bme_log** is exported which accepts three (positional) params:
+1. **log message [mandatory]:** the log message itself.  It accepts colored output (see [below](#colors)).
+1. **log type [optional]:** the type of log, i.e.: *warning*, *info*...  It is represented as a colored uppercase prefix to the message.  As of now, you need to look at [the *switch/case* statement on the bme_log() method](./src/bash-magic-enviro).
+1. **log level [optional]:** when set, it indents your message by as many *tabs* as the number you pass (defaults *0*, no indentation).
+
+**example:** `bme_log "Some info. ${C_BOLD}'this is BOLD'${C_NC} and this message will be indented once." info 1`
 
 ### colored output<a name="colors"></a>
-**No option** (always on).  Constants are exported that can help you rendering colored outputs (see the *"style table"* early on [the bash-magic-enviro file](./src/bash-magic-enviro)).  They can be used within your *.enviro* files with the help of *"-e*" echo's option.  I.e.:
+**Feature** (always on).  Constants are exported that can help you rendering colored outputs (see the *"style table"* early on [the bash-magic-enviro file](./src/bash-magic-enviro)).  They can be used within your *.enviro* files with the help of *"-e*" echo's option.  I.e.:
 ```bash
 echo -e "${C_RED}This is BOLD RED${C_NC}"
 echo -e "Bold follows: '${C_BOLD}BOLD${C_NC}'"
@@ -77,12 +89,25 @@ echo -e "Bold follows: '${C_BOLD}BOLD${C_NC}'"
 ...remember always resetting color option with the `${C_NC}` constant after use.
 
 ### project's bin dir<a name="bindir"></a>
-Option **bindir**.  The *bin/* dir relative to the project's root will be added to $PATH, so custom script helpers, binaries, etc. are automatically available to the environment.
+**[bindir module](./src/bash-magic-enviro_modules/bindir.module)**.  The *bin/* dir relative to the project's root will be added to $PATH, so custom script helpers, binaries, etc. are automatically available to the environment.
 
 **NOTE:** if *bindir* is requested but the directory doesn't exists, this module will create it on the fly.
 
 ## Development<a name="development"></a>
 There's a `make dev` target on [the Makefile](./Makefile), that creates *symbolic links* under *~/bin* from source code.  This way, you can develop new features with ease.
+
+### modules' development<a name="dev-modules"></a>
+*Modules* are the way to add new functionality to *Bash Magic Enviro*.  Any file named *[modulename].module* under the [bash-magic-enviro_modules/ directory](./src/bash-magic-enviro_modules) becomes a module by that name.
+
+*Modules* are loaded by including their *modulename* in the **BME_MODULES array** of your *"main"* project's *.bme_env* file (see [example](./docs/bme_env.example)).  Upon entering your project's root directory, the file represented by the module name is first sourced and then its *[modulename]_load* method is called with no parameters.
+
+When you `cd` out your project's space, all modules are unloaded by calling their *[modulename]_unload* method without parameters.
+
+This means that, at the very minimum, every module needs to define these two methods: *[modulename]_load* and *[modulename]_unload*:
+1. **[modulename]_load:** it should run any preparation the module may need, i.e.: exporting new environment variables, check for the presence or pre-requirements, etc.
+1. **[modulename]_unload:** it should clean any modification to the shell the module introduces.  A good test while developing a new module can be running `set > before.txt` and `set > after.txt` when loading/unloading the module and check the *diff* between both files: there should be no *diff*.
+
+Other than that, anything that can be *sourced* by Bash can be added to the module's file, since that's exactly what will happen (the file is *sourced* when the module is requested).
 
 <sub>[back to contents](#contents).</sub>
 

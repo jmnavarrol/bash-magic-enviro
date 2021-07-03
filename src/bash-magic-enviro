@@ -51,6 +51,7 @@ local log_message="${1}"
 local log_type="${2^^}"
 local log_level=${3:-0}
 local full_message=''
+# Params debug
 # 	echo "log_message: ${log_message}"
 # 	echo "log_type: ${log_type}"
 # 	echo "log_level: ${log_level}"
