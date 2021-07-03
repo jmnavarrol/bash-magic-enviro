@@ -14,6 +14,7 @@ This tool allows to set *"isolated"* per-project Bash environments.
 1. [Available features and modules](#modules)
    * [logging function](#log)
    * [colored output](#colors)
+   * [custom clean function](#custom_clean)
    * [load project's bin dir](#bindir)
 1. [Development](#development)
    * [modules' development](#dev-modules)
@@ -87,6 +88,13 @@ echo -e "${C_RED}This is BOLD RED${C_NC}"
 echo -e "Bold follows: '${C_BOLD}BOLD${C_NC}'"
 ```
 ...remember always resetting color option with the `${C_NC}` constant after use.
+
+### custom clean function<a name="custom_clean"></a>
+**Feature** (always on).  While *Bash Magic Enviro* will take care of cleaning all its customizations when you go out your project's filesystem, you can also define/export your own custom variables, Bash functions, etc. within your project scope, and *Bash magic enviro* will offer the chance to clean after you.
+
+For this to happen you should declare a *custom clean function* named **bme_custom_clean()** and it will be called **before** any other cleansing (see [example config](./docs/bme_env.example)).
+
+Once *bme_custom_clean* is run, it will also be *unset* to avoid cluttering your environment.
 
 ### project's bin dir<a name="bindir"></a>
 **[bindir module](./src/bash-magic-enviro_modules/bindir.module)**.  The *bin/* dir relative to the project's root will be added to $PATH, so custom script helpers, binaries, etc. are automatically available to the environment.

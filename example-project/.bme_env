@@ -12,3 +12,10 @@ PROJECT_NAME='bme-example-project'
 BME_MODULES=(
 	bindir  # adds project's bin/ dir to $PATH
 )
+
+# Custom "clean" as supported by Bash Magic Enviro
+bme_custom_clean() {
+	unset SOME_PROJECT_VAR
+	unset -f SOME_PROJECT_FUNCTION
+	bme_log "Custom cleaning finished" info 1
+}
