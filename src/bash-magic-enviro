@@ -48,9 +48,9 @@ bme_eval_dir() {
 # 2st param: 'log_type': log prefix, i.e.: ERROR, WARNING, empty string...
 # 3st param: 'log_level': sets the indentation level of the log output, starting '0'
 bme_log() {
-local log_message="${1}"
-local log_type="${2^^}"
-local log_level=${3:-0}
+local log_message="${1}"  # first param
+local log_type="${2^^}"   # second param (uppercased)
+local log_level=${3:-0}   # third param (with a default of 0)
 local full_message=''
 # Params debug
 # 	echo "log_message: ${log_message}"
@@ -110,7 +110,9 @@ load_project() {
 				${module}_load
 				ACTIVE_MODULES+=("${module}")
 			else
-				bme_log "Couldn't load ${C_BOLD}'${module}'${C_NC} module.\n\t\tFile ${C_BOLD}'${BASH_SOURCE}_modules/${module}.module'${C_NC} couldn't be found." warning 1
+				local log_msg="Couldn't load ${C_BOLD}'${module}'${C_NC} module.\n"
+					log_msg+="\t\tFile ${C_BOLD}'${BASH_SOURCE}_modules/${module}.module'${C_NC} couldn't be found."
+				bme_log "${log_msg}" warning 1
 			fi
 		done
 		unset module
