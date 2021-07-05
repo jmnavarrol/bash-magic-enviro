@@ -74,9 +74,7 @@ local full_message=''
 		WARNING)
 			full_message+="${C_YELLOW}${log_type}:${C_NC} "
 		;;
-		INFO \
-		| LOADING | CLEANING \
-		| OK)
+		INFO | LOADING | CLEANING | OK)
 			full_message+="${C_GREEN}${log_type}:${C_NC} "
 		;;
 		*)
@@ -122,7 +120,7 @@ load_project() {
 	if [ -n "${custom_clean}" ] && [ "${custom_clean}" != 'function' ]; then
 		bme_log "Custom clean object found, but it's not of type function: ${C_BOLD}'type -t bme_custom_clean: ${custom_clean}'${C_NC}." error 1
 	fi
-	bme_log "Project ${C_BOLD}'${PROJECT_NAME}'${C_NC} ${C_GREEN}loaded!${C_NC}\n"
+	bme_log "Project ${C_BOLD}'${PROJECT_NAME}'${C_NC} loaded.\n" info
 	
 # Finally, show a notice if 'check-version' module was requested
 	[[ "${ACTIVE_MODULES[@]}" =~ 'check-version' ]] && check-version
@@ -160,5 +158,5 @@ clean_project() {
 	unset PROJECT_NAME
 	unset PROJECT_DIR
 	unset BME_MODULES
-	bme_log "Project ${C_BOLD}'${project_name}'${C_NC} ${C_GREEN}cleaned!${C_NC}" cleaning
+	bme_log "Project ${C_BOLD}'${project_name}'${C_NC} cleaned." cleaning
 }
