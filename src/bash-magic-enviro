@@ -1,7 +1,7 @@
 # Main Bash Magic Enviro manager
 #
 # This file is meant to be sourced, not run
-BME_VERSION='v0.1.1'
+BME_VERSION='v0.1.2'
 
 # Style table
 C_BOLD='\033[1m'         # Bold text

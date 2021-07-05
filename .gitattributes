@@ -1,0 +1,8 @@
+# Hints so GitHub "discovers" the programming languages used in this project
+
+# these are also shell files
+src/bash-magic-enviro linguist-language=bash
+docs/bash_includes.example linguist-language=bash
+docs/bme_env.example linguist-language=bash
+.bme_env linguist-language=bash
+*.module linguist-language=bash
