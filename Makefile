@@ -59,15 +59,15 @@ check:
 	fi
 	
 # Expands templated values from main script
-$(BUILDDIR)/$(SCRIPT): Makefile
+$(BUILDDIR)/$(SCRIPT): Makefile src/$(SCRIPT)
 	@mkdir -p $(BUILDDIR)
 	@OLD_IFS=$$IFS; \
 	IFS=''; \
 	cat /dev/null > $(BUILDDIR)/$(SCRIPT); \
-	while read LINE; do \
+	while read -r LINE; do \
 		LINE="$${LINE//'<% BME_SRC_DIR %>'/"'$${PWD}'"}"; \
 		LINE="$${LINE//'<% BME_VERSION %>'/"$(VERSION)"}"; \
-		echo $$LINE >> $(BUILDDIR)/$(SCRIPT); \
+		echo "$${LINE}" >> $(BUILDDIR)/$(SCRIPT); \
 	done < src/$(SCRIPT); \
 	IFS=$$OLD_IFS
 	

@@ -112,6 +112,8 @@ Once *bme_custom_clean* is run, it will also be *unset* to avoid cluttering your
 ## Development<a name="development"></a>
 There's a `make dev` target on [the Makefile](./Makefile), that creates *symbolic links* under *~/bin* from source code.  This way, you can develop new features with ease.
 
+**NOTE:** remember you need to re-run `make dev` each time you alter either the [Makefile](.Makefile) or [bash-magic-enviro](./src/bash-magic-enviro) files.
+
 ### modules' development<a name="dev-modules"></a>
 *Modules* are the way to add new functionality to *Bash Magic Enviro*.  Any file named *[modulename].module* under the [bash-magic-enviro_modules/ directory](./src/bash-magic-enviro_modules) becomes a module by that name.
 

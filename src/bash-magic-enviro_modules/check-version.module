@@ -7,6 +7,10 @@ check-version_load() {
 		bme_log "${C_BOLD}'\$BME_VERSION'${C_NC} should be exported by main ${C_BOLD}'${BASH_SOURCE[${#BASH_SOURCE[@]} - 1]}'${C_NC}, but I couldn't find it." error 1
 		return -1
 	fi
+	if [ -z "${BME_SRC_DIR}" ]; then
+		bme_log "${C_BOLD}'\$BME_SRC_DIR'${C_NC} should be exported by main ${C_BOLD}'${BASH_SOURCE[${#BASH_SOURCE[@]} - 1]}'${C_NC}, but I couldn't find it." error 1
+		return -1
+	fi
 	bme_log "You can compare your current version against upstream with ${C_BOLD}'check-version'${C_NC}." info 1
 }
 
@@ -18,12 +22,13 @@ check-version_unload() {
 
 check-version() {
 # Get highest remote tag
-	# Gets the current remote
-	local current_remote=`git ls-remote --get-url`
+	# Gets the current bash magic enviro remote
+	local current_remote=`git --git-dir "${BME_SRC_DIR}/.git" ls-remote --get-url`
 	
 	# Gets the sorted list of remote tags,
 	# then, get the last one (which should be the highest by "version name").
-	local highest_tag=`git ls-remote --refs --tags ${current_remote} | cut --delimiter='/' --fields=3 | sort --version-sort | tail -n 1`
+	local highest_tag=`git --git-dir "${BME_SRC_DIR}/.git" ls-remote --refs --tags ${current_remote} \
+		| cut --delimiter='/' --fields=3 | sort --version-sort | tail -n 1`
 	
 # Shows version comparation result
 	# TODO: this just checks for differences between version and "highest" tag, so it doesn't really compare versions
