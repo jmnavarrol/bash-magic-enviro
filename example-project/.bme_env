@@ -10,7 +10,8 @@ PROJECT_NAME='bme-example-project'
 
 # Modules' activation (modules are disabled by default, so uncomment those you want to enable
 BME_MODULES=(
-	bindir  # adds project's bin/ dir to $PATH
+	bindir         # adds project's bin/ dir to $PATH
+	check-version  # Compares current and remote version of this product
 )
 
 # Custom "clean" as supported by Bash Magic Enviro

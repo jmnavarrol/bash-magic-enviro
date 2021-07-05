@@ -1,0 +1,36 @@
+# Meant to be sourced by 'magic-enviro'
+# Compares local and remote versions
+
+check-version_load() {
+# '$BME_VERSION' must be defined by main 'bash-magic-enviro' script
+	if [ -z "${BME_VERSION}" ]; then
+		bme_log "${C_BOLD}'\$BME_VERSION'${C_NC} should be exported by main ${C_BOLD}'${BASH_SOURCE[${#BASH_SOURCE[@]} - 1]}'${C_NC}, but I couldn't find it." error 1
+		return -1
+	fi
+	bme_log "You can compare your current version against upstream with ${C_BOLD}'check-version'${C_NC}." info 1
+}
+
+
+check-version_unload() {
+	unset -f check-version
+}
+
+
+check-version() {
+# Get highest remote tag
+	# Gets the current remote
+	local current_remote=`git ls-remote --get-url`
+	
+	# Gets the sorted list of remote tags,
+	# then, get the last one (which should be the highest by "version name").
+	local highest_tag=`git ls-remote --refs --tags ${current_remote} | cut --delimiter='/' --fields=3 | sort --version-sort | tail -n 1`
+	
+# Shows version comparation result
+	# TODO: this just checks for differences between version and "highest" tag, so it doesn't really compare versions
+	if [ "${BME_VERSION}" != "${highest_tag}" ]; then
+		local log_msg="New ${C_BOLD}'magic-enviro'${C_NC} version available.  Please, consider upgrading.\n"
+			log_msg+="\tYour local version: ${C_BOLD}'${BME_VERSION}'${C_NC}.\n"
+			log_msg+="\tHighest version at ${C_BOLD}'${current_remote}'${C_NC}: ${C_BOLD}'${highest_tag}'${C_NC}."
+		bme_log "${log_msg}" info 0
+	fi
+}

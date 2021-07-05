@@ -1,6 +1,7 @@
 # Main Bash Magic Enviro manager
 #
 # This file is meant to be sourced, not run
+BME_VERSION='v0.1.0'
 
 # Style table
 C_BOLD='\033[1m'         # Bold text
@@ -93,7 +94,6 @@ local full_message=''
 
 # Loads a project's configuration
 load_project() {
-local module
 # A bit of debug: I need to know the place I'm stored, so I can find other includes, relative to me
 # 	echo "See what follows: $0"
 # 	echo "See what follows: $_"
@@ -108,11 +108,12 @@ local module
 			if [ -r "${BASH_SOURCE}_modules/${module}.module" ]; then
 				source "${BASH_SOURCE}_modules/${module}.module"
 				${module}_load
-				ACTIVE_MODULES+="${module}"
+				ACTIVE_MODULES+=("${module}")
 			else
 				bme_log "Couldn't load ${C_BOLD}'${module}'${C_NC} module.\n\t\tFile ${C_BOLD}'${BASH_SOURCE}_modules/${module}.module'${C_NC} couldn't be found." warning 1
 			fi
 		done
+		unset module
 	fi
 	# Checks for a valid custom clean function
 	local custom_clean=`type -t bme_custom_clean`
@@ -120,6 +121,11 @@ local module
 		bme_log "Custom clean object found, but it's not of type function: ${C_BOLD}'type -t bme_custom_clean: ${custom_clean}'${C_NC}." error 1
 	fi
 	bme_log "Project ${C_BOLD}'${PROJECT_NAME}'${C_NC} ${C_GREEN}loaded!${C_NC}\n"
+	
+# Finally, show a notice if 'check-version' module was requested
+	IFS=$'\n'
+		[[ "${ACTIVE_MODULES[@]}" =~ 'check-version' ]] && check-version
+	unset IFS
 }
 
 

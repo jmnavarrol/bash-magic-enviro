@@ -15,6 +15,7 @@ This tool allows to set *"isolated"* per-project Bash environments.
    * [logging function](#log)
    * [colored output](#colors)
    * [custom clean function](#custom_clean)
+   * [look for new *Bash Magic Enviro* versions](#check-versions)
    * [load project's bin dir](#bindir)
 1. [Development](#development)
    * [modules' development](#dev-modules)
@@ -96,8 +97,15 @@ For this to happen you should declare a *custom clean function* named **bme_cust
 
 Once *bme_custom_clean* is run, it will also be *unset* to avoid cluttering your environment.
 
+### look for new *Bash Magic Enviro* versions<a name="check-versions"></a>
+**[check-version module](./src/bash-magic-enviro_modules/check-version.module):** exports the **check-version (no params) function**, which compares your current *Bash Magic Enviro's* version against the higest version available, defined as *git tags* on your *git remote*.  Shows a message if the highest remote version doesn't match your current local one.
+
+**NOTES:**
+1. When this module is requested, it will show *check-version's* result at project activation (i.e.: when you `cd` into your project's root dir).
+1. Version comparation is very crude and limits itself to show differences between *local* and *remote* versions.  Use your own judgement when considering an upgrade.
+
 ### project's bin dir<a name="bindir"></a>
-**[bindir module](./src/bash-magic-enviro_modules/bindir.module)**.  The *bin/* dir relative to the project's root will be added to $PATH, so custom script helpers, binaries, etc. are automatically available to the environment.
+**[bindir module](./src/bash-magic-enviro_modules/bindir.module):** the *bin/* dir relative to the project's root will be added to $PATH, so custom script helpers, binaries, etc. are automatically available to the environment.
 
 **NOTE:** if *bindir* is requested but the directory doesn't exists, this module will create it on the fly.
 
