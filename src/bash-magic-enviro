@@ -1,7 +1,7 @@
 # Main Bash Magic Enviro manager
 #
 # This file is meant to be sourced, not run
-BME_VERSION='v0.1.0'
+BME_VERSION='v0.1.1'
 
 # Style table
 C_BOLD='\033[1m'         # Bold text
@@ -123,9 +123,7 @@ load_project() {
 	bme_log "Project ${C_BOLD}'${PROJECT_NAME}'${C_NC} ${C_GREEN}loaded!${C_NC}\n"
 	
 # Finally, show a notice if 'check-version' module was requested
-	IFS=$'\n'
-		[[ "${ACTIVE_MODULES[@]}" =~ 'check-version' ]] && check-version
-	unset IFS
+	[[ "${ACTIVE_MODULES[@]}" =~ 'check-version' ]] && check-version
 }
 
 

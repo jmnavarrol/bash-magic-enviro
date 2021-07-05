@@ -98,7 +98,7 @@ For this to happen you should declare a *custom clean function* named **bme_cust
 Once *bme_custom_clean* is run, it will also be *unset* to avoid cluttering your environment.
 
 ### look for new *Bash Magic Enviro* versions<a name="check-versions"></a>
-**[check-version module](./src/bash-magic-enviro_modules/check-version.module):** exports the **check-version (no params) function**, which compares your current *Bash Magic Enviro's* version against the higest version available, defined as *git tags* on your *git remote*.  Shows a message if the highest remote version doesn't match your current local one.
+**[check-version module](./src/bash-magic-enviro_modules/check-version.module):** exports the **check-version (no params) function**, which compares your current *Bash Magic Enviro's* version against the higest version available, defined as *git tags* at your *git remote*.  Shows a message about current version status.
 
 **NOTES:**
 1. When this module is requested, it will show *check-version's* result at project activation (i.e.: when you `cd` into your project's root dir).
