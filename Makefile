@@ -1,6 +1,8 @@
 # Main project's Makefile
+VERSION := 'v0.1.3'
 SHELL := /bin/bash
 DESTDIR := $${HOME}/bin
+BUILDDIR := 'build'
 SCRIPT := bash-magic-enviro
 
 # Style table
@@ -11,7 +13,7 @@ export C_RED := \033[1;31m
 export C_NC := \033[0m
 
 # Basic targets
-.PHONY: targets check uninstall
+.PHONY: targets check uninstall clean
 
 targets:
 	@echo -e "$${C_BOLD}Main targets are:$${C_NC}"
@@ -20,6 +22,7 @@ targets:
 	@echo -e "\t$${C_BOLD}dev:$${C_NC} creates symlinks for easier development of this tool."
 	@echo -e "\t$${C_BOLD}install:$${C_NC} installs this product."
 	@echo -e "\t$${C_BOLD}uninstall:$${C_NC} uninstalls this product."
+	@echo -e "\t$${C_BOLD}clean:$${C_NC} cleans build artifacts under source code."
 	
 check:
 	@echo -e "$${C_BOLD}Checking requirements...$${C_NC}"
@@ -55,7 +58,20 @@ check:
 		echo -e "\t$${C_BOLD}~/bin$${C_NC} in PATH: $${C_GREEN}OK$${C_NC}"; \
 	fi
 	
-dev: check
+# Expands templated values from main script
+$(BUILDDIR)/$(SCRIPT): Makefile
+	@mkdir -p $(BUILDDIR)
+	@OLD_IFS=$$IFS; \
+	IFS=''; \
+	cat /dev/null > $(BUILDDIR)/$(SCRIPT); \
+	while read LINE; do \
+		LINE="$${LINE//'<% BME_SRC_DIR %>'/"'$${PWD}'"}"; \
+		LINE="$${LINE//'<% BME_VERSION %>'/"$(VERSION)"}"; \
+		echo $$LINE >> $(BUILDDIR)/$(SCRIPT); \
+	done < src/$(SCRIPT); \
+	IFS=$$OLD_IFS
+	
+dev: check $(BUILDDIR)/$(SCRIPT)
 # Symlinks the main script
 	@if ! [ -L ${DESTDIR}/${SCRIPT} ]; then \
 		if [ -e ${DESTDIR}/${SCRIPT} ]; then \
@@ -65,7 +81,7 @@ dev: check
 		fi; \
 		echo -en "Creating $${C_BOLD}'${DESTDIR}/${SCRIPT}'$${C_NC} symlink for development... "; \
 		current_pwd=$${PWD}; \
-		( cd ${DESTDIR} && ln -s $${current_pwd}/src/${SCRIPT} ${SCRIPT} ); \
+		( cd ${DESTDIR} && ln -s $${current_pwd}/$(BUILDDIR)/$(SCRIPT) ${SCRIPT} ); \
 		echo -e "$${C_GREEN}DONE$${C_NC}"; \
 	fi
 # Then, the modules
@@ -81,8 +97,8 @@ dev: check
 		echo -e "$${C_GREEN}DONE$${C_NC}"; \
 	fi
 	
-install: check
-	install --mode=0640 src/$(SCRIPT) $(DESTDIR)/$(SCRIPT)
+install: check $(BUILDDIR)/$(SCRIPT)
+	install --mode=0640 $(BUILDDIR)/$(SCRIPT) $(DESTDIR)/$(SCRIPT)
 	@if [ -L "$(DESTDIR)/$(SCRIPT)_modules" ]; then \
 		echo -en "$${C_YELLOW}WARNING:$${C_NC} about to delete $${C_BOLD}'$(DESTDIR)/$(SCRIPT)_modules$${C_NC}'... "; \
 		rm -rf "$(DESTDIR)/$(SCRIPT)_modules"; \
@@ -92,5 +108,9 @@ install: check
 	
 uninstall:
 	rm -f "$(DESTDIR)/$(SCRIPT)"
+	rm -rf "$(DESTDIR)/$(SCRIPT)_modules"
 	@echo -e "$${C_BOLD}'magic enviro'$${C_NC} script uninstalled: $${C_GREEN}OK$${C_NC}"
 	
+clean:
+	rm -rf "$(BUILDDIR)"
+	@echo -e "$${C_BOLD}'magic enviro'$${C_NC} sources cleaned: $${C_GREEN}OK$${C_NC}"
