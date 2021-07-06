@@ -4,7 +4,7 @@
 # Checks for project's bin directory to be in path
 bindir_load() {
 	if ! [[ -d ${PROJECT_DIR}/bin ]]; then
-		bme_log "${C_BOLD}'${PROJECT_DIR}/bin/${C_NC} directory requested, but not found." warning 1
+		bme_log "${C_BOLD}'${PROJECT_DIR}/bin/'${C_NC} directory requested, but not found." warning 1
 		mkdir ${PROJECT_DIR}/bin
 		bme_log "${C_BOLD}'${PROJECT_DIR}/bin'${C_NC} created." info 1
 	fi

@@ -3,6 +3,7 @@
 # This file is meant to be sourced, not run
 BME_SRC_DIR=<% BME_SRC_DIR %>
 BME_VERSION=<% BME_VERSION %>
+BME_HIDDEN_DIR='.bme.d'
 
 # Style table
 C_BOLD='\033[1m'         # Bold text
@@ -101,6 +102,15 @@ load_project() {
 # 	echo "See what follows: ${BASH_SOURCE[${#BASH_SOURCE[@]} - 1]}"
 
 	bme_log "project ${C_BOLD}'${PROJECT_NAME}'${C_NC} environment..." loading
+	# Checks .gitignore properties
+	if ! git check-ignore -q "${BME_HIDDEN_DIR}/"; then
+		bme_log "${C_BOLD}'${BME_HIDDEN_DIR}/'${C_NC} is not in your ${C_BOLD}'.gitignore'${C_NC} file.  You should add it." warning 1
+	fi
+	if ! [[ -d ${PROJECT_DIR}/${BME_HIDDEN_DIR} ]]; then
+		bme_log "${C_BOLD}'${PROJECT_DIR}/${BME_HIDDEN_DIR}/'${C_NC} directory requested, but not found." warning 1
+		mkdir ${PROJECT_DIR}/${BME_HIDDEN_DIR}
+		bme_log "${C_BOLD}'${PROJECT_DIR}/${BME_HIDDEN_DIR}'${C_NC} created." info 1
+	fi
 	# Loads modules
 	if [[ -n ${BME_MODULES+x} ]]; then
 		for module in "${BME_MODULES[@]}"; do

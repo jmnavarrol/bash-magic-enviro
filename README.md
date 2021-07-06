@@ -67,6 +67,14 @@ Once you move *"above"* the project's root dir (i.e.: `cd ~`) the project's envi
 
 See also the included [example project](./example-project).
 
+*Bash Magic Enviro* can also add project-related configuration on its own (i.e.: local configurations, supporting tools' repositories, etc.).  This tool reserves the *'.bme.d/'* directory for those, and it will create it upon entering the project's dir if it doesn't exist, so you should add it to your project's *'.gitignore'* file, i.e.:
+```shell
+# This is the project's main '.gitignore' file
+
+# Bash Magic Enviro related
+.bme.d/
+```
+
 <sub>[back to contents](#contents).</sub>
 
 ## Available features and modules<a name="modules"></a>
