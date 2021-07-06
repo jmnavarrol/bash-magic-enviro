@@ -17,6 +17,7 @@ This tool allows to set *"isolated"* per-project Bash environments.
    * [custom clean function](#custom_clean)
    * [look for new *Bash Magic Enviro* versions](#check-versions)
    * [load project's bin dir](#bindir)
+   * [Terraform support](#terraform)
 1. [Development](#development)
    * [modules' development](#dev-modules)
 1. [License](#license)
@@ -82,6 +83,8 @@ Features are always active and can't be turned off.
 
 Modules are *"turned off"* by default, but you can *"turn on"* those you need (see [example environment file](./docs/bme_env.example)).  On top of this README, you can also check your *~/bin/bash-magic-enviro_modules/* dir: each file within has the exact name of one module you can activate.
 
+As you may not, modules are loaded/unloaded by means of a Bash array.  As such, listing order matters (i.e.: *'terraform-support'* depends on *'bindir'* which means *'bindir'* must be activated **before** *'terraform-support'*.
+
 ### logging function<a name="log"></a>
 **Feature** (always on).  A function named **bme_log** is exported which accepts three (positional) params:
 1. **log message [mandatory]:** the log message itself.  It accepts colored output (see [below](#colors)).
@@ -116,6 +119,17 @@ Once *bme_custom_clean* is run, it will also be *unset* to avoid cluttering your
 **[bindir module](./src/bash-magic-enviro_modules/bindir.module):** the *bin/* dir relative to the project's root will be added to $PATH, so custom script helpers, binaries, etc. are automatically available to the environment.
 
 **NOTE:** if *bindir* is requested but the directory doesn't exists, this module will create it on the fly.
+
+### Terraform support<a name="terraform"></a>
+**[terraform-support module](./src/bash-magic-enviro_modules/terraform-support.module):** Adds support for [Terraform](https://www.terraform.io/intro/index.html) development.  It peruses [the tfenv project](https://github.com/tfutils/tfenv/tree/v2.2.0) to allow using different per-project Terraform versions, suited to your hardware.
+
+For this to happen, *Bash Magic Enviro* clones [the tfenv repository](https://github.com/tfutils/tfenv/tree/v2.2.0) to the *.bme.d/tfenv/* subdirectory relative to your project's root and configures it for usage within your project scope, so make sure you add `.bme.d/` to your `.gitignore` file (an error will be thrown otherwise).
+
+Once *tfenv* is (automatically) configured for your project, you can normally use any suitable terraform or [tfenv command](https://github.com/tfutils/tfenv/tree/v2.2.0#usage).
+
+You can globably set your project's Terraform version by means of the **'TFENV_TERRAFORM_VERSION'** environment variable defined on your project's main *.bme_env file* (See [example project](./example-project/.bme.env)): it gets unset when you go outside its directory tree along *Bash Magic Enviro*'s cleaning process.
+
+This module also sets the **TF_PLUGIN_CACHE_DIR** environment variable pointing to the *.bme.d/.terraform.d/plugin-cache* directory relative to your project's root, so plugins can be reused within different Terraform plans in your project.
 
 ## Development<a name="development"></a>
 There's a `make dev` target on [the Makefile](./Makefile), that creates *symbolic links* under *~/bin* from source code.  This way, you can develop new features with ease.
