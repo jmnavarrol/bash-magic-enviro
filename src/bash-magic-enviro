@@ -29,7 +29,9 @@ bme_eval_dir() {
 			source .bme_env
 			# PROJECT_NAME must be the first thing to be set!!!
 			if [[ -z ${PROJECT_NAME+x} ]]; then
-				bme_log "You didn't set ${C_BOLD}'PROJECT_NAME=[your_project_name]'${C_NC} in your ${C_BOLD}'.bme_env'${C_NC} file." fatal
+				local log_msg="You didn't set ${C_BOLD}'PROJECT_NAME=[your_project_name]'${C_NC} in your ${C_BOLD}'.bme_env'${C_NC} file.\n"
+				log_msg+="\tDid you stop by your project's root directory first?"
+				bme_log "${log_msg}" fatal
 				return -1
 			elif [[ -z ${PROJECT_DIR+x} ]]; then
 			# If PROJECT_DIR is not set, it's because we just entered a new project enviroment

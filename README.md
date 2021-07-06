@@ -127,9 +127,9 @@ For this to happen, *Bash Magic Enviro* clones [the tfenv repository](https://gi
 
 Once *tfenv* is (automatically) configured for your project, you can normally use any suitable terraform or [tfenv command](https://github.com/tfutils/tfenv/tree/v2.2.0#usage).
 
-You can globably set your project's Terraform version by means of the **'TFENV_TERRAFORM_VERSION'** environment variable defined on your project's main *.bme_env file* (See [example project](./example-project/.bme.env)): it gets unset when you go outside its directory tree along *Bash Magic Enviro*'s cleaning process.
+You can globably set your project's Terraform version by means of the **'TFENV_TERRAFORM_VERSION'** environment variable defined on your project's main *.bme_env file* (See [example project](./example-project/.bme_env)).  This variable gets unset when you go outside the project's directory tree along *Bash Magic Enviro*'s cleaning process.
 
-This module also sets the **TF_PLUGIN_CACHE_DIR** environment variable pointing to the *.bme.d/.terraform.d/plugin-cache* directory relative to your project's root, so plugins can be reused within different Terraform plans in your project.
+This module also sets the **'TF_PLUGIN_CACHE_DIR'** environment variable pointing to the *.bme.d/.terraform.d/plugin-cache/* directory relative to your project's root, so plugins can be reused within different Terraform plans in your project.
 
 ## Development<a name="development"></a>
 There's a `make dev` target on [the Makefile](./Makefile), that creates *symbolic links* under *~/bin* from source code.  This way, you can develop new features with ease.

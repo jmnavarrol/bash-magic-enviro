@@ -1,0 +1,13 @@
+# directory-level '.gitignore' file
+
+# Terraform by-products
+# we explicitly manage plugins' versions
+.terraform.lock.hcl
+# state should be shared (i.e.: S3 bucket), if multi-user support is required
+terraform.tfstate
+terraform.tfstate.backup
+# plan-level plugins dir
+.terraform/
+
+# the example file from this Terraform plan
+bme-terraform-example.txt
