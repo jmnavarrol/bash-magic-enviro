@@ -11,7 +11,9 @@ check-version_load() {
 		bme_log "${C_BOLD}'\$BME_SRC_DIR'${C_NC} should be exported by main ${C_BOLD}'${BASH_SOURCE[${#BASH_SOURCE[@]} - 1]}'${C_NC}, but I couldn't find it." error 1
 		return -1
 	fi
-	bme_log "You can compare your current version against upstream with ${C_BOLD}'check-version'${C_NC}." info 1
+	
+	bme_log "${C_BOLD}'check-version'${C_NC} loaded." info 1
+	bme_log "${C_BOLD}check-version${C_NC} - Compares local and remote versions of BME." function 2
 }
 
 

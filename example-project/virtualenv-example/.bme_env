@@ -1,0 +1,4 @@
+# subdirectory-level BME enviro file
+# Python virtualenv example config
+
+load_virtualenv 'bme-example-virtualenv' || return -1

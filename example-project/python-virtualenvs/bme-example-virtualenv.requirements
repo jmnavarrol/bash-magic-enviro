@@ -1,0 +1,10 @@
+# An example requirements file for testing purposes
+
+colorama==0.4.3
+
+# Other entries for testing/debugging
+# pip 
+# pip # comment
+# pip  == 20.2.4 # comment
+# pipa >= 1.2.3
+# Pip ~= 4.5.6

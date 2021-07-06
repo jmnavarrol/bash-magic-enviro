@@ -78,7 +78,9 @@ local full_message=''
 		WARNING)
 			full_message+="${C_YELLOW}${log_type}:${C_NC} "
 		;;
-		INFO | LOADING | CLEANING | OK)
+		INFO | OK \
+		| LOADING | CLEANING \
+		| FUNCTION)
 			full_message+="${C_GREEN}${log_type}:${C_NC} "
 		;;
 		*)
