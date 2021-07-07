@@ -26,8 +26,10 @@ This tool allows to set *"isolated"* per-project Bash environments.
 ----
 
 ## Requirements<a name="requirements"></a>
+* **[Git](https://git-scm.com/)**. Needed to checkout this project and some other features.
 * **[Bash](https://www.gnu.org/software/bash/) >= 5**.  Make sure you are using a full Bash shell.
 * **[GNU make](https://www.gnu.org/software/make/) >= 4.2**. Used by this tool's install process.
+* **Internet connectivity:** Some features and modules may access Internet at run time (i.e.: *check-version*, *terraform-support*).
 
 <sub>[back to contents](#contents).</sub>
 
@@ -69,7 +71,7 @@ Once you move *"above"* the project's root dir (i.e.: `cd ~`) the project's envi
 
 See also the included [example project](./example-project).
 
-*Bash Magic Enviro* can also add project-related configuration on its own (i.e.: local configurations, supporting tools' repositories, etc.).  This tool reserves the *'.bme.d/'* directory for those, and it will create it upon entering the project's dir if it doesn't exist, so you should add it to your project's *'.gitignore'* file, i.e.:
+*Bash Magic Enviro* can also add project-related configuration on its own (i.e.: local configurations, supporting tools' repositories, etc.).  This tool reserves the *'.bme.d/'* directory under your project's root for those, and it will create it upon entering the project's dir if it doesn't exist, so you should add it to your project's *'.gitignore'* file, i.e.:
 ```shell
 # This is the project's main '.gitignore' file
 
@@ -84,7 +86,7 @@ Features are always active and can't be turned off.
 
 Modules are *"turned off"* by default, but you can *"turn on"* those you need (see [example environment file](./docs/bme_env.example)).  On top of this README, you can also check your *~/bin/bash-magic-enviro_modules/* dir: each file within has the exact name of one module you can activate.
 
-As you may not, modules are loaded/unloaded by means of a Bash array.  As such, listing order matters (i.e.: *'terraform-support'* depends on *'bindir'* which means *'bindir'* must be activated **before** *'terraform-support'*.
+As you may note, modules are loaded/unloaded by means of a Bash array.  As such, sorting order matters (i.e.: *'terraform-support'* depends on *'bindir'* which means *'bindir'* must be listed **before** *'terraform-support'*.
 
 ### logging function<a name="log"></a>
 **Feature** (always on).  A function named **bme_log** is exported which accepts three (positional) params:
@@ -103,9 +105,9 @@ echo -e "Bold follows: '${C_BOLD}BOLD${C_NC}'"
 ...remember always resetting color option with the `${C_NC}` constant after use.
 
 ### custom clean function<a name="custom_clean"></a>
-**Feature** (always on).  While *Bash Magic Enviro* will take care of cleaning all its customizations when you go out your project's filesystem, you can also define/export your own custom variables, Bash functions, etc. within your project scope, and *Bash magic enviro* will offer the chance to clean after you.
+**Feature** (always on).  While *Bash Magic Enviro* will take care of cleaning all its customizations when you go out your project's filesystem, you may also define/export your own custom variables, Bash functions, etc. within your project scope, and *Bash magic enviro* will offer the chance to clean after you.
 
-For this to happen you should declare a *custom clean function* named **bme_custom_clean()** and it will be called **before** any other cleansing (see [example config](./docs/bme_env.example)).
+For this to happen you should declare a *custom clean function* named **bme_custom_clean()** (no params) and it will be called **before** any other cleansing (see [example config](./docs/bme_env.example)).
 
 Once *bme_custom_clean* is run, it will also be *unset* to avoid cluttering your environment.
 
@@ -130,6 +132,10 @@ It requires [virtualenvwrapper](https://virtualenvwrapper.readthedocs.io/) to be
 
 See also [the included example](./example-project/virtualenv-example/.bme_env).
 
+**Requirements:**
+* Python 3.
+* [virtualenvwrapper](https://virtualenvwrapper.readthedocs.io/).
+
 **Functions:**
 * **load_virtualenv [virtualenv]:** loads, with the help of *virtualenvwrapper*, the requested virtualenv *[virtualenv]* if it exists (`workon [virtualenv]`).  
 If the function can't find *[virtualenv]*, it will look for the requirements file *${PROJECT_DIR}/python-virtualenvs/${virtualenv}.requirements* and will create the named *virtualenv* using it.  
@@ -146,9 +152,12 @@ For this to happen, *Bash Magic Enviro* clones [the tfenv repository](https://gi
 
 Once *tfenv* is (automatically) configured for your project, you can normally use any suitable terraform or [tfenv command](https://github.com/tfutils/tfenv/tree/v2.2.0#usage).
 
-You can globably set your project's Terraform version by means of the **'TFENV_TERRAFORM_VERSION'** environment variable defined on your project's main *.bme_env file* (See [example project](./example-project/.bme_env)).  This variable gets unset when you go outside the project's directory tree along *Bash Magic Enviro*'s cleaning process.
+You can globably set your project's Terraform version by means of the **'TFENV_TERRAFORM_VERSION'** environment variable defined on your project's main *.bme_env file* (See [example project](./example-project/.bme_env)).  This variable is unset when you go outside the project's directory tree along *Bash Magic Enviro*'s cleaning process.
 
-This module also sets the **'TF_PLUGIN_CACHE_DIR'** environment variable pointing to the *.bme.d/.terraform.d/plugin-cache/* directory relative to your project's root, so plugins can be reused within different Terraform plans in your project.
+This module also sets the **'TF_PLUGIN_CACHE_DIR'** environment variable pointing to the *.bme.d/.terraform.d/plugin-cache/* directory relative to your project's root, so plugins can be reused within different Terraform plans in your project (also unset at project exit).
+
+**Requirements:**
+* **[bindir module](#bindir)** to be listed **before** *terraform-support*.
 
 ## Development<a name="development"></a>
 There's a `make dev` target on [the Makefile](./Makefile), that creates *symbolic links* under *~/bin* from source code.  This way, you can develop new features with ease.
@@ -163,7 +172,7 @@ There's a `make dev` target on [the Makefile](./Makefile), that creates *symboli
 When you `cd` out your project's space, all modules are unloaded by calling their *[modulename]_unload* method without parameters.
 
 This means that, at the very minimum, every module needs to define these two methods: *[modulename]_load* and *[modulename]_unload*:
-1. **[modulename]_load:** it should run any preparation the module may need, i.e.: exporting new environment variables, check for the presence or pre-requirements, etc.
+1. **[modulename]_load:** it should run any preparation the module may need, i.e.: exporting new environment variables, check for the presence of pre-requirements, etc.
 1. **[modulename]_unload:** it should clean any modification to the shell the module introduces.  A good test while developing a new module can be running `set > before.txt` and `set > after.txt` when loading/unloading the module and check the *diff* between both files: there should be no *diff*.
 
 Other than that, anything that can be *sourced* by Bash can be added to the module's file, since that's exactly what will happen (the file is *sourced* when the module is requested).

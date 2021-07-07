@@ -1,5 +1,5 @@
 # Main project's Makefile
-VERSION := 'v0.3.0'
+VERSION := 'v0.3.1'
 SHELL := /bin/bash
 DESTDIR := $${HOME}/bin
 BUILDDIR := 'build'
@@ -20,7 +20,7 @@ targets:
 	@echo -e "\t$${C_BOLD}targets:$${C_NC} this one (default)."
 	@echo -e "\t$${C_BOLD}check:$${C_NC} checks requirements."
 	@echo -e "\t$${C_BOLD}dev:$${C_NC} creates symlinks for easier development of this tool."
-	@echo -e "\t$${C_BOLD}install:$${C_NC} installs this product."
+	@echo -e "\t$${C_BOLD}install:$${C_NC} installs this product to your ~/bin/ directory."
 	@echo -e "\t$${C_BOLD}uninstall:$${C_NC} uninstalls this product."
 	@echo -e "\t$${C_BOLD}clean:$${C_NC} cleans build artifacts under source code."
 	
