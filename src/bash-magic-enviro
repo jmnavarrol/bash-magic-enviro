@@ -106,15 +106,24 @@ load_project() {
 # 	echo "See what follows: ${BASH_SOURCE[${#BASH_SOURCE[@]} - 1]}"
 
 	bme_log "project ${C_BOLD}'${PROJECT_NAME}'${C_NC} environment..." loading
-	# Checks .gitignore properties
-	if ! git check-ignore -q "${BME_HIDDEN_DIR}/"; then
-		bme_log "${C_BOLD}'${BME_HIDDEN_DIR}/'${C_NC} is not in your ${C_BOLD}'.gitignore'${C_NC} file.  You should add it." warning 1
+	
+	# Checks if current dir is within a git sandbox
+	if git rev-parse --git-dir > /dev/null 2>&1; then
+		BME_WITHIN_GIT=true
+		# Checks .gitignore properties
+		if ! git check-ignore -q "${BME_HIDDEN_DIR}/"; then
+			bme_log "${C_BOLD}'${BME_HIDDEN_DIR}/'${C_NC} is not in your ${C_BOLD}'.gitignore'${C_NC} file.  You should add it." warning 1
+		fi
+		if ! [[ -d ${PROJECT_DIR}/${BME_HIDDEN_DIR} ]]; then
+			bme_log "${C_BOLD}'${PROJECT_DIR}/${BME_HIDDEN_DIR}/'${C_NC} directory requested, but not found." warning 1
+			mkdir ${PROJECT_DIR}/${BME_HIDDEN_DIR}
+			bme_log "${C_BOLD}'${PROJECT_DIR}/${BME_HIDDEN_DIR}'${C_NC} created." info 1
+		fi
+	else
+		BME_WITHIN_GIT=false
+		bme_log "Directory ${C_BOLD}'${PWD}'${C_NC} is not within a git sandbox." info 1
 	fi
-	if ! [[ -d ${PROJECT_DIR}/${BME_HIDDEN_DIR} ]]; then
-		bme_log "${C_BOLD}'${PROJECT_DIR}/${BME_HIDDEN_DIR}/'${C_NC} directory requested, but not found." warning 1
-		mkdir ${PROJECT_DIR}/${BME_HIDDEN_DIR}
-		bme_log "${C_BOLD}'${PROJECT_DIR}/${BME_HIDDEN_DIR}'${C_NC} created." info 1
-	fi
+	
 	# Loads modules
 	if [[ -n ${BME_MODULES+x} ]]; then
 		for module in "${BME_MODULES[@]}"; do
@@ -130,6 +139,7 @@ load_project() {
 		done
 		unset module
 	fi
+	
 	# Checks for a valid custom clean function
 	local custom_clean=`type -t bme_custom_clean`
 	if [ -n "${custom_clean}" ] && [ "${custom_clean}" != 'function' ]; then
@@ -170,6 +180,7 @@ clean_project() {
 	unset ACTIVE_MODULES
 	unset module
 # Final clean
+	unset BME_WITHIN_GIT
 	unset PROJECT_NAME
 	unset PROJECT_DIR
 	unset BME_MODULES

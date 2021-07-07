@@ -15,16 +15,18 @@ local tfenv_version='v2.2.2'
 	fi
 	
 	# checks '.gitignore' contents
-	for tfenv_ignore in 'bin/tfenv' 'bin/terraform'; do
-		if ! git check-ignore -q ${tfenv_ignore}; then
-			local log_msg="${C_BOLD}'terraform-support'${C_NC} not loaded.\n"
-			log_msg+="\t\t${C_BOLD}'${tfenv_ignore}'${C_NC} is not in your '.gitignore' file.  You should add it."
-			bme_log "${log_msg}" error 1
-			unset tfenv_ignore
-			return -1
-		fi
-	done
-	unset tfenv_ignore
+	if ($BME_WITHIN_GIT); then
+		for tfenv_ignore in 'bin/tfenv' 'bin/terraform'; do
+			if ! git check-ignore -q ${tfenv_ignore}; then
+				local log_msg="${C_BOLD}'terraform-support'${C_NC} not loaded.\n"
+				log_msg+="\t\t${C_BOLD}'${tfenv_ignore}'${C_NC} is not in your '.gitignore' file.  You should add it."
+				bme_log "${log_msg}" error 1
+				unset tfenv_ignore
+				return -1
+			fi
+		done
+		unset tfenv_ignore
+	fi
 	
 	# makes sure tfenv repo is in place
 	if [ -d ${PROJECT_DIR}/${BME_HIDDEN_DIR}/tfenv ]; then
@@ -67,7 +69,7 @@ local tfenv_version='v2.2.2'
 	done
 	unset tfenv_link
 	# ...trying to control tfenv bug. See https://github.com/tfutils/tfenv/issues/245
-	if [ -n "${TFENV_TERRAFORM_VERSION+x}" ] && ! [ tfenv list > /dev/null 2>&1 ]; then
+	if [ -n "${TFENV_TERRAFORM_VERSION+x}" ] && ! tfenv list > /dev/null 2>&1; then
 		tfenv install
 	fi
 	
