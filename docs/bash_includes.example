@@ -8,6 +8,13 @@ if [ -d ~/bin ]; then
 	PATH=~/bin:$PATH
 fi
 
+# In case you are taking advantage of the 'python3-virtualenvs' module...
+# NOTE: The path to 'virtualenvwrapper.sh' will depend on the way you install it,
+# so make sure you substitute the path below with the proper one for your system.
+# if [ -r /usr/share/virtualenvwrapper/virtualenvwrapper.sh ]; then
+# 	source /usr/share/virtualenvwrapper/virtualenvwrapper.sh
+# fi
+
 # By the "export" below, the function 'bme_load' is run every time we change directories
 # Then, it's a matter of what you include within the '.bme_env' file of each directory
 if ! source bash-magic-enviro; then

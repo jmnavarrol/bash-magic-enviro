@@ -17,6 +17,7 @@ This tool allows to set *"isolated"* per-project Bash environments.
    * [custom clean function](#custom_clean)
    * [look for new *Bash Magic Enviro* versions](#check-versions)
    * [load project's bin dir](#bindir)
+   * [load Python3 *virtualenvs*](#virtualenvs)
    * [Terraform support](#terraform)
 1. [Development](#development)
    * [modules' development](#dev-modules)
@@ -109,7 +110,10 @@ For this to happen you should declare a *custom clean function* named **bme_cust
 Once *bme_custom_clean* is run, it will also be *unset* to avoid cluttering your environment.
 
 ### look for new *Bash Magic Enviro* versions<a name="check-versions"></a>
-**[check-version module](./src/bash-magic-enviro_modules/check-version.module):** exports the **check-version (no params) function**, which compares your current *Bash Magic Enviro's* version against the higest version available, defined as *git tags* at your *git remote*.  Shows a message about current version status.
+**[check-version module](./src/bash-magic-enviro_modules/check-version.module):** as the name implies, helps you noticing if your current *Bash Magic Enviro* version is up to date.
+
+**Functions:**
+* **check-version (no params):** it compares your current *Bash Magic Enviro's* version against the higest version available, defined as *git tags* at your *git remote*.  Shows a message about current version status.
 
 **NOTES:**
 1. When this module is requested, it will show *check-version's* result at project activation (i.e.: when you `cd` into your project's root dir).
@@ -119,6 +123,21 @@ Once *bme_custom_clean* is run, it will also be *unset* to avoid cluttering your
 **[bindir module](./src/bash-magic-enviro_modules/bindir.module):** the *bin/* dir relative to the project's root will be added to $PATH, so custom script helpers, binaries, etc. are automatically available to the environment.
 
 **NOTE:** if *bindir* is requested but the directory doesn't exists, this module will create it on the fly.
+
+### load Python3 *virtualenvs*<a name="virtualenvs"></a>
+**[python3-virtualenvs module](./src/bash-magic-enviro_modules/python3-virtualenvs.module):** Manages *Python3 virtualenvs* using your system Python version (this module looks first for `python3 --version` output; if it doesn't find it, it also tries `python --version`, in case it defaults to >=3.  
+It requires [virtualenvwrapper](https://virtualenvwrapper.readthedocs.io/) to be installed (i.e.: `sudo apt install virtualenvwrapper`).  Remember that, in order to *"activate"* virtualenvwrapper, you need to source its Bash control script, *virtualenvwrapper.sh* within your environment.  An example has been added to [the bash_includes example](./docs/bash_includes.example). Make sure you set the the script's path accordingly to your system.
+
+See also [the included example](./example-project/virtualenv-example/.bme_env).
+
+**Functions:**
+* **load_virtualenv [virtualenv]:** loads, with the help of *virtualenvwrapper*, the requested virtualenv *[virtualenv]* if it exists (`workon [virtualenv]`).  
+If the function can't find *[virtualenv]*, it will look for the requirements file *${PROJECT_DIR}/python-virtualenvs/${virtualenv}.requirements* and will create the named *virtualenv* using it.  
+If the requirements file can't be found, it will create an *"empty"* virtualenv *[virtualenv]*, along with the *${PROJECT_DIR}/python-virtualenvs/${virtualenv}.requirements* file, also empty, so you can start installing packages on it.
+
+The expectation is that you will install whatever required pips within your virtualenv and, once satisfied with the results, you'll "dump" its contents to the requirements file, i.e.: `pip freeze > ${PROJECT_DIR}/python-virtualenvs/${virtualenv}.requirements`.
+
+**NOTE:** Since the resulting requirements file's format is quite sensible about the exact version of *pip* in use, if your requirements file includes *pip* (i.e.: `pip freeze --all >...`), *load_virtualenv* will try to honor your requested pip version before installing the remaining packages into the virtualenv.
 
 ### Terraform support<a name="terraform"></a>
 **[terraform-support module](./src/bash-magic-enviro_modules/terraform-support.module):** Adds support for [Terraform](https://www.terraform.io/intro/index.html) development.  It peruses [the tfenv project](https://github.com/tfutils/tfenv/tree/v2.2.0) to allow using different per-project Terraform versions, suited to your hardware.
