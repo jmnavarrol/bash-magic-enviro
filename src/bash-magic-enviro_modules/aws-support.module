@@ -1,0 +1,99 @@
+# Meant to be sourced by 'magic-enviro'
+# Offers support for development against AWS
+
+aws-support_load() {
+local unmet_dependencies=false
+
+# Check jq availabilty
+	if ! which jq > /dev/null; then
+		bme_log "${C_BOLD}'jq'${C_NC} command not found.  Please install it." error 1
+		unmet_dependencies=true
+	fi
+	
+# Check awscli (optional, since it can also be loaded form a virtualenv)
+	if ! which aws > /dev/null; then
+		if ! [[ "${ACTIVE_MODULES[@]}" =~ 'python3-virtualenvs' ]]; then
+			local log_msg="${C_BOLD}'aws'${C_NC} command not found.\n"
+			log_msg+="\t\tYou should activate the ${C_BOLD}'python3-virtualenvs'${C_NC}  ${C_BOLD}BEFORE${C_NC} this one,\n"
+			log_msg+="\t\tand load a suitable python virtualenv before calling ${C_BOLD}'load_aws_credentials'${C_NC}."
+			bme_log "${log_msg}" error 1
+			unmet_dependencies=true
+		else
+			local log_msg="${C_BOLD}'aws'${C_NC} command not found.\n"
+			log_msg+="\t\tMake sure you load a suitable python virtualenv before calling ${C_BOLD}'load_aws_credentials'${C_NC}."
+			bme_log "${log_msg}" warning 1
+		fi
+	fi
+	
+# Check user's MFA token
+	if [ -z ${AWS_MFA+x} ]; then
+		local log_msg="Environment variable ${C_BOLD}'\$AWS_MFA'${C_NC} can't be found.\n"
+		log_msg+="\t\tRemember you should export your AWS MFA device's ID in that variable."
+		bme_log "${log_msg}" error 1
+		unmet_dependencies=true
+	fi
+	
+# Final message
+	if ($unmet_dependencies); then
+		aws-support_unload
+		bme_log "${C_BOLD}'aws-support'${C_NC} not loaded. See missed dependencies above." error 1
+		return -1
+	else
+		export AWS_SDK_LOAD_CONFIG=1
+		bme_log "${C_BOLD}'aws-support'${C_NC} loaded." info 1
+		bme_log "${C_BOLD}load_aws_credentials${C_NC} - Loads your personal AWS access credentials." function 2
+	fi
+}
+
+
+aws-support_unload() {
+	unset -f load_aws_credentials
+	unset AWS_SESSION_TOKEN
+	unset AWS_SECRET_ACCESS_KEY
+	unset AWS_ACCESS_KEY_ID
+	unset AWS_SESSION_EXPIRATION
+	unset AWS_SDK_LOAD_CONFIG
+}
+
+
+# Grabs an AWS session token and exports required variables
+# TODO: See if jq from pip can be used
+load_aws_credentials() {
+# Check for run-time dependencies
+	if ! which aws > /dev/null; then
+		echo "COULDN'T FIND 'AWS'"
+		local log_msg="${C_BOLD}'aws'${C_NC} command not found.\n"
+		log_msg+="\tMake sure you load a suitable python virtualenv before calling ${C_BOLD}'load_aws_credentials'${C_NC}."
+		bme_log "${log_msg}" error
+		return -1
+	fi
+	
+# Only request an AWS_SESSION_TOKEN if not one present
+	if [ -z ${AWS_SESSION_TOKEN+x} ]; then
+	# Existing environment variables can cause issues, so we unset them first
+		unset AWS_SESSION_TOKEN
+		unset AWS_SECRET_ACCESS_KEY
+		unset AWS_ACCESS_KEY_ID
+		unset AWS_SESSION_EXPIRATION
+		
+	# Get One Time Password from the user's MFA device
+		echo -n "Please enter AWS MFA's One Time Password: "
+		read otp
+		
+	# Get the credentials from AWS and store the response in a variable
+		local creds=`aws sts get-session-token --serial-number $AWS_MFA --token-code $otp` || return $?
+		unset otp
+		
+	# Parse the response into separate variables
+		local access_key=`echo $creds | jq .Credentials.AccessKeyId`
+		local secret_key=`echo $creds | jq .Credentials.SecretAccessKey`
+		local session_token=`echo $creds | jq .Credentials.SessionToken`
+		local session_expiration=`echo $creds | jq .Credentials.Expiration`
+		
+	# Set the appropriate environment variables -- The sed statement is needed to strip the quotation marks
+		export AWS_ACCESS_KEY_ID=`echo $access_key | sed -e 's/^"//' -e 's/"$//'`
+		export AWS_SECRET_ACCESS_KEY=`echo $secret_key | sed -e 's/^"//' -e 's/"$//'`
+		export AWS_SESSION_TOKEN=`echo $session_token | sed -e 's/^"//' -e 's/"$//'`
+		export AWS_SESSION_EXPIRATION=`echo $session_expiration | sed -e 's/^"//' -e 's/"$//'`
+	fi
+}

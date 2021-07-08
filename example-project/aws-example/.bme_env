@@ -1,0 +1,17 @@
+# subdirectory-level BME enviro file
+# AWS example config
+
+# awscli will be loaded from a custom virtualenv
+load_virtualenv 'bme-example-aws' || return -1
+
+# now, load my AWS credentials
+load_aws_credentials || return -1
+
+# An example output
+local log_msg="Current AWS credentials:\n"
+log_msg+="\t${C_BOLD}AWS_ACCESS_KEY_ID:${C_NC} '${AWS_ACCESS_KEY_ID}'\n"
+log_msg+="\t${C_BOLD}AWS_SECRET_ACCESS_KEY:${C_NC} '${AWS_SECRET_ACCESS_KEY}'\n"
+log_msg+="\t${C_BOLD}AWS_SESSION_EXPIRATION:${C_NC} '${AWS_SESSION_EXPIRATION}'\n"
+log_msg+="\t${C_BOLD}AWS_SESSION_TOKEN:${C_NC} '${AWS_SESSION_TOKEN}'\n"
+
+bme_log "${log_msg}" info
