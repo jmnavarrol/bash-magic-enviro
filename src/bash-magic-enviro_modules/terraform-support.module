@@ -80,7 +80,7 @@ local tfenv_version='v2.2.2'
 	fi
 	export TF_PLUGIN_CACHE_DIR="${PROJECT_DIR}/${BME_HIDDEN_DIR}/.terraform.d/plugin-cache"
 	
-	bme_log "Terraform support activated." info 1
+	bme_log "${C_BOLD}'terraform-support'${C_NC} loaded." info 1
 }
 
 
