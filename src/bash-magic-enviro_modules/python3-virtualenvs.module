@@ -9,7 +9,7 @@ local python_version=''
 local unmet_dependencies=false
 
 # Checks md5sum availability
-	if ! which md5ssum > /dev/null; then
+	if ! which md5sum > /dev/null; then
 		bme_log "${C_BOLD}'md5sum'${C_NC} not found.  Please install ${C_BOLD}'coreutils'${C_NC} package." error 1
 		unmet_dependencies=true
 	fi
