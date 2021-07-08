@@ -129,8 +129,7 @@ load_project() {
 		for module in "${BME_MODULES[@]}"; do
 			if [ -r "${BASH_SOURCE}_modules/${module}.module" ]; then
 				source "${BASH_SOURCE}_modules/${module}.module"
-				${module}_load
-				ACTIVE_MODULES+=("${module}")
+				${module}_load && ACTIVE_MODULES+=("${module}")
 			else
 				local log_msg="Couldn't load ${C_BOLD}'${module}'${C_NC} module.\n"
 					log_msg+="\t\tFile ${C_BOLD}'${BASH_SOURCE}_modules/${module}.module'${C_NC} couldn't be found."

@@ -6,12 +6,12 @@ virtualenvs_md5sums="${PROJECT_DIR}/${BME_HIDDEN_DIR}/python-virtualenvs.md5"
 
 python3-virtualenvs_load() {
 local python_version=''
-local missed_dependencies=false
+local unmet_dependencies=false
 
 # Checks md5sum availability
-	if ! which md5sum > /dev/null; then
+	if ! which md5ssum > /dev/null; then
 		bme_log "${C_BOLD}'md5sum'${C_NC} not found.  Please install ${C_BOLD}'coreutils'${C_NC} package." error 1
-		missed_dependencies=true
+		unmet_dependencies=true
 	fi
 	
 # Checks Python3 availability
@@ -23,11 +23,11 @@ local missed_dependencies=false
 			SYSTEM_PYTHON=`which python`
 		else
 			bme_log "No valid Python3 executable found." error 1
-			missed_dependencies=true
+			unmet_dependencies=true
 		fi
 	else
 		bme_log "No valid Python executable found." error 1
-		missed_dependencies=true
+		unmet_dependencies=true
 	fi
 	
 # Checks virtualenvwrapper availability and other requirements
@@ -44,13 +44,13 @@ local missed_dependencies=false
 		fi
 	else
 		bme_log "${C_BOLD}virtualenvwrapper tool undetected${C_NC}.  You should install it for virtualenvs support." error 1
-		missed_dependencies=true
+		unmet_dependencies=true
 	fi
 	
 # Final message
-	if ($missed_dependencies); then
-		bme_log "${C_BOLD}'python3-virtualenvs'${C_NC} not loaded. See missed dependencies above." error 1
+	if ($unmet_dependencies); then
 		python3-virtualenvs_unload
+		bme_log "${C_BOLD}'python3-virtualenvs'${C_NC} not loaded. See missed dependencies above." error 1
 		return -1
 	else
 		local log_msg="${C_BOLD}'python3-virtualenvs'${C_NC} "

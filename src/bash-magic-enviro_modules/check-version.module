@@ -2,18 +2,25 @@
 # Compares local and remote versions
 
 check-version_load() {
-# '$BME_VERSION' must be defined by main 'bash-magic-enviro' script
+local unmet_dependencies=false
+
 	if [ -z "${BME_VERSION}" ]; then
 		bme_log "${C_BOLD}'\$BME_VERSION'${C_NC} should be exported by main ${C_BOLD}'${BASH_SOURCE[${#BASH_SOURCE[@]} - 1]}'${C_NC}, but I couldn't find it." error 1
-		return -1
+		unmet_dependencies=true
 	fi
 	if [ -z "${BME_SRC_DIR}" ]; then
 		bme_log "${C_BOLD}'\$BME_SRC_DIR'${C_NC} should be exported by main ${C_BOLD}'${BASH_SOURCE[${#BASH_SOURCE[@]} - 1]}'${C_NC}, but I couldn't find it." error 1
-		return -1
+		unmet_dependencies=true
 	fi
 	
-	bme_log "${C_BOLD}'check-version'${C_NC} loaded." info 1
-	bme_log "${C_BOLD}check-version${C_NC} - Compares local and remote versions of BME." function 2
+	if ($unmet_dependencies); then
+		check-version_unload
+		bme_log "${C_BOLD}'check-version'${C_NC} not loaded. See missed dependencies above." error 1
+		return -1
+	else
+		bme_log "${C_BOLD}'check-version'${C_NC} loaded." info 1
+		bme_log "${C_BOLD}check-version${C_NC} - Compares local and remote versions of BME." function 2
+	fi
 }
 
 
