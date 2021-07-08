@@ -1,9 +1,16 @@
 Bash Magic Enviro
 =================
 
-An opinionated Bash configuration tool for development environments.
+**An opinionated Bash configuration tool for development environments.**
 
 This tool allows to set *"isolated"* per-project Bash environments.
+
+Once installed and configured, this tool will look for a *'.bme_env'* file each time you change directories, and will *"source"* them when found.  
+You *"declare"* a project by means of the *.bme_env* file at its topmost directory (the expectation, but not a hard requirement, is that a project's entry point is the root of a git sandbox).  This topmost file sets the project's name, the modules you want to be loaded for this project, etc.  
+Aditional *.bme_env* files within the project's directory hierarchy may call exported functions, tweak the environment for that given directory, etc. (i.e.: you may load a virtualenv, request a custom Terraform version, even run whatever Bash code you may need).  
+This tool also allows you to add your own project-specific extensions/customizations as needed.
+
+Once you *"cd out"* from the project's hierarchy all these customizations will be automatically cleaned out.
 
 **Contents:**<a name="contents"></a>
 1. [Requirements](#requirements)
@@ -29,7 +36,7 @@ This tool allows to set *"isolated"* per-project Bash environments.
 * **[Git](https://git-scm.com/)**. Needed to checkout this project and some other features.
 * **[Bash](https://www.gnu.org/software/bash/) >= 5**.  Make sure you are using a full Bash shell.
 * **[GNU make](https://www.gnu.org/software/make/) >= 4.2**. Used by this tool's install process.
-* **Internet connectivity:** Some features and modules may access Internet at run time (i.e.: *check-version*, *terraform-support*).
+* **Internet connectivity:** Some features and modules may access Internet at run time (i.e.: *check-version*, *terraform-support*...).
 * See each module's requirements section for other dependencies.
 
 <sub>[back to contents](#contents).</sub>
@@ -66,7 +73,7 @@ Use [the included Makefile](./Makefile).  See the output of the bare `make` comm
 ### set your project's *"main"* *.bme_env* file<a name="project"></a>
 Once you properly installed *Bash Magic Enviro*, you may add to your project(s) a *"main"* *.bme_env* file to activate and configure the environment (see [example](./docs/bme_env.example)).
 
-In order for this main *.bme_env* to be sourced, you need to first *"stop"* by your project's root directory **before** entering any other subdirectory (i.e.: `cd ~/REPOS/project_directory && cd some_subir`).
+In order for this main *.bme_env* to be sourced, you need to first *"stop"* by your project's root directory **before** entering any other subdirectory (i.e.: `~$: cd ~/REPOS/project_directory ~$: cd some_subir`).
 
 Once you move *"above"* the project's root dir (i.e.: `cd ~`) the project's environment will be automatically cleaned.
 
@@ -87,7 +94,7 @@ Features are always active and can't be turned off.
 
 Modules are *"turned off"* by default, but you can *"turn on"* those you need (see [example environment file](./docs/bme_env.example)).  On top of this README, you can also check your *~/bin/bash-magic-enviro_modules/* dir: each file within has the exact name of one module you can activate.
 
-As you may note, modules are loaded/unloaded by means of a Bash array.  As such, sorting order matters (i.e.: *'terraform-support'* depends on *'bindir'* which means *'bindir'* must be listed **before** *'terraform-support'*.
+As you may note, modules are loaded/unloaded by means of a Bash array.  As such, sorting order matters (i.e.: *'terraform-support'* depends on *'bindir'* which means *'bindir'* must be listed **before** *'terraform-support'*).
 
 ### logging function<a name="log"></a>
 **Feature** (always on).  A function named **bme_log** is exported which accepts three (positional) params:
@@ -98,10 +105,10 @@ As you may note, modules are loaded/unloaded by means of a Bash array.  As such,
 **example:** `bme_log "Some info. ${C_BOLD}'this is BOLD'${C_NC} and this message will be indented once." info 1`
 
 ### colored output<a name="colors"></a>
-**Feature** (always on).  Constants are exported that can help you rendering colored outputs (see the *"style table"* early on [the bash-magic-enviro file](./src/bash-magic-enviro)).  They can be used within your *.enviro* files with the help of *"-e*" echo's option.  I.e.:
+**Feature** (always on).  Constants are exported that can help you rendering colored outputs (see the *"style table"* early on [the bash-magic-enviro file](./src/bash-magic-enviro)).  They can be used within your *.enviro* files with the help of either [bme_log](#log) or *"-e*" echo's option.  I.e.:
 ```bash
 echo -e "${C_RED}This is BOLD RED${C_NC}"
-echo -e "Bold follows: '${C_BOLD}BOLD${C_NC}'"
+echo -e "Bold follows: ${C_BOLD}'BOLD'${C_NC}"
 ```
 ...remember always resetting color option with the `${C_NC}` constant after use.
 
@@ -115,8 +122,12 @@ Once *bme_custom_clean* is run, it will also be *unset* to avoid cluttering your
 ### look for new *Bash Magic Enviro* versions<a name="check-versions"></a>
 **[check-version module](./src/bash-magic-enviro_modules/check-version.module):** as the name implies, helps you noticing if your current *Bash Magic Enviro* version is up to date.
 
+**Requirements:**
+* git command
+* Internet connectivity
+
 **Functions:**
-* **check-version (no params):** it compares your current *Bash Magic Enviro's* version against the higest version available, defined as *git tags* at your *git remote*.  Shows a message about current version status.
+* **check-version (no params):** it compares your current *Bash Magic Enviro's* version against the highest version available, defined as *git tags* at your *git remote*.  Shows a message about current version status.
 
 **NOTES:**
 1. When this module is requested, it will show *check-version's* result at project activation (i.e.: when you `cd` into your project's root dir).
@@ -139,14 +150,13 @@ See also [the included example](./example-project/virtualenv-example/.bme_env).
 * md5sum (it comes from package **coreutils** in the case of Debian systems).
 
 **Functions:**
-* **load_virtualenv [virtualenv]:** loads, with the help of *virtualenvwrapper*, the requested virtualenv *[virtualenv]* if it exists (`workon [virtualenv]`).  
-If the function can't find *[virtualenv]*, it will look for the requirements file *${PROJECT_DIR}/python-virtualenvs/${virtualenv}.requirements* and will create the named *virtualenv* using it.  
-If the requirements file can't be found, it will create an *"empty"* virtualenv *[virtualenv]*, along with the *${PROJECT_DIR}/python-virtualenvs/${virtualenv}.requirements* file, also empty, so you can start installing packages on it.  
-This function also stores the requirements file's *md5sum* under the *'.bme.d/'* hidden directory, so it can update the virtualenv when changes detected.
+* **load_virtualenv [virtualenv]:** loads, with the help of *virtualenvwrapper*, the requested virtualenv *[virtualenv]* if it exists (`workon [virtualenv]`).
+  1. If the function can't find the requested virtualenv *[virtualenv]*, it will look for the requirements file *"${PROJECT_DIR}/python-virtualenvs/[virtualenv].requirements"* and will create the named *virtualenv* using it.
+  1. If the requirements file can't be found, it will create an *"empty"* virtualenv *[virtualenv]*, along with an empty *requirements* file, so you can start installing packages on it.
+  1. If *pip* is listed in the *requirements* file, and given the requirements' file format is quite sensible about the exact version of *pip* in use, *load_virtualenv* will try to honor your requested pip version before installing the remaining packages into the virtualenv.
+  1. This function also stores the requirements file's *md5sum* under the *'.bme.d/'* hidden directory, so it can update the virtualenv when changes are detected.
 
-The expectation is that you will install whatever required pips within your virtualenv and, once satisfied with the results, you'll "dump" its contents to the requirements file, i.e.: `pip freeze > ${PROJECT_DIR}/python-virtualenvs/${virtualenv}.requirements`.
-
-**NOTE:** Since the resulting requirements file's format is quite sensible about the exact version of *pip* in use, if your requirements file includes *pip* (i.e.: `pip freeze --all >...`), *load_virtualenv* will try to honor your requested pip version before installing the remaining packages into the virtualenv.
+The expectation is that you will install whatever required pips within your virtualenv and, once satisfied with the results, you'll "dump" its contents to the requirements file, i.e.: `pip freeze > ${PROJECT_DIR}/python-virtualenvs/[virtualenv].requirements`.
 
 ### Terraform support<a name="terraform"></a>
 **[terraform-support module](./src/bash-magic-enviro_modules/terraform-support.module):** Adds support for [Terraform](https://www.terraform.io/intro/index.html) development.  It peruses [the tfenv project](https://github.com/tfutils/tfenv/tree/v2.2.0) to allow using different per-project Terraform versions, suited to your hardware.
@@ -161,6 +171,8 @@ This module also sets the **'TF_PLUGIN_CACHE_DIR'** environment variable pointin
 
 **Requirements:**
 * **[bindir module](#bindir)** to be listed **before** *terraform-support*.
+* git command
+* Internet connectivity
 
 ## Development<a name="development"></a>
 There's a `make dev` target on [the Makefile](./Makefile), that creates *symbolic links* under *~/bin* from source code.  This way, you can develop new features with ease.
@@ -170,12 +182,33 @@ There's a `make dev` target on [the Makefile](./Makefile), that creates *symboli
 ### modules' development<a name="dev-modules"></a>
 *Modules* are the way to add new functionality to *Bash Magic Enviro*.  Any file named *[modulename].module* under the [bash-magic-enviro_modules/ directory](./src/bash-magic-enviro_modules) becomes a module by that name.
 
-*Modules* are loaded by including their *modulename* in the **BME_MODULES array** of your *"main"* project's *.bme_env* file (see [example](./docs/bme_env.example)).  Upon entering your project's root directory, the file represented by the module name is first sourced and then its *[modulename]_load* method is called with no parameters.
+*Modules* are loaded by including their *modulename* in the **BME_MODULES array** of your *"main"* project's *.bme_env* file (see [example](./docs/bme_env.example)).  Upon entering your project's root directory, the file represented by the module name is first sourced and then its *[modulename]_load* function is called with no parameters.
 
-When you `cd` out your project's space, all modules are unloaded by calling their *[modulename]_unload* method without parameters.
+When you `cd` out of your project's space, all modules are unloaded by calling their *[modulename]_unload* function without parameters.
 
-This means that, at the very minimum, every module needs to define these two methods: *[modulename]_load* and *[modulename]_unload*:
-1. **[modulename]_load:** it should run any preparation the module may need, i.e.: exporting new environment variables, check for the presence of pre-requirements, etc.
+This means that, at the very minimum, every module needs to define these two functions: *[modulename]_load* and *[modulename]_unload*:
+1. **[modulename]_load:** it should run any preparation the module may need, i.e.: exporting new environment variables, check for the presence of pre-requirements, etc.  
+   It is expected that, in case of problems running *[modulename]_load*, your module cleans after itself before returning, i.e.:
+   ```bash
+   [modulename]_load() {
+     local unmet_dependencies=false  # true and false are defined in the global bash-magic-enviro file
+     [...]
+     if ! something_that_fails; then
+       unmet_dependencies=true
+       bme_log "${C_BOLD}'something_that_fails'${C_NC} failed.  Try so-and-so to recover." error 1
+     fi
+     [...]
+     if ($unmet_dependencies); then
+       [modulename]_unload
+       bme_log "${C_BOLD}'[modulename]'${C_NC} not loaded. See missed dependencies above." error 1
+       return -1
+     else
+       bme_log "${C_BOLD}'[modulename]'${C_NC} loaded." info 1
+     fi
+   }
+
+   ```
+   You can also look at [other modules](./src/bash-magic-enviro_modules/) to get some inspiration.
 1. **[modulename]_unload:** it should clean any modification to the shell the module introduces.  A good test while developing a new module can be running `set > before.txt` and `set > after.txt` when loading/unloading the module and check the *diff* between both files: there should be no *diff*.
 
 Other than that, anything that can be *sourced* by Bash can be added to the module's file, since that's exactly what will happen (the file is *sourced* when the module is requested).

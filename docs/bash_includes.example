@@ -3,7 +3,7 @@
 # Personal secrets and other variables
 # Make sure this file is protected by restrictive permissions!
 
-# Adds user's bin to path, if it exists
+# Adds user's bin dir to path, if it exists -it better should, or else Bash Magic Enviro won't work ;^)
 if [ -d ~/bin ]; then
 	PATH=~/bin:$PATH
 fi
@@ -16,7 +16,7 @@ fi
 # fi
 
 # By the "export" below, the function 'bme_load' is run every time we change directories
-# Then, it's a matter of what you include within the '.bme_env' file of each directory
+# Then, it's a matter of what you include within the '.bme_env' file on each one
 if ! source bash-magic-enviro; then
 	echo "Please make sure 'bash-magic-enviro' is installed and in your path!"
 	return -1
