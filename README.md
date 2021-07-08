@@ -136,7 +136,7 @@ Once *bme_custom_clean* is run, it will also be *unset* to avoid cluttering your
 ### project's bin dir<a name="bindir"></a>
 **[bindir module](./src/bash-magic-enviro_modules/bindir.module):** the *bin/* dir relative to the project's root will be added to $PATH, so custom script helpers, binaries, etc. are automatically available to the environment.
 
-**NOTE:** if *bindir* is requested but the directory doesn't exists, this module will create it on the fly.
+**NOTE:** if *bindir* is requested but the directory doesn't exist, this module will create it on the fly.
 
 ### load Python3 *virtualenvs*<a name="virtualenvs"></a>
 **[python3-virtualenvs module](./src/bash-magic-enviro_modules/python3-virtualenvs.module):** Manages *Python3 virtualenvs* using your system Python version (this module looks first for `python3 --version` output; if it doesn't find it, it also tries `python --version`, in case it defaults to >=3.  

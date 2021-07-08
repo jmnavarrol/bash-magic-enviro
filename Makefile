@@ -1,5 +1,5 @@
 # Main project's Makefile
-VERSION := 'v0.3.3'
+VERSION := 'v0.3.4'
 SHELL := /bin/bash
 DESTDIR := $${HOME}/bin
 BUILDDIR := 'build'
@@ -57,6 +57,17 @@ check:
 	else \
 		echo -e "\t$${C_BOLD}~/bin$${C_NC} in PATH: $${C_GREEN}OK$${C_NC}"; \
 	fi
+# Looks for virtualenvwrapper
+	@bash -i -c "if ! virtualenvwrapper > /dev/null 2>&1; then \
+		echo -e \"\t$${C_YELLOW}WARNING:$${C_NC} $${C_BOLD}'virtualenvwrapper'$${C_NC} couldn't be found.\"; \
+		echo -e \"\t\tYou won't be able to use Python virtualenv-related features.\"; \
+	fi"
+# Looks for md5sum
+	@bash -i -c "if ! md5sum --version > /dev/null 2>&1; then \
+		echo -e \"\t$${C_YELLOW}WARNING:$${C_NC} $${C_BOLD}'md5sum'$${C_NC} couldn't be found.\"; \
+		echo -e \"\t\tYou won't be able to use Python virtualenv-related features.\"; \
+		echo -e \"\t\tYou should install your system's 'coreutils' package.\"; \
+	fi"
 	
 # Expands templated values from main script
 $(BUILDDIR)/$(SCRIPT): Makefile src/$(SCRIPT)
