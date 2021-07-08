@@ -30,6 +30,7 @@ This tool allows to set *"isolated"* per-project Bash environments.
 * **[Bash](https://www.gnu.org/software/bash/) >= 5**.  Make sure you are using a full Bash shell.
 * **[GNU make](https://www.gnu.org/software/make/) >= 4.2**. Used by this tool's install process.
 * **Internet connectivity:** Some features and modules may access Internet at run time (i.e.: *check-version*, *terraform-support*).
+* See each module's requirements section for other dependencies.
 
 <sub>[back to contents](#contents).</sub>
 
@@ -135,11 +136,13 @@ See also [the included example](./example-project/virtualenv-example/.bme_env).
 **Requirements:**
 * Python 3.
 * [virtualenvwrapper](https://virtualenvwrapper.readthedocs.io/).
+* md5sum (it comes from package **coreutils** in the case of Debian systems).
 
 **Functions:**
 * **load_virtualenv [virtualenv]:** loads, with the help of *virtualenvwrapper*, the requested virtualenv *[virtualenv]* if it exists (`workon [virtualenv]`).  
 If the function can't find *[virtualenv]*, it will look for the requirements file *${PROJECT_DIR}/python-virtualenvs/${virtualenv}.requirements* and will create the named *virtualenv* using it.  
-If the requirements file can't be found, it will create an *"empty"* virtualenv *[virtualenv]*, along with the *${PROJECT_DIR}/python-virtualenvs/${virtualenv}.requirements* file, also empty, so you can start installing packages on it.
+If the requirements file can't be found, it will create an *"empty"* virtualenv *[virtualenv]*, along with the *${PROJECT_DIR}/python-virtualenvs/${virtualenv}.requirements* file, also empty, so you can start installing packages on it.  
+This function also stores the requirements file's *md5sum* under the *'.bme.d/'* hidden directory, so it can update the virtualenv when changes detected.
 
 The expectation is that you will install whatever required pips within your virtualenv and, once satisfied with the results, you'll "dump" its contents to the requirements file, i.e.: `pip freeze > ${PROJECT_DIR}/python-virtualenvs/${virtualenv}.requirements`.
 
