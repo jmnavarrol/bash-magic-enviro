@@ -61,7 +61,6 @@ aws-support_unload() {
 load_aws_credentials() {
 # Check for run-time dependencies
 	if ! which aws > /dev/null; then
-		echo "COULDN'T FIND 'AWS'"
 		local log_msg="${C_BOLD}'aws'${C_NC} command not found.\n"
 		log_msg+="\tMake sure you load a suitable python virtualenv before calling ${C_BOLD}'load_aws_credentials'${C_NC}."
 		bme_log "${log_msg}" error
@@ -77,23 +76,17 @@ load_aws_credentials() {
 		unset AWS_SESSION_EXPIRATION
 		
 	# Get One Time Password from the user's MFA device
-		echo -n "Please enter AWS MFA's One Time Password: "
-		read otp
+		echo -n "Please enter your AWS MFA's One Time Password: "
+		read aws_otp
 		
-	# Get the credentials from AWS and store the response in a variable
-		local creds=`aws sts get-session-token --serial-number $AWS_MFA --token-code $otp` || return $?
-		unset otp
+	# Grab AWS credentials
+		local aws_credentials=`aws sts get-session-token --serial-number $AWS_MFA --token-code $aws_otp` || return $?
+		unset aws_otp
 		
-	# Parse the response into separate variables
-		local access_key=`echo $creds | jq .Credentials.AccessKeyId`
-		local secret_key=`echo $creds | jq .Credentials.SecretAccessKey`
-		local session_token=`echo $creds | jq .Credentials.SessionToken`
-		local session_expiration=`echo $creds | jq .Credentials.Expiration`
-		
-	# Set the appropriate environment variables -- The sed statement is needed to strip the quotation marks
-		export AWS_ACCESS_KEY_ID=`echo $access_key | sed -e 's/^"//' -e 's/"$//'`
-		export AWS_SECRET_ACCESS_KEY=`echo $secret_key | sed -e 's/^"//' -e 's/"$//'`
-		export AWS_SESSION_TOKEN=`echo $session_token | sed -e 's/^"//' -e 's/"$//'`
-		export AWS_SESSION_EXPIRATION=`echo $session_expiration | sed -e 's/^"//' -e 's/"$//'`
+	# Parse the response into separate variables - the sed statement is needed to strip the quotation marks
+		export AWS_ACCESS_KEY_ID=`echo $aws_credentials | jq .Credentials.AccessKeyId | sed -e 's/^"//' -e 's/"$//'`
+		export AWS_SECRET_ACCESS_KEY=`echo $aws_credentials | jq .Credentials.SecretAccessKey | sed -e 's/^"//' -e 's/"$//'`
+		export AWS_SESSION_TOKEN=`echo $aws_credentials | jq .Credentials.SessionToken | sed -e 's/^"//' -e 's/"$//'`
+		export AWS_SESSION_EXPIRATION=`echo $aws_credentials | jq .Credentials.Expiration | sed -e 's/^"//' -e 's/"$//'`
 	fi
 }
