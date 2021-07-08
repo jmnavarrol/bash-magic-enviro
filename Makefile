@@ -112,5 +112,5 @@ uninstall:
 	@echo -e "$${C_BOLD}'magic enviro'$${C_NC} script uninstalled: $${C_GREEN}OK$${C_NC}"
 	
 clean:
-	rm -rf "$(BUILDDIR)"
+	rm -rf $(BUILDDIR)
 	@echo -e "$${C_BOLD}'magic enviro'$${C_NC} sources cleaned: $${C_GREEN}OK$${C_NC}"
