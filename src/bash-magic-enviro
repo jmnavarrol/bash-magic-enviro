@@ -117,7 +117,7 @@ load_project() {
 		if ! [[ -d ${PROJECT_DIR}/${BME_HIDDEN_DIR} ]]; then
 			bme_log "${C_BOLD}'${PROJECT_DIR}/${BME_HIDDEN_DIR}/'${C_NC} directory requested, but not found." warning 1
 			mkdir ${PROJECT_DIR}/${BME_HIDDEN_DIR}
-			bme_log "${C_BOLD}'${PROJECT_DIR}/${BME_HIDDEN_DIR}'${C_NC} created." info 1
+			bme_log "${C_BOLD}'${PROJECT_DIR}/${BME_HIDDEN_DIR}/'${C_NC} created." info 1
 		fi
 	else
 		BME_WITHIN_GIT=false

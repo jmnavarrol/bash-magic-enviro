@@ -1,6 +1,9 @@
 # Meant to be sourced by 'magic-enviro'
 # Adds support for Python3 virtualenvs
 
+virtualenvs_requirements="${PROJECT_DIR}/python-virtualenvs"
+virtualenvs_md5sums="${PROJECT_DIR}/${BME_HIDDEN_DIR}/python-virtualenvs.md5"
+
 python3-virtualenvs_load() {
 local python_version=''
 # Checks Python3 availability
@@ -23,12 +26,17 @@ local python_version=''
 		return -1
 	fi
 	
-# Check virtualenvwrapper availbility
+# Checks virtualenvwrapper availability and other requirements
 	if hash workon 2>/dev/null; then
-		if ! [[ -d ${PROJECT_DIR}/python-virtualenvs ]]; then
-			bme_log "${C_BOLD}'${PROJECT_DIR}/python-virtualenvs/'${C_NC} directory requested, but not found." warning 1
-			mkdir ${PROJECT_DIR}/python-virtualenvs
-			bme_log "${C_BOLD}'${PROJECT_DIR}/python-virtualenvs'${C_NC} created." info 1
+		# makes sure virtualenvs' directory for requirements files is in place
+		if ! [[ -d "${virtualenvs_requirements}" ]]; then
+			mkdir -p "${virtualenvs_requirements}/"
+			bme_log "${C_BOLD}'${virtualenvs_requirements}/'${C_NC} created." info 1
+		fi
+		# Makes sure virtualenvs' md5sum file is in place
+		if [ ! -r "${virtualenvs_md5sums}" ]; then
+			touch "${virtualenvs_md5sums}"
+			bme_log "File ${C_BOLD}'${virtualenvs_md5sums}'${C_NC} created." info 1
 		fi
 	else
 		local log_msg="${C_BOLD}'python3-virtualenvs'${C_NC} not loaded.\n"
@@ -37,6 +45,7 @@ local python_version=''
 		return -1
 	fi
 	
+# Final message
 	local log_msg="${C_BOLD}'python3-virtualenvs'${C_NC} "
 	log_msg+="(${C_BOLD}$(${SYSTEM_PYTHON} --version 2>&1)${C_NC}) "
 	log_msg+="loaded."
@@ -49,6 +58,8 @@ local python_version=''
 python3-virtualenvs_unload() {
 	unset -f load_virtualenv
 	unset SYSTEM_PYTHON
+	unset virtualenvs_requirements
+	unset virtualenvs_md5sums
 	hash deactivate 2>/dev/null && deactivate  # deactivates virtualenv (if any active)
 }
 
@@ -56,19 +67,26 @@ python3-virtualenvs_unload() {
 load_virtualenv() {
 local requested_virtualenv="${1}"
 
-# if requested virtualenv already exists, just activate it
+# if requested virtualenv already exists, check if it's still valid
 	if lsvirtualenv -b | grep -q ^${requested_virtualenv}$; then
-		workon ${requested_virtualenv}
-		return 0
+		if ! grep "${virtualenvs_requirements}/${requested_virtualenv}.requirements" "${virtualenvs_md5sums}" | md5sum --check --status > /dev/null 2>&1; then
+			bme_log "Virtualenv ${C_BOLD}'${requested_virtualenv}'${C_NC} outdated." warning
+			hash deactivate 2>/dev/null && deactivate  # deactivates virtualenv (if any active and just in case)
+			rmvirtualenv "${requested_virtualenv}"
+		else
+			workon ${requested_virtualenv}
+			bme_log "${C_BOLD}'${requested_virtualenv}'${C_NC} virtualenv activated." info
+			return 0
+		fi
 	fi
 	
 # if virtualenv doesn't exist...
 	bme_log "Virtualenv ${C_BOLD}'${requested_virtualenv}'${C_NC} doesn't exist.  About to create it." info
 	
 	# not even a requirements file! let's create an empty one
-	if ! [ -f ${PROJECT_DIR}/python-virtualenvs/${requested_virtualenv}.requirements ]; then
-		bme_log "Requirements file for virtualenv ${C_BOLD}'python-virtualenvs/${requested_virtualenv}.requirements'${C_NC} doesn't exist. Creating empty virtualenv." warning 1
-		touch ${PROJECT_DIR}/python-virtualenvs/${requested_virtualenv}.requirements
+	if ! [ -r "${virtualenvs_requirements}/${requested_virtualenv}.requirements" ]; then
+		bme_log "Requirements file for virtualenv ${C_BOLD}'${virtualenvs_requirements}/${requested_virtualenv}.requirements'${C_NC} doesn't exist. Creating empty virtualenv." warning 1
+		touch "${virtualenvs_requirements}/${requested_virtualenv}.requirements"
 	fi
 	
 # virtualenv creation
@@ -80,26 +98,32 @@ local virtualenv_error=false
 	# 3. everything else
 	local pip_found=$(
 		# this first grep strips comments
-		grep --only-matching '^[^#]*' ${PROJECT_DIR}/python-virtualenvs/${requested_virtualenv}.requirements | \
+		grep --only-matching '^[^#]*' "${virtualenvs_requirements}/${requested_virtualenv}.requirements" | \
 		# this second one finds pip entries: '~|=|<|>' is the list of valid version-specifier characters
 		grep --ignore-case --extended-regexp '^pip[[:space:]]*((~|=|<|>)|$)'
 	)
 	if [ ! -z "${pip_found}" ]; then
 	# custom pip found in the requirements file
+		bme_log "Custom pip version requested." info 1
 		# 1. "empty" virtualenv (it also activates it)
 		mkvirtualenv --python=${SYSTEM_PYTHON} ${requested_virtualenv} || virtualenv_error=true
 		# 2. install pip
 		pip install "${pip_found}" || virtualenv_error=true
 		# 3. install the full requirements file
-		pip install -r ${PROJECT_DIR}/python-virtualenvs/${requested_virtualenv}.requirements || virtualenv_error=true
+		pip install -r "${virtualenvs_requirements}/${requested_virtualenv}.requirements" || virtualenv_error=true
 	else
 	# no custom pip version: "standard" virtualenv creation
-		mkvirtualenv --python=${SYSTEM_PYTHON} ${requested_virtualenv} -r ${PROJECT_DIR}/python-virtualenvs/${requested_virtualenv}.requirements || virtualenv_error=true
+		mkvirtualenv --python=${SYSTEM_PYTHON} ${requested_virtualenv} -r "${virtualenvs_requirements}/${requested_virtualenv}.requirements" || virtualenv_error=true
 	fi
 	
 	if ($virtualenv_error); then
 		bme_log "${C_BOLD}'${requested_virtualenv}'${C_NC} creation FAILED (see above)." error
 	else
-		bme_log "${C_BOLD}'${requested_virtualenv}'${C_NC} created." info
+		if ! grep "${virtualenvs_requirements}/${requested_virtualenv}.requirements" "${virtualenvs_md5sums}" | md5sum --check --status > /dev/null 2>&1; then
+			sed --in-place "/\/${requested_virtualenv}.requirements/d" ${virtualenvs_md5sums}
+			md5sum "${virtualenvs_requirements}/${requested_virtualenv}.requirements" >> "${virtualenvs_md5sums}"
+			bme_log "md5sum for ${C_BOLD}'${requested_virtualenv}'${C_NC} virtualenv collected." info 1
+		fi
+		bme_log "${C_BOLD}'${requested_virtualenv}'${C_NC} virtualenv created." info
 	fi
 }
