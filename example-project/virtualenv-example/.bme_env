@@ -2,3 +2,7 @@
 # Python virtualenv example config
 
 load_virtualenv 'bme-example-virtualenv' || return -1
+
+# Just an example of what you can add to your .bme_env files
+bme_log "Packages in current virtualenv:" info
+pip freeze --all

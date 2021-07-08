@@ -81,13 +81,26 @@ local requested_virtualenv="${1}"
 			hash deactivate 2>/dev/null && deactivate  # deactivates virtualenv (if any active and just in case)
 			rmvirtualenv "${requested_virtualenv}"
 		else
-			workon ${requested_virtualenv}
-			bme_log "${C_BOLD}'${requested_virtualenv}'${C_NC} virtualenv activated." info
+		# virtualenv exists and still valid
+			if [[ -n ${VIRTUAL_ENV+x} ]]; then
+			# a virtualenv is already active
+				if [ `basename "${VIRTUAL_ENV}"` != "${requested_virtualenv}" ]; then
+				# ...but it's different than the requested one
+					deactivate && workon ${requested_virtualenv}
+					bme_log "${C_BOLD}'${requested_virtualenv}'${C_NC} virtualenv activated." info
+				fi
+			else
+			# no virtualenv active and the requested one already exists and it's current: activate it
+				workon ${requested_virtualenv}
+				bme_log "${C_BOLD}'${requested_virtualenv}'${C_NC} virtualenv activated." info
+			fi
+			# one way or the other, the requested virtualenv is already properly activated.
+			# end here (bit ugly, but more efficient)
 			return 0
 		fi
 	fi
 	
-# if virtualenv doesn't exist...
+# Reaching here means the requested virtualenv doesn't exist...
 	bme_log "Virtualenv ${C_BOLD}'${requested_virtualenv}'${C_NC} doesn't exist.  About to create it." info
 	
 	# not even a requirements file! let's create an empty one
