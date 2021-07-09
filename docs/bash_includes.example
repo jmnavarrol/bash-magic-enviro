@@ -3,6 +3,10 @@
 # Personal secrets and other variables
 # Make sure this file is protected by restrictive permissions!
 
+# Your AWS multifactor authentication device
+# (required if you use the 'aws-support' module)
+#export AWS_MFA=arn:aws:iam::NNNNNNNNNNNN:mfa/your.user
+
 # Adds user's bin dir to path, if it exists -it better should, or else Bash Magic Enviro won't work ;^)
 if [ -d ~/bin ]; then
 	PATH=~/bin:$PATH

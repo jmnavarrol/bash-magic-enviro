@@ -1,0 +1,9 @@
+# Example ~/.aws/config file
+# Remember 'Bash Magic Enviro' will only use your 'default' profile
+
+# Please, use ~/.aws/credentials to store sensible params:
+# aws_access_key_id
+# aws_secret_access_key
+# mfa_serial
+[profile default]
+output = json

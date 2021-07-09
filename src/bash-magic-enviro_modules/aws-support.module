@@ -57,7 +57,6 @@ aws-support_unload() {
 
 
 # Grabs an AWS session token and exports required variables
-# TODO: See if jq from pip can be used
 load_aws_credentials() {
 # Check for run-time dependencies
 	if ! which aws > /dev/null; then
@@ -67,7 +66,7 @@ load_aws_credentials() {
 		return -1
 	fi
 	
-# Only request an AWS_SESSION_TOKEN if not one present
+# Only request an AWS_SESSION_TOKEN if not already present
 	if [ -z ${AWS_SESSION_TOKEN+x} ]; then
 	# Existing environment variables can cause issues, so we unset them first
 		unset AWS_SESSION_TOKEN

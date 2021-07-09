@@ -68,6 +68,12 @@ check:
 		echo -e \"\t\tYou won't be able to use Python virtualenv-related features.\"; \
 		echo -e \"\t\tYou should install your system's 'coreutils' package.\"; \
 	fi"
+# Looks for jq
+	@if ! jq --version > /dev/null 2>&1; then \
+		echo -e "\t$${C_YELLOW}WARNING:$${C_NC} $${C_BOLD}'jq'$${C_NC} couldn't be found."; \
+		echo -e "\t\tYou won't be able to use AWS-related features."; \
+		echo -e "\t\tYou should install your system's 'jq' package."; \
+	fi
 	
 # Expands templated values from main script
 $(BUILDDIR)/$(SCRIPT): Makefile src/$(SCRIPT)

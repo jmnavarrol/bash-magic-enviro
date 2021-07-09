@@ -25,6 +25,7 @@ Once you *"cd out"* from the project's hierarchy all these customizations will b
    * [look for new *Bash Magic Enviro* versions](#check-versions)
    * [load project's bin dir](#bindir)
    * [load Python3 *virtualenvs*](#virtualenvs)
+   * [AWS support](#aws)
    * [Terraform support](#terraform)
 1. [Development](#development)
    * [modules' development](#dev-modules)
@@ -157,6 +158,22 @@ See also [the included example](./example-project/virtualenv-example/.bme_env).
   1. This function also stores the requirements file's *md5sum* under the *'.bme.d/'* hidden directory, so it can update the virtualenv when changes are detected.
 
 The expectation is that you will install whatever required pips within your virtualenv and, once satisfied with the results, you'll "dump" its contents to the requirements file, i.e.: `pip freeze > ${PROJECT_DIR}/python-virtualenvs/[virtualenv].requirements`.
+
+### AWS support<a name="aws"></a>
+**[aws-support module](./src/bash-magic-enviro_modules/aws-support.module):** Adds support for [AWS-based](https://aws.amazon.com/) development.
+
+As of now, it works on the expectation that you own a *"personal AWS account"*, protected by means of [MultiFactor Authentication](https://docs.aws.amazon.com/IAM/latest/UserGuide/id_credentials_mfa.html) and a [software OTP device](https://docs.aws.amazon.com/IAM/latest/UserGuide/id_credentials_mfa_enable_virtual.html).  Your account is, then, granted further access and privileges by means of role impersonation.
+
+**Requirements:**
+* [jq](https://github.com/stedolan/jq): a *"lightweight and flexible command-line JSON processor"*.  It is used here to parse AWS API responses.  You should most possibly install it with the help of your system's package manager (i.e.: `sudo apt install jq`).
+* A properly profiled AWS access configuration.  I tested this with a local *~/.aws/* directory (this module will use your AWS's **default** profile).  See [examples for *config* and *credentials* files](./docs/aws_dir).
+* *$AWS_MFA* environment variable.  You need to export your MFA device to this variable, usually from your [bash_includes file](./docs/bash_includes.example).  Make sure it matches the **mfa_serial** configuration from [your **default** AWS profile](./docs/aws_dir/credentials.example).
+* [AWS CLI](https://docs.aws.amazon.com/cli/latest/userguide/cli-chap-welcome.html): most possibly, your best approach is including it in a python virtualenv with the help of our [python3-virtualenvs module](#virtualenvs).
+* [python3-virtualenvs module](#virtualenvs): if you load your *awscli* support from within a python virtualenv.
+
+**Functions:**
+* **load_aws_credentials:** it contacts, with the help of AWS CLI, AWS's API endpoint to grab an *aws session token* using your *default profile's* credentials.  
+Upon loading, it will ask for a single use password from your MFA device, which means this can be only used in interactive sessions.  In the end, it's a wrapper around a command invocation: `aws sts get-session-token --serial-number [your MFA device] --token-code [single use password]`.  It then exports AWS_* session variables to your console, so you don't have to re-authenticate again (up to your session's expiration time).  See [an example usage](./example-project/aws-example/.bme_env).
 
 ### Terraform support<a name="terraform"></a>
 **[terraform-support module](./src/bash-magic-enviro_modules/terraform-support.module):** Adds support for [Terraform](https://www.terraform.io/intro/index.html) development.  It peruses [the tfenv project](https://github.com/tfutils/tfenv/tree/v2.2.0) to allow using different per-project Terraform versions, suited to your hardware.
