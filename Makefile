@@ -1,5 +1,5 @@
 # Main project's Makefile
-VERSION := 'v0.4.1'
+VERSION := 'v0.4.2'
 SHELL := /bin/bash
 DESTDIR := $${HOME}/bin
 BUILDDIR := 'build'
@@ -63,11 +63,11 @@ check:
 		echo -e \"\t\tYou won't be able to use Python virtualenv-related features.\"; \
 	fi"
 # Looks for md5sum
-	@bash -i -c "if ! md5sum --version > /dev/null 2>&1; then \
-		echo -e \"\t$${C_YELLOW}WARNING:$${C_NC} $${C_BOLD}'md5sum'$${C_NC} couldn't be found.\"; \
-		echo -e \"\t\tYou won't be able to use Python virtualenv-related features.\"; \
-		echo -e \"\t\tYou should install your system's 'coreutils' package.\"; \
-	fi"
+	@if ! md5sum --version > /dev/null 2>&1; then \
+		echo -e "\t$${C_YELLOW}WARNING:$${C_NC} $${C_BOLD}'md5sum'$${C_NC} couldn't be found."; \
+		echo -e "\t\tYou won't be able to use Python virtualenv-related features."; \
+		echo -e "\t\tYou should install your system's 'coreutils' package."; \
+	fi
 # Looks for jq
 	@if ! jq --version > /dev/null 2>&1; then \
 		echo -e "\t$${C_YELLOW}WARNING:$${C_NC} $${C_BOLD}'jq'$${C_NC} couldn't be found."; \
