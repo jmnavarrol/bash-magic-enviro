@@ -14,6 +14,7 @@ Once you *"cd out"* from the project's hierarchy all these customizations will b
 
 **Contents:**<a name="contents"></a>
 1. [Requirements](#requirements)
+1. [Security](#security)
 1. [Install](#install)
    1. [update your Bash prompt](#prompt)
    1. [install Bash Magic Enviro](#install)
@@ -39,6 +40,15 @@ Once you *"cd out"* from the project's hierarchy all these customizations will b
 * **[GNU make](https://www.gnu.org/software/make/) >= 4.2**. Used by this tool's install process.
 * **Internet connectivity:** Some features and modules may access Internet at run time (i.e.: *check-version*, *terraform-support*...).
 * See each module's requirements section for other dependencies.
+
+<sub>[back to contents](#contents).</sub>
+
+## Security<a name="security"></a>
+**A WORD OF CAUTION:** as of now, *Bash Magic Enviro* will make **NO ATTEMPT** to sanitize/protect you from the contents of sourced *.bme_env* files it could find, which means you are just a `cd` away from starting a Global Nuclear War or, at the very least, to happily sweep out your full home directory.
+
+Make sure you review the *.bme_env* files you are going to source **BEFORE** entering a directory for first time.
+
+**YOU'VE BEEN WARNED!!!**
 
 <sub>[back to contents](#contents).</sub>
 
