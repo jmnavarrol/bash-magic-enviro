@@ -18,14 +18,11 @@ bindir_load() {
 
 bindir_unload() {
 # Passes current $PATH to an array
-	OLD_IFS=$IFS && IFS=:
-	tmp_path=($PATH) && unset IFS
+	local OLD_IFS=$IFS && IFS=:
+	local tmp_path=($PATH) && IFS=$OLD_IFS
 # array operation to delete project's bin entry from path
 	tmp_path=(${tmp_path[@]%%*${PROJECT_DIR}/bin*})
 	IFS=:
 # sets the new path
 	PATH=`echo "${tmp_path[*]}"` && IFS=$OLD_IFS
-	
-	unset tmp_path
-	unset OLD_IFS
 }

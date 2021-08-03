@@ -3,7 +3,10 @@
 # This file is meant to be sourced, not run
 BME_SRC_DIR=<% BME_SRC_DIR %>
 BME_VERSION=<% BME_VERSION %>
+BME_FILE='.bme_env'
 BME_HIDDEN_DIR='.bme.d'
+BME_CONFIG_DIR="${HOME}/${BME_HIDDEN_DIR}"
+BME_WHITELISTED_FILE="${BME_CONFIG_DIR}/whitelistedpaths.txt"
 
 # Style table
 C_BOLD='\033[1m'         # Bold text
@@ -14,8 +17,8 @@ C_NC='\033[0m'           # No Color
 
 # Sets 'fake' boolean
 declare -i BOOL=(0 1)
-false=${BOOL[0]}
-true=${BOOL[1]}
+true=${BOOL[0]}
+false=${BOOL[1]}
 
 
 #--
@@ -25,18 +28,22 @@ true=${BOOL[1]}
 bme_eval_dir() {
 	if [ "$PWD" != "$MYOLDPWD" ]; then
 		MYOLDPWD="$PWD"
-		if [ -e .bme_env ]; then
-			source .bme_env
-			# PROJECT_NAME must be the first thing to be set!!!
-			if [[ -z ${PROJECT_NAME+x} ]]; then
-				local log_msg="You didn't set ${C_BOLD}'PROJECT_NAME=[your_project_name]'${C_NC} in your ${C_BOLD}'.bme_env'${C_NC} file.\n"
-				log_msg+="\tDid you stop by your project's root directory first?"
-				bme_log "${log_msg}" fatal
-				return -1
-			elif [[ -z ${PROJECT_DIR+x} ]]; then
-			# If PROJECT_DIR is not set, it's because we just entered a new project enviroment
-				export PROJECT_DIR="$PWD"
-				load_project
+		if [ -e ${BME_FILE} ]; then
+			if bme_whitelist "$PWD"; then
+				source ${BME_FILE}
+				# PROJECT_NAME must be the first thing to be set!!!
+				if [[ -z ${PROJECT_NAME+x} ]]; then
+					local log_msg="You didn't set ${C_BOLD}'PROJECT_NAME=[your_project_name]'${C_NC} in your ${C_BOLD}'${BME_FILE}'${C_NC} file.\n"
+					log_msg+="\tDid you stop by your project's root directory first?"
+					bme_log "${log_msg}" fatal
+					return -1
+				elif [[ -z ${PROJECT_DIR+x} ]]; then
+				# If PROJECT_DIR is not set, it's because we just entered a new project enviroment
+					export PROJECT_DIR="$PWD"
+					load_project
+				fi
+			else
+				bme_log "${C_BOLD}'${BME_FILE}'${C_NC} file found, but load was rejected (see ${C_BOLD}'${BME_WHITELISTED_FILE}'${C_NC} contents)." warning
 			fi
 		fi
 	# this conditional matches when we out of a project's root directory
@@ -170,6 +177,11 @@ clean_project() {
 	fi
 # Active modules
 	if [[ -n ${ACTIVE_MODULES+x} ]]; then
+		# WORKAROUND: workon 'virtualenv' stores its then-current PATH, which may already be altered within the project's scope
+		# Therefore, I need to insure python3-virtualenv gets unloaded first
+		if [[ "${ACTIVE_MODULES[@]}" =~ 'python3-virtualenvs' ]]; then
+			python3-virtualenvs_unload
+		fi
 		for module in "${ACTIVE_MODULES[@]}"; do
 			${module}_unload
 			unset -f ${module}_load
@@ -184,4 +196,70 @@ clean_project() {
 	unset PROJECT_DIR
 	unset BME_MODULES
 	bme_log "Project ${C_BOLD}'${project_name}'${C_NC} cleaned." cleaning
+}
+
+
+# Whitelists projects
+bme_whitelist() {
+local test_path="${1}"
+
+# Loads list of known directories
+	if ! [ -v BME_WHITELISTED_PATHS[@] ]; then
+	# BME_WHITELISTED_PATHS associative array not yet loaded
+		if [ -r "${BME_WHITELISTED_FILE}" ]; then
+			source "${BME_WHITELISTED_FILE}"
+		else
+		# First time configuration
+			if ! [ -d "${BME_CONFIG_DIR}" ]; then
+				bme_log "${C_BOLD}'${BME_CONFIG_DIR}'${C_NC} directory doesn't exist.  Creating it" info
+				mkdir -p "${BME_CONFIG_DIR}"
+			fi
+			declare -gA BME_WHITELISTED_PATHS
+		fi
+	fi
+	
+# Checks whitelisting status of known directories
+	local dir
+	for dir in "${!BME_WHITELISTED_PATHS[@]}"; do
+		# remember how this returns false if we are "within" a directory and true if not
+		if ! [ "${test_path##$dir}" == "${test_path}" ]; then
+			# returns the true/false allowance value associated with this directory
+			return ${!BME_WHITELISTED_PATHS[$dir]}
+		fi
+	done
+	
+# If we reach here, it's a new directory
+	bme_log "${C_BOLD}'${BME_FILE}'${C_NC} file found at ${C_BOLD}'${test_path}'${C_NC}." info
+	echo -en 'Do you want to whitelist this directory? [y/N]: '
+	while true; do
+		read -r REPLY
+		REPLY="${REPLY:-N}"  # reply defaults to 'N'
+		REPLY="${REPLY^^}"   # then, turn the answer into uppercase
+		case "${REPLY}" in
+			Y)
+				BME_WHITELISTED_PATHS["${test_path}"]+=true
+				bme_log "Directory ${C_BOLD}'${test_path}'${C_NC} whitelisted!" info
+				break
+			;;
+			N)
+				BME_WHITELISTED_PATHS["${test_path}"]+=false
+				bme_log "Directory ${C_BOLD}'${test_path}'${C_NC} rejected!" warning
+				break
+			;;
+			*)
+				# these control codes "overwrite" de console line
+				echo -en "\r\033[1A\033[0K${C_RED}Only 'y' or 'n' allowed!${C_NC} Do you want to whitelist this directory? [y/N]: "
+			;;
+		esac
+	done
+	
+	# finally, dump the new associative array to file and return the result
+	echo "declare -gA BME_WHITELISTED_PATHS=(" > "${BME_WHITELISTED_FILE}"
+		local dir
+		for dir in "${!BME_WHITELISTED_PATHS[@]}"; do
+			echo -e "\t[${dir}]=${BME_WHITELISTED_PATHS[$dir]}" >> "${BME_WHITELISTED_FILE}"
+		done 
+	echo ")" >> "${BME_WHITELISTED_FILE}"
+	
+	[ "$REPLY" == 'Y' ] && return $true || return $false
 }

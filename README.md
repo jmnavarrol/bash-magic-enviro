@@ -5,9 +5,12 @@ Bash Magic Enviro
 
 This tool allows to set *"isolated"* per-project Bash environments.
 
-Once installed and configured, this tool will look for a *'.bme_env'* file each time you change directories, and will *"source"* them when found.  
-You *"declare"* a project by means of the *.bme_env* file at its topmost directory (the expectation, but not a hard requirement, is that a project's entry point is the root of a git sandbox).  This topmost file sets the project's name, the modules you want to be loaded for this project, etc.  
-Aditional *.bme_env* files within the project's directory hierarchy may call exported functions, tweak the environment for that given directory, etc. (i.e.: you may load a virtualenv, request a custom Terraform version, even run whatever Bash code you may need).  
+Once installed and configured, this tool will look for a file named **'.bme_env'** each time you change directories, and will *source* them when found.
+
+You *"declare"* a project by means of the *.bme_env* file at its topmost directory (the expectation, but not a hard requirement, is that a project's entry point is the root of a *git sandbox*).  This topmost file sets the project's name, the BME modules you want to be loaded for this project, etc.
+
+Aditional *.bme_env* files within the project's directory hierarchy may call exported functions, tweak the environment for that given directory, etc. (i.e.: you may load a Python virtualenv, request a custom Terraform version, even run whatever Bash code you may need).
+
 This tool also allows you to add your own project-specific extensions/customizations as needed.
 
 Once you *"cd out"* from the project's hierarchy all these customizations will be automatically cleaned out.
@@ -17,9 +20,10 @@ Once you *"cd out"* from the project's hierarchy all these customizations will b
 1. [Security](#security)
 1. [Install](#install)
    1. [update your Bash prompt](#prompt)
-   1. [install Bash Magic Enviro](#install)
+   1. [install Bash Magic Enviro](#make_install)
    1. [set your project's *"main"* *.bme_env* file](#project)
 1. [Available features and modules](#modules)
+   * [directory whitelisting](#whitelisting)
    * [logging function](#log)
    * [colored output](#colors)
    * [custom clean function](#custom_clean)
@@ -44,11 +48,17 @@ Once you *"cd out"* from the project's hierarchy all these customizations will b
 <sub>[back to contents](#contents).</sub>
 
 ## Security<a name="security"></a>
-**A WORD OF CAUTION:** as of now, *Bash Magic Enviro* will make **NO ATTEMPT** to sanitize/protect you from the contents of sourced *.bme_env* files it could find, which means you are just a `cd` away from starting a Global Nuclear War or, at the very least, to happily sweep out your full home directory.
+**A WORD OF CAUTION:** Remember your are sourcing pure Bash code within those *.bme_env* files, so whatever that can be programmed **will** be run at your privilege level (including *sudo* commands, i.e.: `sudo rm -rf /`).  This means you are just a `cd` away from starting a Global Nuclear War or, at the very least, to happily sweep out your full home directory.
 
 Make sure you review the *.bme_env* files you are going to source **BEFORE** entering a directory for first time.
 
 **YOU'VE BEEN WARNED!!!**
+
+In order to slightly protect you, BME will ask for your permission the first time it finds a *.bme_env* file in a directory.  If you **reject** access, no *.bme_env* files will be sourced within the directory hierarchy.  If you **accept**, *.bme_env* files within that directory **and all its subdirectories** will be *sourced*.
+
+Your answer will be stored at **~/.bme.d/whitelistedpaths.txt** in the form of a Bash associative array, which will also be exported to an environment variable.  You can edit this file, but be aware that the contents in memory will remain for as long as your console session, and they will be overwritten if new changes are requested.
+
+See also the [*'whitelisting'* feature's section](#whitelisting).
 
 <sub>[back to contents](#contents).</sub>
 
@@ -59,7 +69,7 @@ First of all clone this repository, then follow the steps below.
 This tool works by altering your Bash prompt so it can process (source) files it finds each time you traverse a directory on the console.  For this to happen, you need to source *Bash Magic Enviro's* main file (*'bash-magic-enviro'*) and then make your *"prompt command"* to run its main function (*'bme_eval_dir'*) each time you `cd` into a new directory.
 1. Create your own *~/bash_includes* file using [this 'bash_includes.example'](./docs/bash_includes.example) as reference.  It provides two features:
    1. It adds your `~/bin` directory (if it exists) to your $PATH.  This way, the helper functions provided by this repository can be found and eventually loaded (of course, if you already added `~/bin` to your $PATH by other means, you won't need to do it here again).
-   1. The critical part: it alters your Bash prompt exporting the **bme_eval_dir** function, which is the one that makes possible looking for *.bme_env* files.  
+   1. The critical part: it sources the main *bash-magic-enviro* file and alters your Bash prompt so it runs the **bme_eval_dir** function each time your change directories, which is the one that makes possible looking for (and eventually sourcing) *.bme_env* files.  
 You can/should also use your *~/bash_includes* file to export your personal project-related variables, like *secrets*, *tokens* and other data that shouldn't be checked-in to source code management systems (make sure you protect this file with restrictive permissions).
 1. Add to the end of your `~/.bashrc` file (or whatever other file you know it gets processed/sourced at login):
    ```bash
@@ -73,7 +83,7 @@ Once you open a new terminal, changes will be loaded.
 
 <sub>[back to contents](#contents).</sub>
 
-### install Bash Magic Enviro<a name="prompt"></a>
+### install Bash Magic Enviro<a name="make_install"></a>
 Use [the included Makefile](./Makefile).  See the output of the bare `make` command for available targets.
 * `make check`, as the name implies, runs some tests trying to insure required dependencies are in place.
 * `make install`, installs Bash Magic Enviro into your personal *~/bin/* directory.  This means that *~/bin/* must be in your *$PATH* (see section [*"Update your Bash prompt"*](#prompt) above).
@@ -82,13 +92,38 @@ Use [the included Makefile](./Makefile).  See the output of the bare `make` comm
 <sub>[back to contents](#contents).</sub>
 
 ### set your project's *"main"* *.bme_env* file<a name="project"></a>
-Once you properly installed *Bash Magic Enviro*, you may add to your project(s) a *"main"* *.bme_env* file to activate and configure the environment (see [example](./docs/bme_env.example)).
+Once you properly installed *Bash Magic Enviro*, you may add a *"main"* *.bme_env* file to your project(s) to activate and configure their related environment (see [example](./docs/bme_env.example)).
 
-In order for this main *.bme_env* to be sourced, you need to first *"stop"* by your project's root directory **before** entering any other subdirectory (i.e.: `~$: cd ~/REPOS/project_directory ~$: cd some_subir`).
+In order for this main *.bme_env* to be sourced, you need to first *"stop"* by your project's root directory **before** entering any other subdirectory, i.e.:
+```bash
+~$: cd ~/REPOS/example-project
+LOADING: project 'bme-example-project' environment...
+        INFO: '[...]/example-project/bin' added to local path.
+        INFO: 'check-version' loaded.
+                FUNCTION: check-version - Compares local and remote versions of BME.
+        INFO: 'terraform-support' loaded.
+        INFO: 'python3-virtualenvs' (Python 3.7.3) loaded.
+                FUNCTION: load_virtualenv 'venv_name' - Loads the Python virtualenv by name 'venv_name'.
+        WARNING: 'aws' command not found.
+                Make sure you load a suitable python virtualenv before calling 'load_aws_credentials'.
+        INFO: 'aws-support' loaded.
+                FUNCTION: load_aws_credentials - Loads your personal AWS access credentials.
+INFO: Project 'bme-example-project' loaded.
+
+INFO: New 'Bash Magic Enviro' version available.  Please, consider upgrading.
+        Your local version: 'v0.4.1'.
+        Highest version at 'git@github.com:jmnavarrol/bash-magic-enviro.git': 'v1.0.0'.
+~/REPOS/example-project$: cd some_subir
+```
 
 Once you move *"above"* the project's root dir (i.e.: `cd ~`) the project's environment will be automatically cleaned.
-
-See also the included [example project](./example-project).
+```bash
+~/REPOS/example-project$: cd
+        INFO: Custom cleaning finished
+        INFO: Custom clean function ended successfully
+CLEANING: Project 'bme-example-project' cleaned.
+~$:
+```
 
 *Bash Magic Enviro* can also add project-related configuration on its own (i.e.: local configurations, supporting tools' repositories, etc.).  This tool reserves the *'.bme.d/'* directory under your project's root for those, and it will create it upon entering the project's dir if it doesn't exist, so you should add it to your project's *'.gitignore'* file, i.e.:
 ```shell
@@ -98,19 +133,28 @@ See also the included [example project](./example-project).
 .bme.d/
 ```
 
+See also the included [example project](./example-project).
+
 <sub>[back to contents](#contents).</sub>
 
 ## Available features and modules<a name="modules"></a>
 Features are always active and can't be turned off.
 
-Modules are *"turned off"* by default, but you can *"turn on"* those you need (see [example environment file](./docs/bme_env.example)).  On top of this README, you can also check your *~/bin/bash-magic-enviro_modules/* dir: each file within has the exact name of one module you can activate.
+Modules are *"turned off"* by default, but you can *"turn on"* those you need (see [example environment file](./docs/bme_env.example)).  On top of this README, you can also check your *~/bin/bash-magic-enviro_modules/* dir: each file within has the exact name (with *.module* extension) of one module you can activate.
 
 As you may note, modules are loaded/unloaded by means of a Bash array.  As such, sorting order matters (i.e.: *'terraform-support'* depends on *'bindir'* which means *'bindir'* must be listed **before** *'terraform-support'*).
+
+### directory whitelisting<a name="whitelisting"></a>
+**Feature** (always on).  The first time a *.bme_env* file is found in a directory hierarchy, you'll be prompted to either allow or forbid BME to source it.  Your answers apply to that directory and **all its subdirectories** and they will be stored under *~/.bme.d/whitelistedpaths.txt* in the form of an associative array.
+
+You can manually edit your *~/.bme.d/whitelistedpaths.txt* file, but be aware the file will be overwritten each time the answer for a new directory is collected (so, i.e.: your comments won't be preserved).
+
+**WARNING:** as already stated at [the Security section](#security), be aware this by no means is a security protection, but more of a convenience to avoid glaring overlooks.  You are still fully responsible to review *.bme_env* contents before entering a directory.  Be also aware of tricks like symlinks, etc. that can fool you into sourcing unexpected code.
 
 ### logging function<a name="log"></a>
 **Feature** (always on).  A function named **bme_log** is exported which accepts three (positional) params:
 1. **log message [mandatory]:** the log message itself.  It accepts colored output (see [below](#colors)).
-1. **log type [optional]:** the type of log, i.e.: *warning*, *info*...  It is represented as a colored uppercase prefix to the message.  As of now, you need to look at [the *switch/case* statement on the bme_log() method](./src/bash-magic-enviro).
+1. **log type [optional]:** the type of log, i.e.: *warning*, *info*...  It is represented as a colored uppercase prefix to the message.  As of now, you need to look at [the *switch/case* statement on the bme_log() method](./src/bash-magic-enviro#L81).
 1. **log level [optional]:** when set, it indents your message by as many *tabs* as the number you pass (defaults *0*, no indentation).
 
 **example:** `bme_log "Some info. ${C_BOLD}'this is BOLD'${C_NC} and this message will be indented once." info 1`
@@ -186,7 +230,7 @@ As of now, it works on the expectation that you own a *"personal AWS account"*, 
 Upon loading, it will ask for a single use password from your MFA device, which means this can be only used in interactive sessions.  In the end, it's a wrapper around a command invocation: `aws sts get-session-token --serial-number [your MFA device] --token-code [single use password]`.  It then exports AWS_* session variables to your console, so you don't have to re-authenticate again (up to your session's expiration time).  See [an example usage](./example-project/aws-example/.bme_env).
 
 ### Terraform support<a name="terraform"></a>
-**[terraform-support module](./src/bash-magic-enviro_modules/terraform-support.module):** Adds support for [Terraform](https://www.terraform.io/intro/index.html) development.  It peruses [the tfenv project](https://github.com/tfutils/tfenv/tree/v2.2.0) to allow using different per-project Terraform versions, suited to your hardware.
+**[terraform-support module](./src/bash-magic-enviro_modules/terraform-support.module):** Adds support for [Terraform](https://www.terraform.io/intro/index.html) development.  It peruses [the tfenv project](https://github.com/tfutils/tfenv/tree/v2.2.2) to allow using different per-project Terraform versions, suited to your hardware.
 
 For this to happen, *Bash Magic Enviro* clones [the tfenv repository](https://github.com/tfutils/tfenv/tree/v2.2.0) to the *.bme.d/tfenv/* subdirectory relative to your project's root and configures it for usage within your project scope, so make sure you add `.bme.d/` to your `.gitignore` file (an error will be thrown otherwise).
 
@@ -200,6 +244,8 @@ This module also sets the **'TF_PLUGIN_CACHE_DIR'** environment variable pointin
 * **[bindir module](#bindir)** to be listed **before** *terraform-support*.
 * git command
 * Internet connectivity
+
+<sub>[back to contents](#contents).</sub>
 
 ## Development<a name="development"></a>
 There's a `make dev` target on [the Makefile](./Makefile), that creates *symbolic links* under *~/bin* from source code.  This way, you can develop new features with ease.
