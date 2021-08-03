@@ -19,10 +19,15 @@ BME_MODULES=(
 
 # Custom "clean" as supported by Bash Magic Enviro
 bme_custom_clean() {
-	unset SOME_PROJECT_VAR
-	unset -f SOME_PROJECT_FUNCTION
-	bme_log "Custom cleaning finished" info 1
+	unset -f run_on_this_dir
 }
 
 # Sets project-wide Terraform version
 export TFENV_TERRAFORM_VERSION='1.0.1'
+
+# This workaround is required, in case you want to apply customizations on the "root" project dir
+run_on_this_dir() {
+	bme_log "Applying customizations on this very directory." info 0
+}
+
+[ -n "${PROJECT_DIR}" ] && run_on_this_dir

@@ -108,11 +108,10 @@ LOADING: project 'bme-example-project' environment...
                 Make sure you load a suitable python virtualenv before calling 'load_aws_credentials'.
         INFO: 'aws-support' loaded.
                 FUNCTION: load_aws_credentials - Loads your personal AWS access credentials.
-INFO: Project 'bme-example-project' loaded.
-
 INFO: New 'Bash Magic Enviro' version available.  Please, consider upgrading.
         Your local version: 'v0.4.1'.
         Highest version at 'git@github.com:jmnavarrol/bash-magic-enviro.git': 'v1.0.0'.
+INFO: Project 'bme-example-project' loaded.
 ~/REPOS/example-project$: cd some_subir
 ```
 
@@ -131,6 +130,21 @@ CLEANING: Project 'bme-example-project' cleaned.
 
 # Bash Magic Enviro related
 .bme.d/
+```
+
+**NOTE:** there is a *'chicken-and-egg'* problem when you try to use BME features to set the environment for the root project's dir itself (i.e.: you need a Python virtualenv to be loaded right when you enter the project).  
+As the main *.bme_env* file is sourced early on, BME modules won't be loaded till **after** the file is processed, thus, helper functions, etc. won't be available yet.  To avoid this, the *.bme_env* file at the project's root is sourced **twice** at project *"activation"*: first one to set basic project environment, load modules, etc. and a second one to *"run"* your configuration code.  You can check the *$PROJECT_DIR* environment variable to insure everything is in place **before** running any further code.  I.e. (in your project's main *.bme_env* file):
+```bash
+[...]
+# This workaround is required, in case you want to apply customizations on the "root" project dir
+# remember adding 'unset -f run_on_this_dir' to your bme_custom_clean() function
+run_on_this_dir() {
+	bme_log "Applying customizations on this very directory." info 0
+}
+
+# the configuration code for this directory will be run only **after** BME is properly configured
+[ -n "${PROJECT_DIR}" ] && run_on_this_dir
+
 ```
 
 See also the included [example project](./example-project).

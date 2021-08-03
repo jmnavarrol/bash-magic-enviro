@@ -29,7 +29,7 @@ bme_eval_dir() {
 	if [ "$PWD" != "$MYOLDPWD" ]; then
 		MYOLDPWD="$PWD"
 		if [ -e ${BME_FILE} ]; then
-			if bme_whitelist "$PWD"; then
+			if __bme_whitelist "$PWD"; then
 				source ${BME_FILE}
 				# PROJECT_NAME must be the first thing to be set!!!
 				if [[ -z ${PROJECT_NAME+x} ]]; then
@@ -39,8 +39,7 @@ bme_eval_dir() {
 					return -1
 				elif [[ -z ${PROJECT_DIR+x} ]]; then
 				# If PROJECT_DIR is not set, it's because we just entered a new project enviroment
-					export PROJECT_DIR="$PWD"
-					load_project
+					__load_project
 				fi
 			else
 				bme_log "${C_BOLD}'${BME_FILE}'${C_NC} file found, but load was rejected (see ${C_BOLD}'${BME_WHITELISTED_FILE}'${C_NC} contents)." warning
@@ -48,7 +47,7 @@ bme_eval_dir() {
 		fi
 	# this conditional matches when we out of a project's root directory
 		if [ "${PWD##$PROJECT_DIR}" == "$PWD" ] && [[ -n ${PROJECT_DIR+x} ]]; then
-			clean_project
+			__clean_project
 		fi
 	fi
 }
@@ -104,15 +103,31 @@ local full_message=''
 
 
 # Loads a project's configuration
-load_project() {
+__load_project() {
 # A bit of debug: I need to know the place I'm stored, so I can find other includes, relative to me
 # 	echo "See what follows: $0"
 # 	echo "See what follows: $_"
 # 	echo "See what follows: ${BASH_SOURCE}"  # This is the good one! ~/bin/bash-magic-enviro
 # 	echo "See what follows: ${BASH_SOURCE[0]}"
 # 	echo "See what follows: ${BASH_SOURCE[${#BASH_SOURCE[@]} - 1]}"
-
+# 	echo "See what follows: ${FUNCNAME[@]}"
+	
+# "pseudo private" function protection
+	if [ "${FUNCNAME[1]}" != 'bme_eval_dir' ]; then
+		bme_log "Function ${C_BOLD}'${FUNCNAME[0]}()'${C_NC} is ${C_BOLD}private${C_NC}.  You shouldn't invoke it!" error
+		return -1
+	fi
+#  Let's make sure we are invoked only once
+	if [[ -n ${PROJECT_DIR+x} ]]; then
+		bme_log "Function ${C_BOLD}'${FUNCNAME[0]}()'${C_NC} can only be called once per project session!" error
+		return -1
+	fi
+	
+# "Real" processing starts here
 	bme_log "project ${C_BOLD}'${PROJECT_NAME}'${C_NC} environment..." loading
+	
+	# First of all, let's "store" the project's "root dir"
+	export PROJECT_DIR="$PWD"
 	
 	# Checks if current dir is within a git sandbox
 	if git rev-parse --git-dir > /dev/null 2>&1; then
@@ -151,15 +166,25 @@ load_project() {
 	if [ -n "${custom_clean}" ] && [ "${custom_clean}" != 'function' ]; then
 		bme_log "Custom clean object found, but it's not of type function: ${C_BOLD}'type -t bme_custom_clean: ${custom_clean}'${C_NC}." error 1
 	fi
+	
+	# Show notice if 'check-version' module was requested
+	[[ "${ACTIVE_MODULES[@]}" =~ 'check-version' ]] && check-version
+	
 	bme_log "Project ${C_BOLD}'${PROJECT_NAME}'${C_NC} loaded.\n" info
 	
-# Finally, show a notice if 'check-version' module was requested
-	[[ "${ACTIVE_MODULES[@]}" =~ 'check-version' ]] && check-version
+# Finally "re-run" the project's main BME_FILE, in case there is required code in-there
+	source ${BME_FILE}
 }
 
 
 # Cleans project's environment
-clean_project() {
+__clean_project() {
+# "pseudo private" function protection
+	if [ "${FUNCNAME[1]}" != 'bme_eval_dir' ]; then
+		bme_log "Function ${C_BOLD}'${FUNCNAME[0]}()'${C_NC} is ${C_BOLD}private${C_NC}.  You shouldn't invoke it!" error
+		return -1
+	fi
+	
 	local project_name="${PROJECT_NAME}"
 	
 # Custom clean (if any)
@@ -200,9 +225,15 @@ clean_project() {
 
 
 # Whitelists projects
-bme_whitelist() {
+__bme_whitelist() {
 local test_path="${1}"
 
+# "pseudo private" function protection
+	if [ "${FUNCNAME[1]}" != 'bme_eval_dir' ]; then
+		bme_log "Function ${C_BOLD}'${FUNCNAME[0]}()'${C_NC} is ${C_BOLD}private${C_NC}.  You shouldn't invoke it!" error
+		return -1
+	fi
+	
 # Loads list of known directories
 	if ! [ -v BME_WHITELISTED_PATHS[@] ]; then
 	# BME_WHITELISTED_PATHS associative array not yet loaded

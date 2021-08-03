@@ -26,3 +26,6 @@ BME_MODULES=(
 
 # Sets project-wide Terraform version
 # export TFENV_TERRAFORM_VERSION='1.0.1'
+
+# This check is required, in case you want to apply customizations on the "root" project dir
+# [ -n "${PROJECT_DIR}" ] && echo "Post-run"
