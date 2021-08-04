@@ -203,11 +203,12 @@ __clean_project() {
 	fi
 # Active modules
 	if [[ -n ${ACTIVE_MODULES+x} ]]; then
-		# TODO: modules should be best deactivated in reverse order
-		for module in "${ACTIVE_MODULES[@]}"; do
-			${module}_unload
-			unset -f ${module}_load
-			unset -f ${module}_unload
+		# List of active modules is processed in reverse order for deactivation, in case there are sorting dependencies
+		# See https://stackoverflow.com/a/13360181/12237334 (hopefully this array will NOT have "holes" within)
+		for (( module=${#ACTIVE_MODULES[@]}-1; module>=0; module-- )); do
+			${ACTIVE_MODULES[module]}_unload
+			unset -f ${ACTIVE_MODULES[module]}_load
+			unset -f ${ACTIVE_MODULES[module]}_unload
 		done
 	fi
 	unset module
