@@ -126,8 +126,9 @@ __load_project() {
 # "Real" processing starts here
 	bme_log "project ${C_BOLD}'${PROJECT_NAME}'${C_NC} environment..." loading
 	
-	# First of all, let's "store" the project's "root dir"
+	# First of all, let's "store" the project's "root dir" and "clean" PATH
 	export PROJECT_DIR="$PWD"
+	BME_ORIG_PATH=$PATH
 	
 	# Checks if current dir is within a git sandbox
 	if git rev-parse --git-dir > /dev/null 2>&1; then
@@ -202,19 +203,18 @@ __clean_project() {
 	fi
 # Active modules
 	if [[ -n ${ACTIVE_MODULES+x} ]]; then
-		# WORKAROUND: workon 'virtualenv' stores its then-current PATH, which may already be altered within the project's scope
-		# Therefore, I need to insure python3-virtualenv gets unloaded first
-		if [[ "${ACTIVE_MODULES[@]}" =~ 'python3-virtualenvs' ]]; then
-			python3-virtualenvs_unload
-		fi
+		# TODO: modules should be best deactivated in reverse order
 		for module in "${ACTIVE_MODULES[@]}"; do
 			${module}_unload
 			unset -f ${module}_load
 			unset -f ${module}_unload
 		done
 	fi
-	unset ACTIVE_MODULES
 	unset module
+	unset ACTIVE_MODULES
+# Restore path
+	PATH=$BME_ORIG_PATH
+	unset BME_ORIG_PATH
 # Final clean
 	unset BME_WITHIN_GIT
 	unset PROJECT_NAME
