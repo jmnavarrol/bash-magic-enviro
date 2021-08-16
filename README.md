@@ -209,7 +209,7 @@ Once *bme_custom_clean* is run, it will also be *unset* to avoid cluttering your
 
 ### load Python3 *virtualenvs*<a name="virtualenvs"></a>
 **[python3-virtualenvs module](./src/bash-magic-enviro_modules/python3-virtualenvs.module):** Manages *Python3 virtualenvs* using your system Python version (this module looks first for `python3 --version` output; if it doesn't find it, it also tries `python --version`, in case it defaults to >=3.  
-It requires [virtualenvwrapper](https://virtualenvwrapper.readthedocs.io/) to be installed (i.e.: `sudo apt install virtualenvwrapper`).  Remember that, in order to *"activate"* virtualenvwrapper, you need to source its Bash control script, *virtualenvwrapper.sh* within your environment.  An example has been added to [the bash_includes example](./docs/bash_includes.example). Make sure you set the the script's path accordingly to your system.
+It requires [virtualenvwrapper](https://virtualenvwrapper.readthedocs.io/) to be installed (i.e.: `sudo apt install virtualenvwrapper`).  Remember that, in order to *"activate"* virtualenvwrapper, you need to source its Bash control script, *virtualenvwrapper.sh* within your environment.  An example has been added to [the bash_includes example](./docs/bash_includes.example). Make sure you set the script's path accordingly to your system.
 
 See also [the included example](./example-project/virtualenv-example/.bme_env).
 
@@ -217,6 +217,7 @@ See also [the included example](./example-project/virtualenv-example/.bme_env).
 * Python 3.
 * [virtualenvwrapper](https://virtualenvwrapper.readthedocs.io/).
 * md5sum (it comes from package **coreutils** in the case of Debian systems).
+* flock (it comes from package **util-linux** in the case of Debian systems).
 
 **Functions:**
 * **load_virtualenv [virtualenv]:** loads, with the help of *virtualenvwrapper*, the requested virtualenv *[virtualenv]* if it exists (`workon [virtualenv]`).

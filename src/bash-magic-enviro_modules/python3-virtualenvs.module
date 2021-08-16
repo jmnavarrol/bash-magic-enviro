@@ -3,6 +3,7 @@
 
 virtualenvs_requirements="${PROJECT_DIR}/python-virtualenvs"
 virtualenvs_md5sums="${PROJECT_DIR}/${BME_HIDDEN_DIR}/python-virtualenvs.md5"
+virtualenvs_lockfile="${PROJECT_DIR}/${BME_HIDDEN_DIR}/python-virtualenvs.lockfile"
 
 python3-virtualenvs_load() {
 local python_version=''
@@ -11,6 +12,11 @@ local unmet_dependencies=false
 # Checks md5sum availability
 	if ! which md5sum > /dev/null; then
 		bme_log "${C_BOLD}'md5sum'${C_NC} not found.  Please install ${C_BOLD}'coreutils'${C_NC} package." error 1
+		unmet_dependencies=true
+	fi
+# Checks flock availability
+	if ! which flock > /dev/null; then
+		bme_log "${C_BOLD}'flock'${C_NC} not found.  Please install ${C_BOLD}'util-linux'${C_NC} package." error 1
 		unmet_dependencies=true
 	fi
 	
@@ -67,6 +73,8 @@ python3-virtualenvs_unload() {
 	unset SYSTEM_PYTHON
 	unset virtualenvs_requirements
 	unset virtualenvs_md5sums
+	unset virtualenvs_lockfile
+	unset -f __create_python_virtualenv
 	hash deactivate 2>/dev/null && deactivate  # deactivates virtualenv (if any active)
 }
 
@@ -101,49 +109,72 @@ local requested_virtualenv="${1}"
 	fi
 	
 # Reaching here means the requested virtualenv doesn't exist...
-	bme_log "Virtualenv ${C_BOLD}'${requested_virtualenv}'${C_NC} doesn't exist.  About to create it." info
-	
-	# not even a requirements file! let's create an empty one
-	if ! [ -r "${virtualenvs_requirements}/${requested_virtualenv}.requirements" ]; then
-		bme_log "Requirements file for virtualenv ${C_BOLD}'${virtualenvs_requirements}/${requested_virtualenv}.requirements'${C_NC} doesn't exist. Creating empty virtualenv." warning 1
-		touch "${virtualenvs_requirements}/${requested_virtualenv}.requirements"
+	__create_python_virtualenv "${requested_virtualenv}" && workon "${requested_virtualenv}" || return $?
+}
+
+
+# Creates a virtualenv by name
+__create_python_virtualenv() {
+local requested_virtualenv="${1}"
+
+# "pseudo private" function protection
+	if [ "${FUNCNAME[1]}" != 'load_virtualenv' ]; then
+		bme_log "Function ${C_BOLD}'${FUNCNAME[0]}()'${C_NC} is ${C_BOLD}private${C_NC}.  You shouldn't invoke it!" error
+		return -1
 	fi
 	
-# virtualenv creation
-local virtualenv_error=false
-	# requirements file format can be picky about pip version.
-	# when pip is referenced in requirements file, let's create the virtualenv in three steps:
-	# 1. empty virtualenv
-	# 2. install requested pip
-	# 3. everything else
-	local pip_found=$(
-		# this first grep strips comments
-		grep --only-matching '^[^#]*' "${virtualenvs_requirements}/${requested_virtualenv}.requirements" | \
-		# this second one finds pip entries: '~|=|<|>' is the list of valid version-specifier characters
-		grep --ignore-case --extended-regexp '^pip[[:space:]]*((~|=|<|>)|$)'
-	)
-	if [ ! -z "${pip_found}" ]; then
-	# custom pip found in the requirements file
-		bme_log "Custom pip version requested." info 1
-		# 1. "empty" virtualenv (it also activates it)
-		mkvirtualenv --python=${SYSTEM_PYTHON} ${requested_virtualenv} || virtualenv_error=true
-		# 2. install pip
-		pip install "${pip_found}" || virtualenv_error=true
-		# 3. install the full requirements file
-		pip install -r "${virtualenvs_requirements}/${requested_virtualenv}.requirements" || virtualenv_error=true
-	else
-	# no custom pip version: "standard" virtualenv creation
-		mkvirtualenv --python=${SYSTEM_PYTHON} ${requested_virtualenv} -r "${virtualenvs_requirements}/${requested_virtualenv}.requirements" || virtualenv_error=true
-	fi
-	
-	if ($virtualenv_error); then
-		bme_log "${C_BOLD}'${requested_virtualenv}'${C_NC} creation FAILED (see above)." error
-	else
-		if ! grep "${virtualenvs_requirements}/${requested_virtualenv}.requirements" "${virtualenvs_md5sums}" | md5sum --check --status > /dev/null 2>&1; then
-			sed --in-place "/\/${requested_virtualenv}.requirements/d" ${virtualenvs_md5sums}
-			md5sum "${virtualenvs_requirements}/${requested_virtualenv}.requirements" >> "${virtualenvs_md5sums}"
-			bme_log "md5sum for ${C_BOLD}'${requested_virtualenv}'${C_NC} virtualenv collected." info 1
+# tries to acquire a lock
+	(
+		if flock -n 100; then
+			bme_log "Virtualenv ${C_BOLD}'${requested_virtualenv}'${C_NC} doesn't exist.  About to create it." info
+			if ! [ -r "${virtualenvs_requirements}/${requested_virtualenv}.requirements" ]; then
+			# not even a requirements file! let's create an empty one
+				bme_log "Requirements file for virtualenv ${C_BOLD}'${virtualenvs_requirements}/${requested_virtualenv}.requirements'${C_NC} doesn't exist. Creating empty virtualenv." warning 1
+				touch "${virtualenvs_requirements}/${requested_virtualenv}.requirements"
+			fi
+			
+			# virtualenv creation
+			local virtualenv_error=false
+			# requirements file format can be picky about pip version.
+			# when pip is referenced in requirements file, let's create the virtualenv in three steps:
+			# 1. empty virtualenv
+			# 2. install requested pip
+			# 3. everything else
+			local pip_found=$(
+				# this first grep strips comments
+				grep --only-matching '^[^#]*' "${virtualenvs_requirements}/${requested_virtualenv}.requirements" | \
+				# this second one finds pip entries: '~|=|<|>' is the list of valid version-specifier characters
+				grep --ignore-case --extended-regexp '^pip[[:space:]]*((~|=|<|>)|$)'
+			)
+			if [ ! -z "${pip_found}" ]; then
+			# custom pip found in the requirements file
+				bme_log "Custom pip version requested." info 1
+				# 1. "empty" virtualenv (it also activates it)
+				mkvirtualenv --python=${SYSTEM_PYTHON} ${requested_virtualenv} || virtualenv_error=true
+				# 2. install pip
+				pip install "${pip_found}" || virtualenv_error=true
+				# 3. install the full requirements file
+				pip install -r "${virtualenvs_requirements}/${requested_virtualenv}.requirements" || virtualenv_error=true
+			else
+			# no custom pip version: "standard" virtualenv creation
+				mkvirtualenv --python=${SYSTEM_PYTHON} ${requested_virtualenv} -r "${virtualenvs_requirements}/${requested_virtualenv}.requirements" || virtualenv_error=true
+			fi
+			
+			if ($virtualenv_error); then
+				bme_log "${C_BOLD}'${requested_virtualenv}'${C_NC} creation FAILED (see above)." error
+			else
+				if ! grep "${virtualenvs_requirements}/${requested_virtualenv}.requirements" "${virtualenvs_md5sums}" | md5sum --check --status > /dev/null 2>&1; then
+					sed --in-place "/\/${requested_virtualenv}.requirements/d" ${virtualenvs_md5sums}
+					md5sum "${virtualenvs_requirements}/${requested_virtualenv}.requirements" >> "${virtualenvs_md5sums}"
+					bme_log "md5sum for ${C_BOLD}'${requested_virtualenv}'${C_NC} virtualenv collected." info 1
+				fi
+				bme_log "${C_BOLD}'${requested_virtualenv}'${C_NC} virtualenv created." info
+			fi
+		else
+			local log_msg="Couldn't grab a lock while trying to create ${C_BOLD}'${requested_virtualenv}'${C_NC} python virtualenv.\n"
+			log_msg+="\tPlease make sure there's no other process creating a virtualenv within this project right now."
+			bme_log "${log_msg}" error
+			return 1
 		fi
-		bme_log "${C_BOLD}'${requested_virtualenv}'${C_NC} virtualenv created." info
-	fi
+	) 100>"${virtualenvs_lockfile}"
 }
