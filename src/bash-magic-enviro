@@ -9,11 +9,11 @@ BME_CONFIG_DIR="${HOME}/${BME_HIDDEN_DIR}"
 BME_WHITELISTED_FILE="${BME_CONFIG_DIR}/whitelistedpaths.txt"
 
 # Style table
-C_BOLD='\033[1m'         # Bold text
-C_GREEN='\033[1;32m'     # Green (and bold)
-C_YELLOW='\033[1;1;33m'  # Yellow (and bold)
-C_RED='\033[1;31m'       # Red (and bold)
-C_NC='\033[0m'           # No Color
+export C_BOLD='\033[1m'         # Bold text
+export C_GREEN='\033[1;32m'     # Green (and bold)
+export C_YELLOW='\033[1;1;33m'  # Yellow (and bold)
+export C_RED='\033[1;31m'       # Red (and bold)
+export C_NC='\033[0m'           # No Color
 
 # Sets 'fake' boolean
 declare -i BOOL=(0 1)
@@ -100,7 +100,7 @@ local full_message=''
 	
 	echo -e "${full_message}"
 }
-
+export -f bme_log
 
 # Loads a project's configuration
 __load_project() {
