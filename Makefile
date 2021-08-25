@@ -1,5 +1,5 @@
 # Main project's Makefile
-VERSION := 'v1.0.5'
+VERSION := 'v1.0.6'
 SHELL := /bin/bash
 DESTDIR := $${HOME}/bin
 BUILDDIR := 'build'
@@ -26,54 +26,7 @@ targets:
 	
 check:
 	@echo -e "$${C_BOLD}Checking requirements...$${C_NC}"
-# Checks if ~/bin exists
-	@if [ ! -d ~/bin ]; then \
-		echo -e "$${C_RED}ERROR:$${C_NC} $${C_BOLD}'~/bin'$${C_NC} doesn't exist."; \
-		echo -en "\tDo you want me to create it? [y/N] " && read ans && [ $${ans:-N} = y ]; \
-		case "$$ans" in \
-			[yY]) \
-				echo -en "\tCreating bin dir... "; \
-				mkdir --mode=0750 ~/bin; \
-				if [ $$? -eq 0 ]; then \
-					echo -e "$${C_GREEN}OK$${C_NC}"; \
-					exit 0; \
-				else \
-					echo -e "\t$${C_RED}FAIL$${C_NC}"; \
-					exit 1; \
-				fi ;; \
-			*) \
-				echo -e "\t$${C_BOLD}NOT$${C_NC} creating '~/bin' dir."; \
-				exit 1;; \
-		esac; \
-	else \
-		echo -e "\t$${C_BOLD}~/bin$${C_NC} exists: $${C_GREEN}OK$${C_NC}"; \
-	fi
-# Checks if ~/bin is in path
-	@if [[ ! "$$PATH" =~ (^|:)"$${HOME}/bin"(:|$$) ]]; then \
-		echo -en "$${C_RED}ERROR:$${C_NC} $${C_BOLD}'~/bin'$${C_NC} not in path. "; \
-		echo -e "You need to add it!"; \
-		echo -e "\t$${C_BOLD}PATH:$${C_NC} $${PATH}"; \
-		exit 1; \
-	else \
-		echo -e "\t$${C_BOLD}~/bin$${C_NC} in PATH: $${C_GREEN}OK$${C_NC}"; \
-	fi
-# Looks for virtualenvwrapper
-	@bash -i -c "if ! virtualenvwrapper > /dev/null 2>&1; then \
-		echo -e \"\t$${C_YELLOW}WARNING:$${C_NC} $${C_BOLD}'virtualenvwrapper'$${C_NC} couldn't be found.\"; \
-		echo -e \"\t\tYou won't be able to use Python virtualenv-related features.\"; \
-	fi"
-# Looks for md5sum
-	@if ! md5sum --version > /dev/null 2>&1; then \
-		echo -e "\t$${C_YELLOW}WARNING:$${C_NC} $${C_BOLD}'md5sum'$${C_NC} couldn't be found."; \
-		echo -e "\t\tYou won't be able to use Python virtualenv-related features."; \
-		echo -e "\t\tYou should install your system's 'coreutils' package."; \
-	fi
-# Looks for jq
-	@if ! jq --version > /dev/null 2>&1; then \
-		echo -e "\t$${C_YELLOW}WARNING:$${C_NC} $${C_BOLD}'jq'$${C_NC} couldn't be found."; \
-		echo -e "\t\tYou won't be able to use AWS-related features."; \
-		echo -e "\t\tYou should install your system's 'jq' package."; \
-	fi
+	@./make-checks.sh
 	
 # Expands templated values from main script
 $(BUILDDIR)/$(SCRIPT): Makefile src/$(SCRIPT)
