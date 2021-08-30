@@ -1,9 +1,16 @@
 # Meant to be sourced by 'magic-enviro'
 # Adds support for Python3 virtualenvs
+#
+# This module creates/loads a named virtualenv "populating" with a configuration-by-convention requirements file.
+# The requirements file is expected to be found at ${virtualenvs_requirements}/${requested_virtualenv}.requirements.
+# It also stores the requirements file's md5sum in a user-global fashion,
+# so it can regenerate the virtualenv when the md5sum doesn't match.
+
 
 virtualenvs_requirements="${PROJECT_DIR}/python-virtualenvs"
-virtualenvs_md5sums="${PROJECT_DIR}/${BME_HIDDEN_DIR}/python-virtualenvs.md5"
-virtualenvs_lockfile="${PROJECT_DIR}/${BME_HIDDEN_DIR}/python-virtualenvs.lockfile"
+# Since virtualenv names are "global" per user account, so it will be locking and md5sums storage.
+virtualenvs_md5sums="${BME_CONFIG_DIR}/python-virtualenvs.md5"
+virtualenvs_lockfile="${BME_CONFIG_DIR}/python-virtualenvs.lockfile"
 
 python3-virtualenvs_load() {
 local python_version=''
@@ -82,34 +89,33 @@ python3-virtualenvs_unload() {
 load_virtualenv() {
 local requested_virtualenv="${1}"
 
-# if requested virtualenv already exists, check if it's still valid
-	if lsvirtualenv -b | grep -q ^${requested_virtualenv}$; then
-		if ! grep "${virtualenvs_requirements}/${requested_virtualenv}.requirements" "${virtualenvs_md5sums}" | md5sum --check --status > /dev/null 2>&1; then
+# Checks the requirements file's md5sum
+	# running in a subshell so I can securely change directories
+	local venv_outdated=$(
+		cd "${virtualenvs_requirements}"
+		if ! grep " ${requested_virtualenv}.requirements$" "${virtualenvs_md5sums}" | md5sum --check --status > /dev/null 2>&1; then
 			bme_log "Virtualenv ${C_BOLD}'${requested_virtualenv}'${C_NC} outdated." warning
-			hash deactivate 2>/dev/null && deactivate  # deactivates virtualenv (if any active and just in case)
-			rmvirtualenv "${requested_virtualenv}"
-		else
-		# virtualenv exists and still valid
-			if [[ -n ${VIRTUAL_ENV+x} ]]; then
-			# a virtualenv is already active
-				if [ `basename "${VIRTUAL_ENV}"` != "${requested_virtualenv}" ]; then
-				# ...but it's different than the requested one
-					deactivate && workon ${requested_virtualenv}
-					bme_log "${C_BOLD}'${requested_virtualenv}'${C_NC} virtualenv activated." info
-				fi
-			else
-			# no virtualenv active and the requested one already exists and it's current: activate it
-				workon ${requested_virtualenv}
-				bme_log "${C_BOLD}'${requested_virtualenv}'${C_NC} virtualenv activated." info
-			fi
-			# one way or the other, the requested virtualenv is already properly activated.
-			# end here (bit ugly, but more efficient)
-			return 0
 		fi
+	)
+	
+# if $venv_outdated holds output, it's because stored md5sum for the associated requirements file doesn't match
+	if [ -n "${venv_outdated}" ]; then
+		echo -e "${venv_outdated}"
+		hash deactivate 2>/dev/null && deactivate  # deactivates virtualenv (if any active and just in case)
+		rmvirtualenv "${requested_virtualenv}"
 	fi
 	
-# Reaching here means the requested virtualenv doesn't exist...
-	__create_python_virtualenv "${requested_virtualenv}" && workon "${requested_virtualenv}" || return $?
+# if requested virtualenv still exists, activate it, unless already so
+	if lsvirtualenv -b | grep -q ^${requested_virtualenv}$; then
+		if [[ `basename "${VIRTUAL_ENV}"` != "${requested_virtualenv}" ]]; then
+			workon ${requested_virtualenv}
+			bme_log "${C_BOLD}'${requested_virtualenv}'${C_NC} virtualenv activated." info
+		fi
+	else
+	# ...or create it otherwise
+		bme_log "Virtualenv ${C_BOLD}'${requested_virtualenv}'${C_NC} doesn't exist.  About to create it." info
+		__create_python_virtualenv "${requested_virtualenv}" && workon "${requested_virtualenv}" || return $?
+	fi
 }
 
 
@@ -126,7 +132,6 @@ local requested_virtualenv="${1}"
 # tries to acquire a lock
 	(
 		if flock -n 100; then
-			bme_log "Virtualenv ${C_BOLD}'${requested_virtualenv}'${C_NC} doesn't exist.  About to create it." info
 			if ! [ -r "${virtualenvs_requirements}/${requested_virtualenv}.requirements" ]; then
 			# not even a requirements file! let's create an empty one
 				bme_log "Requirements file for virtualenv ${C_BOLD}'${virtualenvs_requirements}/${requested_virtualenv}.requirements'${C_NC} doesn't exist. Creating empty virtualenv." warning 1
@@ -163,11 +168,15 @@ local requested_virtualenv="${1}"
 			if ($virtualenv_error); then
 				bme_log "${C_BOLD}'${requested_virtualenv}'${C_NC} creation FAILED (see above)." error
 			else
-				if ! grep "${virtualenvs_requirements}/${requested_virtualenv}.requirements" "${virtualenvs_md5sums}" | md5sum --check --status > /dev/null 2>&1; then
-					sed --in-place "/\/${requested_virtualenv}.requirements/d" ${virtualenvs_md5sums}
-					md5sum "${virtualenvs_requirements}/${requested_virtualenv}.requirements" >> "${virtualenvs_md5sums}"
-					bme_log "md5sum for ${C_BOLD}'${requested_virtualenv}'${C_NC} virtualenv collected." info 1
-				fi
+				# running in a subshell so I securely can change directories
+				(
+					cd "${virtualenvs_requirements}"
+					if ! grep " ${requested_virtualenv}.requirements$" "${virtualenvs_md5sums}" | md5sum --check --status > /dev/null 2>&1; then
+						sed --in-place "/ ${requested_virtualenv}.requirements/d" ${virtualenvs_md5sums}
+						md5sum "${requested_virtualenv}.requirements" >> "${virtualenvs_md5sums}"
+						bme_log "md5sum for ${C_BOLD}'${requested_virtualenv}'${C_NC} virtualenv collected." info 1
+					fi
+				)
 				bme_log "${C_BOLD}'${requested_virtualenv}'${C_NC} virtualenv created." info
 			fi
 		else
