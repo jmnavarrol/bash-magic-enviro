@@ -5,7 +5,7 @@
 #--
 # Checks Bash >= 5
 check_bash_version() {
-	if [ "${BASH_VERSINFO:-0}" -ge 5 ]; then
+	if [ "${BASH_VERSINFO:-0}" -ge 4 ]; then
 		echo -e "${C_BOLD}*${C_NC} Bash version ${C_GREEN}OK${C_NC}: ${BASH_VERSION}."
 	else
 		echo -e "${C_BOLD}*${C_NC} ${C_RED}ERROR:${C_NC} ${C_BOLD}BASH VERSION ERROR${C_NC}."

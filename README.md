@@ -40,7 +40,7 @@ Once you *"cd out"* from the project's hierarchy all these customizations will b
 
 ## Requirements<a name="requirements"></a>
 * **[Git](https://git-scm.com/)**. Needed to checkout this project and some other features.
-* **[Bash](https://www.gnu.org/software/bash/) >= 5**.  Make sure you are using a full Bash shell.
+* **[Bash](https://www.gnu.org/software/bash/) >= 4**.  Make sure you are using a full Bash shell.
 * **[GNU make](https://www.gnu.org/software/make/) >= 4.2**. Used by this tool's install process.
 * **Internet connectivity:** Some features and modules may access Internet at run time (i.e.: *check-version*, *terraform-support*...).
 * See each module's requirements section for other dependencies.

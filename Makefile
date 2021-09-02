@@ -41,7 +41,7 @@ $(BUILDDIR)/$(SCRIPT): Makefile src/$(SCRIPT)
 	done < src/$(SCRIPT); \
 	IFS=$$OLD_IFS
 	
-dev: check $(BUILDDIR)/$(SCRIPT)
+dev: $(BUILDDIR)/$(SCRIPT)
 # Symlinks the main script
 	@if ! [ -L ${DESTDIR}/${SCRIPT} ]; then \
 		if [ -e ${DESTDIR}/${SCRIPT} ]; then \
