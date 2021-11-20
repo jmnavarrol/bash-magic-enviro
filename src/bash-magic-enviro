@@ -45,7 +45,7 @@ bme_eval_dir() {
 				bme_log "${C_BOLD}'${BME_FILE}'${C_NC} file found, but load was rejected (see ${C_BOLD}'${BME_WHITELISTED_FILE}'${C_NC} contents)." warning
 			fi
 		fi
-	# this conditional matches when we out of a project's root directory
+	# this conditional matches when we go "above" the project's root directory
 		if [ "${PWD##$PROJECT_DIR}" == "$PWD" ] && [[ -n ${PROJECT_DIR+x} ]]; then
 			__clean_project
 		fi
@@ -67,6 +67,24 @@ local full_message=''
 # 	echo "log_type: ${log_type}"
 # 	echo "log_level: ${log_level}"
 
+	# No parameters.  Show help instead
+	if (( $# == 0 )); then
+		local log_msg="'log message' ['log type' (see below)] [indentation level (0,1,2...)]"
+		log_msg+="\n${C_BOLD}'log type'${C_NC} will add a colored prefix as shown below:"
+		log_msg+="\n\t${C_GREEN}'INFO|OK|LOADING|CLEANING|FUNCTION'${C_NC}"
+		log_msg+="\n\t${C_YELLOW}'WARNING'${C_NC}"
+		log_msg+="\n\t${C_RED}'FATAL|ERROR|FAIL'${C_NC}"
+		log_msg+="\n\t${C_BOLD}'any other log type'${C_NC}"
+		log_msg+="\n${C_BOLD}Color codes you can use in your messages:${C_NC}"
+		log_msg+="\n\t\"\${C_BOLD}${C_BOLD}'BOLD'${C_NC}\${C_NC}\""
+		log_msg+="\n\t\"\${C_GREEN}${C_GREEN}'GREEN'${C_NC}\${C_NC}\""
+		log_msg+="\n\t\"\${C_YELLOW}${C_YELLOW}'YELLOW'${C_NC}\${C_NC}\""
+		log_msg+="\n\t\"\${C_RED}${C_RED}'RED'${C_NC}\${C_NC}\""
+		bme_log "${log_msg}" ${FUNCNAME[0]}
+		return 0
+	fi
+	
+	# standard log message processing
 	if [ -z "$log_message" ]; then
 		echo -e "${C_RED}FATAL:${C_NC} ${C_BOLD}'${FUNCNAME[0]}'${C_NC} called in code from ${C_BOLD}'${FUNCNAME[1]}'${C_NC} with no message."
 		return -1
@@ -101,6 +119,7 @@ local full_message=''
 	echo -e "${full_message}"
 }
 export -f bme_log
+
 
 # Loads a project's configuration
 __load_project() {

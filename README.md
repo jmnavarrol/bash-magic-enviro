@@ -166,17 +166,20 @@ You can manually edit your *~/.bme.d/whitelistedpaths.txt* file, but be aware th
 **WARNING:** as already stated at [the Security section](#security), be aware this by no means is a security protection, but more of a convenience to avoid glaring overlooks.  You are still fully responsible to review *.bme_env* contents before entering a directory.  Be also aware of tricks like symlinks, etc. that can fool you into sourcing unexpected code.
 
 ### logging function<a name="log"></a>
-**Feature** (always on).  A function named **bme_log** is exported which accepts three (positional) params:
-1. **log message [mandatory]:** the log message itself.  It accepts colored output (see [below](#colors)).
-1. **log type [optional]:** the type of log, i.e.: *warning*, *info*...  It is represented as a colored uppercase prefix to the message.  As of now, you need to look at [the *switch/case* statement on the bme_log() method](./src/bash-magic-enviro#L81).
-1. **log level [optional]:** when set, it indents your message by as many *tabs* as the number you pass (defaults *0*, no indentation).
+**Feature** (always on).  A function named **bme_log** is exported so you can use it in your project's `.bme_env` files, which accepts three (positional) params:
+1. **log message [mandatory]:** the log message itself.  It accepts codes for colored output (see [below](#colors)).
+1. **log type [optional]:** the type of log, i.e.: *warning*, *info*...  It is represented as a colored uppercase prefix to the message.  Run `bme_log` without parameters to get a list of known *log types* and the color it will be used along the prefix.
+1. **log level [optional]:** when set, it indents your message by as many *tabs* as the number you pass (defaults *0*, no indentation).  Remember that, since Bash function parameters are positional, you need to provide a *log type* when you want to provide a *log level*.
 
-**example:** `bme_log "Some info. ${C_BOLD}'this is BOLD'${C_NC} and this message will be indented once." info 1`
+**example:**
+```bash
+bme_log "An 'INFO:' prefix will be added in green. ${C_BOLD}'this is BOLD'${C_NC} and this message will be indented once." info 1
+```
 
 ### colored output<a name="colors"></a>
-**Feature** (always on).  Constants are exported that can help you rendering colored outputs (see the *"style table"* early on [the bash-magic-enviro file](./src/bash-magic-enviro)).  They can be used within your *.enviro* files with the help of either [bme_log](#log) or *"-e*" echo's option.  I.e.:
+**Feature** (always on).  Constants are exported that can help you rendering colored outputs (see the output of [bme_log](#log) without params).  They can be used within your *.bme_env* files with the help of either [bme_log](#log) or *"-e*" echo's option.  I.e.:
 ```bash
-echo -e "${C_RED}This is BOLD RED${C_NC}"
+bme_log "${C_RED}This is BOLD RED${C_NC}" info 1
 echo -e "Bold follows: ${C_BOLD}'BOLD'${C_NC}"
 ```
 ...remember always resetting color option with the `${C_NC}` constant after use.
