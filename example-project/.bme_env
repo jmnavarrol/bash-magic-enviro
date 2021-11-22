@@ -6,7 +6,7 @@
 # 'MAIN' .bme_env file at the root of your project
 #---
 # Set your project name (must be unique)
-PROJECT_NAME='bme-example-project'
+# PROJECT_NAME='bme-example-project'
 
 # Modules' activation (modules are disabled by default, so uncomment those you want to enable
 BME_MODULES=(

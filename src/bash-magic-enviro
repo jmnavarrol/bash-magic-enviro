@@ -1,8 +1,11 @@
 # Main Bash Magic Enviro manager
 #
 # This file is meant to be sourced, not run
-BME_SRC_DIR=<% BME_SRC_DIR %>
-BME_VERSION=<% BME_VERSION %>
+BME_SRC_DIR='/home/jmnav/REPOS/bash-magic-enviro'
+BME_VERSION='v1.2.0'
+# BME_SRC_DIR=<% BME_SRC_DIR %>
+# BME_VERSION=<% BME_VERSION %>
+BME_PROJECT_FILE='.bme_project'
 BME_FILE='.bme_env'
 BME_HIDDEN_DIR='.bme.d'
 BME_CONFIG_DIR="${HOME}/${BME_HIDDEN_DIR}"
@@ -20,35 +23,72 @@ declare -i BOOL=(0 1)
 true=${BOOL[0]}
 false=${BOOL[1]}
 
+DEBUG=$true
 
 #--
 # FUNCTIONS
 #--
 # Main BME loader (it runs each time we change directory as per PROMPT_COMMAND)
+# it first looks for a "project file" (.bme_project), then for a "config file" (.bme_env)
 bme_eval_dir() {
 	if [ "$PWD" != "$MYOLDPWD" ]; then
 		MYOLDPWD="$PWD"
-		if [ -e ${BME_FILE} ]; then
+		if [ -e ${BME_PROJECT_FILE} ]; then
 			if __bme_whitelist "$PWD"; then
-				source ${BME_FILE}
-				# PROJECT_NAME must be the first thing to be set!!!
-				if [[ -z ${PROJECT_NAME+x} ]]; then
-					local log_msg="You didn't set ${C_BOLD}'PROJECT_NAME=[your_project_name]'${C_NC} in your ${C_BOLD}'${BME_FILE}'${C_NC} file.\n"
-					log_msg+="\tDid you stop by your project's root directory first?"
-					bme_log "${log_msg}" fatal
-					return -1
-				elif [[ -z ${PROJECT_DIR+x} ]]; then
-				# If PROJECT_DIR is not set, it's because we just entered a new project enviroment
-					__load_project
-				fi
+				__bme_load_project
 			else
-				bme_log "${C_BOLD}'${BME_FILE}'${C_NC} file found, but load was rejected (see ${C_BOLD}'${BME_WHITELISTED_FILE}'${C_NC} contents)." warning
+				bme_log "${C_BOLD}'${BME_PROJECT_FILE}'${C_NC} file found, but load was rejected (see ${C_BOLD}'${BME_WHITELISTED_FILE}'${C_NC} contents)." warning
 			fi
 		fi
 	# this conditional matches when we go "above" the project's root directory
-		if [ "${PWD##$PROJECT_DIR}" == "$PWD" ] && [[ -n ${PROJECT_DIR+x} ]]; then
-			__clean_project
-		fi
+# 		if [ "${PWD##$PROJECT_DIR}" == "$PWD" ] && [[ -n ${PROJECT_DIR+x} ]]; then
+# 			__bme_clean_project
+# 		fi
+	fi
+# 		if [ -e ${BME_FILE} ]; then
+# 			if __bme_whitelist "$PWD"; then
+# 				__load_project
+# 				source ${BME_FILE}
+# 				# PROJECT_NAME must be the first thing to be set!!!
+# 				if [[ -z ${BME_PROJECT_NAME+x} ]]; then
+# 					local log_msg="You didn't set ${C_BOLD}'BME_PROJECT_NAME=[your_project_name]'${C_NC} in your ${C_BOLD}'${BME_PROJECT_FILE}'${C_NC} file.\n"
+# 					log_msg+="\tDid you stop by your project's root directory first?"
+# 					bme_log "${log_msg}" fatal
+# 					return -1
+# 				elif [[ -z ${PROJECT_DIR+x} ]]; then
+# 					__bme_check_project_name "${BME_PROJECT_NAME}" || return $?
+# 					# if a variable named after the project doesn't exist, it's because we just entered a new project environment
+# 					if ! [ -v ${BME_PROJECT_NAME}[@] ]; then
+# 						echo "VAR DOES NOT EXIST"
+# 						__load_project ${BME_PROJECT_NAME}
+# 					else
+# 						echo "VAR DOES EXIST: ${!BME_PROJECT_NAME}"
+# 						declare -n current_project=${BME_PROJECT_NAME}
+# 						for key in "${!current_project[@]}"; do
+# 							echo "$key => ${current_project[$key]}"
+# 						done
+# 					fi
+# 				# If PROJECT_DIR is not set, it's because we just entered a new project enviroment
+# 					__load_project
+# 				fi
+# 			else
+# 				bme_log "${C_BOLD}'${BME_FILE}'${C_NC} file found, but load was rejected (see ${C_BOLD}'${BME_WHITELISTED_FILE}'${C_NC} contents)." warning
+# 			fi
+# 		fi
+# 	# this conditional matches when we go "above" the project's root directory
+# 		if [ "${PWD##$PROJECT_DIR}" == "$PWD" ] && [[ -n ${PROJECT_DIR+x} ]]; then
+# 			__clean_project
+# 		fi
+# 	fi
+}
+
+
+# A quick-set for debug messages
+__bme_debug() {
+	if [[ -n ${DEBUG} && $DEBUG == $true ]]; then
+		return ${DEBUG}
+	else
+		return ${false}
 	fi
 }
 
@@ -122,7 +162,7 @@ export -f bme_log
 
 
 # Loads a project's configuration
-__load_project() {
+__bme_load_project() {
 # A bit of debug: I need to know the place I'm stored, so I can find other includes, relative to me
 # 	echo "See what follows: $0"
 # 	echo "See what follows: $_"
@@ -130,116 +170,218 @@ __load_project() {
 # 	echo "See what follows: ${BASH_SOURCE[0]}"
 # 	echo "See what follows: ${BASH_SOURCE[${#BASH_SOURCE[@]} - 1]}"
 # 	echo "See what follows: ${FUNCNAME[@]}"
-	
+
 # "pseudo private" function protection
 	if [ "${FUNCNAME[1]}" != 'bme_eval_dir' ]; then
 		bme_log "Function ${C_BOLD}'${FUNCNAME[0]}()'${C_NC} is ${C_BOLD}private${C_NC}.  You shouldn't invoke it!" error
 		return -1
 	fi
-#  Let's make sure we are invoked only once
-	if [[ -n ${PROJECT_DIR+x} ]]; then
-		bme_log "Function ${C_BOLD}'${FUNCNAME[0]}()'${C_NC} can only be called once per project session!" error
-		return -1
+	
+# Just once, on a new "BME session"
+	if ! [ -v BME_LOADED_PROJECTS[@] ]; then
+		__bme_debug && echo "Creating BME_LOADED_PROJECTS"
+		declare -Ag BME_LOADED_PROJECTS
 	fi
 	
+# Loads the new project file in a subshell to check if it's a new project
+	local new_project=$(source "${BME_PROJECT_FILE}" && echo "${BME_PROJECT_NAME}")
+# Process the new project if, in fact, new
+	if [ "${BME_PROJECT_NAME}" != "${new_project}" ]; then
+		__bme_debug && echo "NEW PROJECT DETECTED: '${BME_PROJECT_NAME}' vs '${new_project}'"
+	# If we already were within a project context, it has to be cleaned before loading the new one
+		if [[ -n "${BME_PROJECT_NAME}" ]]; then
+			__bme_debug && echo "PROJECT '${BME_PROJECT_NAME}' already loaded: unloading."
+			__bme_clean_project
+		fi
+	# Now we can load the new project
+		if ! [ -v BME_LOADED_PROJECTS[${new_project}] ]; then
+			__bme_debug && echo "${new_project} not listed."
+			source "${BME_PROJECT_FILE}"
+			__bme_check_project_name || return $?
+			BME_LOADED_PROJECTS["${BME_PROJECT_NAME}"]+="${PWD}"
+			__bme_debug && echo "new root project: ${BME_LOADED_PROJECTS[${BME_PROJECT_NAME}]}"
+		else
+			__bme_debug && echo "root project already known: ${BME_LOADED_PROJECTS[${new_project}]}"
+		fi
+		
+# 		if [[ -z ${PROJECT_DIR+x} ]]; then
+# 		__bme_debug && echo "BME_LOADED_PROJECTS[${new_project}]"
+# 		BME_LOADED_PROJECTS["${BME_PROJECT_NAME}"]+="${PWD}"
+# 		if [[ -z ${PROJECT_DIR+x} ]]; then
+# 			__bme_debug && echo "PROJECT_DIR not set: new session load."
+# 		fi
+# 		source "${BME_PROJECT_FILE}"
+# 		__bme_check_project_name && __bme_load_project || return $?
+	fi
+
+# 	# if $BME_PROJECT_NAME is defined, we are already within a "BME session"
+# 	if [[ -n ${BME_PROJECT_NAME+x} ]]; then
+# 		__bme_debug && echo "ALREADY WITHIN A PROJECT ENVIRONMENT"
+# 		# Loads the new project file in a subshell to check if it's a new project
+# 			local new_project=$(source ${BME_PROJECT_FILE} && echo ${BME_PROJECT_NAME})
+# 			if [ ${BME_PROJECT_NAME} != ${new_project} ]; then
+# 				__bme_debug && echo "NEW PROJECT DETECTED: ${BME_LOADED_PROJECTS[@]} vs ${new_project}"
+# 				if [ ${BME_LOADED_PROJECTS[${BME_PROJECT_NAME}]+x} ]; then
+# 					__bme_debug && echo "root stored: ${BME_LOADED_PROJECTS[${BME_PROJECT_NAME}]}"
+# 					__bme_clean_project && source ${BME_PROJECT_FILE} && __bme_load_project
+# 				else
+# 					__bme_debug && echo "root not yet stored"
+# 					local log_msg="Something wrong happened."
+# 					log_msg+="\n\tProject ${C_BOLD}'${BME_PROJECT_NAME}'${C_NC} activated, but no root known."
+# 					log_msg+="\n\tTry to replicate this circumstance and open a bug at https://github.com/jmnavarrol/bash-magic-enviro/issues."
+# 					bme_log "${log_msg}" error
+# 				fi
+# 			else
+# 				__bme_debug && echo "STILL WITHIN SAME PROJECT: ${BME_PROJECT_NAME} vs ${new_project}"
+# 			fi
+# 		# Before even trying to load the new project environment, we need to preserve current environment
+# # 		if ! [ -v ${BME_PROJECT_NAME}[@] ]; then
+# # 			echo "VAR DOES NOT EXIST"
+# # 		else
+# # 			echo "VAR DOES EXIST: ${!BME_PROJECT_NAME}"
+# # 			# Loads the new project file in a subshell to check if it's a new project
+# # 		fi
+# 	else
+# 	# $BME_PROJECT_NAME is not yet defined, we are entering a new "BME session"
+# 		__bme_debug && echo "FIRST PROJECT TO BE LOADED"
+# 		source ${BME_PROJECT_FILE}
+# 		__bme_check_project_name "${BME_PROJECT_NAME}" || return $?
+# 		if ! [ -v ${BME_LOADED_PROJECTS[@]} ]; then
+# 			declare -Ag BME_LOADED_PROJECTS
+# 		fi
+# 		BME_LOADED_PROJECTS["${BME_PROJECT_NAME}"]+="${PWD}"
+# 	fi
+
+# 					# if a variable named after the project doesn't exist, it's because we just entered a new project environment
+# 					if ! [ -v ${BME_PROJECT_NAME}[@] ]; then
+# 						echo "VAR DOES NOT EXIST"
+# 						__load_project ${BME_PROJECT_NAME}
+# 					else
+# 						echo "VAR DOES EXIST: ${!BME_PROJECT_NAME}"
+# 						declare -n current_project=${BME_PROJECT_NAME}
+# 						for key in "${!current_project[@]}"; do
+# 							echo "$key => ${current_project[$key]}"
+# 						done
+# 					fi
+	
+# #  Let's make sure we are invoked only once
+# 	if [[ -n ${PROJECT_DIR+x} ]]; then
+# 		bme_log "Function ${C_BOLD}'${FUNCNAME[0]}()'${C_NC} can only be called once per project session!" error
+# 		return -1
+# 	fi
+# 	
 # "Real" processing starts here
-	bme_log "project ${C_BOLD}'${PROJECT_NAME}'${C_NC} environment..." loading
-	
-	# First of all, let's "store" the project's "root dir" and "clean" PATH
-	export PROJECT_DIR="$PWD"
-	BME_ORIG_PATH=$PATH
-	
-	# Checks if current dir is within a git sandbox
-	if git rev-parse --git-dir > /dev/null 2>&1; then
-		BME_WITHIN_GIT=true
-		# Checks .gitignore properties
-		if ! git check-ignore -q "${BME_HIDDEN_DIR}/"; then
-			bme_log "${C_BOLD}'${BME_HIDDEN_DIR}/'${C_NC} is not in your ${C_BOLD}'.gitignore'${C_NC} file.  You should add it." warning 1
-		fi
-		if ! [[ -d ${PROJECT_DIR}/${BME_HIDDEN_DIR} ]]; then
-			bme_log "${C_BOLD}'${PROJECT_DIR}/${BME_HIDDEN_DIR}/'${C_NC} directory requested, but not found." warning 1
-			mkdir ${PROJECT_DIR}/${BME_HIDDEN_DIR}
-			bme_log "${C_BOLD}'${PROJECT_DIR}/${BME_HIDDEN_DIR}/'${C_NC} created." info 1
-		fi
-	else
-		BME_WITHIN_GIT=false
-		bme_log "Directory ${C_BOLD}'${PWD}'${C_NC} is not within a git sandbox." info 1
-	fi
-	
-	# Loads modules
-	if [[ -n ${BME_MODULES+x} ]]; then
-		for module in "${BME_MODULES[@]}"; do
-			if [ -r "${BASH_SOURCE}_modules/${module}.module" ]; then
-				source "${BASH_SOURCE}_modules/${module}.module"
-				${module}_load && ACTIVE_MODULES+=("${module}")
-			else
-				local log_msg="Couldn't load ${C_BOLD}'${module}'${C_NC} module.\n"
-					log_msg+="\t\tFile ${C_BOLD}'${BASH_SOURCE}_modules/${module}.module'${C_NC} couldn't be found."
-				bme_log "${log_msg}" warning 1
-			fi
-		done
-		unset module
-	fi
-	
-	# Checks for a valid custom clean function
-	local custom_clean=`type -t bme_custom_clean`
-	if [ -n "${custom_clean}" ] && [ "${custom_clean}" != 'function' ]; then
-		bme_log "Custom clean object found, but it's not of type function: ${C_BOLD}'type -t bme_custom_clean: ${custom_clean}'${C_NC}." error 1
-	fi
-	
-	# Show notice if 'check-version' module was requested
-	[[ "${ACTIVE_MODULES[@]}" =~ 'check-version' ]] && check-version
-	
-	bme_log "Project ${C_BOLD}'${PROJECT_NAME}'${C_NC} loaded.\n" info
-	
-# Finally "re-run" the project's main BME_FILE, in case there is required code in-there
-	source ${BME_FILE}
+# 	bme_log "project ${C_BOLD}'${BME_PROJECT_NAME}'${C_NC} environment..." loading
+# # 	bme_log "project ${C_BOLD}'${PROJECT_NAME}'${C_NC} environment..." loading
+# 	
+# 	# First of all, check the validity of $BME_PROJECT_NAME
+# 	__bme_check_project_name "${BME_PROJECT_NAME}" || return $?
+# 	
+# 	# First of all, let's "store" the project's "root dir" and "clean" PATH
+# 	# Managing indirections for associative arrays in Bash is PITA.
+# 	# Luckily, indirections come to the rescue
+# 	declare -Ag ${project_name}
+# 	declare -n current_project=${project_name}
+# 	current_project['root_dir']="$PWD"
+# 	current_project['previous_path']="${PATH}"
+# 	export PROJECT_DIR="$PWD"
+# 	BME_ORIG_PATH=$PATH
+# 	
+# 	# Checks if current dir is within a git sandbox
+# 	if git rev-parse --git-dir > /dev/null 2>&1; then
+# 		BME_WITHIN_GIT=true
+# 		# Checks .gitignore properties
+# 		if ! git check-ignore -q "${BME_HIDDEN_DIR}/"; then
+# 			bme_log "${C_BOLD}'${BME_HIDDEN_DIR}/'${C_NC} is not in your ${C_BOLD}'.gitignore'${C_NC} file.  You should add it." warning 1
+# 		fi
+# 		if ! [[ -d ${PROJECT_DIR}/${BME_HIDDEN_DIR} ]]; then
+# 			bme_log "${C_BOLD}'${PROJECT_DIR}/${BME_HIDDEN_DIR}/'${C_NC} directory requested, but not found." warning 1
+# 			mkdir ${PROJECT_DIR}/${BME_HIDDEN_DIR}
+# 			bme_log "${C_BOLD}'${PROJECT_DIR}/${BME_HIDDEN_DIR}/'${C_NC} created." info 1
+# 		fi
+# 	else
+# 		BME_WITHIN_GIT=false
+# 		bme_log "Directory ${C_BOLD}'${PWD}'${C_NC} is not within a git sandbox." info 1
+# 	fi
+# 	
+# 	# Loads modules
+# 	if [[ -n ${BME_MODULES+x} ]]; then
+# 		for module in "${BME_MODULES[@]}"; do
+# 			if [ -r "${BASH_SOURCE}_modules/${module}.module" ]; then
+# 				source "${BASH_SOURCE}_modules/${module}.module"
+# 				${module}_load && ACTIVE_MODULES+=("${module}")
+# 			else
+# 				local log_msg="Couldn't load ${C_BOLD}'${module}'${C_NC} module.\n"
+# 					log_msg+="\t\tFile ${C_BOLD}'${BASH_SOURCE}_modules/${module}.module'${C_NC} couldn't be found."
+# 				bme_log "${log_msg}" warning 1
+# 			fi
+# 		done
+# 		unset module
+# 	fi
+# 	
+# 	# Checks for a valid custom clean function
+# 	local custom_clean=`type -t bme_custom_clean`
+# 	if [ -n "${custom_clean}" ] && [ "${custom_clean}" != 'function' ]; then
+# 		bme_log "Custom clean object found, but it's not of type function: ${C_BOLD}'type -t bme_custom_clean: ${custom_clean}'${C_NC}." error 1
+# 	fi
+# 	
+# 	# Show notice if 'check-version' module was requested
+# 	[[ "${ACTIVE_MODULES[@]}" =~ 'check-version' ]] && check-version
+# 	
+# 	bme_log "Project ${C_BOLD}'${BME_PROJECT_NAME}'${C_NC} loaded.\n" info
+# 	
+# # Finally "re-run" the project's main BME_FILE, in case there is required code in-there
+# 	source ${BME_FILE}
+# # Print results
+# 	for key in "${!current_project[@]}"; do
+# 		echo "$key => ${current_project[$key]}"
+# 	done
 }
 
 
 # Cleans project's environment
-__clean_project() {
-# "pseudo private" function protection
-	if [ "${FUNCNAME[1]}" != 'bme_eval_dir' ]; then
-		bme_log "Function ${C_BOLD}'${FUNCNAME[0]}()'${C_NC} is ${C_BOLD}private${C_NC}.  You shouldn't invoke it!" error
-		return -1
-	fi
-	
-	local project_name="${PROJECT_NAME}"
-	
-# Custom clean (if any)
-	local custom_clean=`type -t bme_custom_clean`
-	if [ -n "${custom_clean}" ]; then
-		if [ "${custom_clean}" == 'function' ]; then
-			bme_custom_clean \
-			&& bme_log "Custom clean function ended successfully" info 1 \
-			|| bme_log "Custom clean function failed" error 1
-			
-			unset -f bme_custom_clean
-		else
-			bme_log "Custom clean object found, but it's not of type function: ${C_BOLD}'type -t bme_custom_clean: ${custom_clean}'${C_NC}." error 1
-		fi
-	fi
-# Active modules
-	if [[ -n ${ACTIVE_MODULES+x} ]]; then
-		# List of active modules is processed in reverse order for deactivation, in case there are sorting dependencies
-		# See https://stackoverflow.com/a/13360181/12237334 (hopefully this array will NOT have "holes" within)
-		for (( module=${#ACTIVE_MODULES[@]}-1; module>=0; module-- )); do
-			${ACTIVE_MODULES[module]}_unload
-			unset -f ${ACTIVE_MODULES[module]}_load
-			unset -f ${ACTIVE_MODULES[module]}_unload
-		done
-	fi
-	unset module
-	unset ACTIVE_MODULES
-# Restore path
-	PATH=$BME_ORIG_PATH
-	unset BME_ORIG_PATH
-# Final clean
-	unset BME_WITHIN_GIT
+__bme_clean_project() {
+# # "pseudo private" function protection
+# 	if [ "${FUNCNAME[1]}" != 'bme_eval_dir' ]; then
+# 		bme_log "Function ${C_BOLD}'${FUNCNAME[0]}()'${C_NC} is ${C_BOLD}private${C_NC}.  You shouldn't invoke it!" error
+# 		return -1
+# 	fi
+# 	
+# 	local project_name="${PROJECT_NAME}"
+# 	
+# # Custom clean (if any)
+# 	local custom_clean=`type -t bme_custom_clean`
+# 	if [ -n "${custom_clean}" ]; then
+# 		if [ "${custom_clean}" == 'function' ]; then
+# 			bme_custom_clean \
+# 			&& bme_log "Custom clean function ended successfully" info 1 \
+# 			|| bme_log "Custom clean function failed" error 1
+# 			
+# 			unset -f bme_custom_clean
+# 		else
+# 			bme_log "Custom clean object found, but it's not of type function: ${C_BOLD}'type -t bme_custom_clean: ${custom_clean}'${C_NC}." error 1
+# 		fi
+# 	fi
+# # Active modules
+# 	if [[ -n ${ACTIVE_MODULES+x} ]]; then
+# 		# List of active modules is processed in reverse order for deactivation, in case there are sorting dependencies
+# 		# See https://stackoverflow.com/a/13360181/12237334 (hopefully this array will NOT have "holes" within)
+# 		for (( module=${#ACTIVE_MODULES[@]}-1; module>=0; module-- )); do
+# 			${ACTIVE_MODULES[module]}_unload
+# 			unset -f ${ACTIVE_MODULES[module]}_load
+# 			unset -f ${ACTIVE_MODULES[module]}_unload
+# 		done
+# 	fi
+# 	unset module
+# 	unset ACTIVE_MODULES
+# # Restore path
+# 	PATH=$BME_ORIG_PATH
+# 	unset BME_ORIG_PATH
+# # Final clean
+# 	unset BME_WITHIN_GIT
 	unset PROJECT_NAME
 	unset PROJECT_DIR
-	unset BME_MODULES
+# 	unset BME_MODULES
 	bme_log "Project ${C_BOLD}'${project_name}'${C_NC} cleaned." cleaning
 }
 
@@ -313,4 +455,40 @@ local test_path="${1}"
 	echo ")" >> "${BME_WHITELISTED_FILE}"
 	
 	[ "$REPLY" == 'Y' ] && return $true || return $false
+}
+
+
+# Checks project name (since it'll become a variable name)
+# As per https://unix.stackexchange.com/questions/23659/can-shell-variable-name-include-a-hyphen-or-dash/23714
+# A single "token" with only ASCII letters, numbers and underscore, and it can't start with a number
+__bme_check_project_name() {
+local bad_name=false
+
+# PROJECT_NAME must be the first thing to be set!!!
+	if [[ -z "${BME_PROJECT_NAME}" ]]; then
+		local log_msg="You didn't set ${C_BOLD}'BME_PROJECT_NAME=[your_project_name]'${C_NC} in your ${C_BOLD}'${BME_PROJECT_FILE}'${C_NC} file.\n"
+		log_msg+="\tDid you stop by your project's root directory first?"
+		bme_log "${log_msg}" fatal
+		return -1
+	fi
+	
+# There's a project name.  Now: is it valid?
+	# the project name should consist only on alnum or underscores
+	local re="^([[:alnum:]]|_)+$"
+	if [[ ! ${BME_PROJECT_NAME} =~ $re ]]; then
+		bme_log "${C_BOLD}'${BME_PROJECT_NAME}'${C_NC} should only consist in alnum or underscores." fatal
+		bad_name=true
+	fi
+	# the project name can't start with a number
+	re="^[[:digit:]]"
+	if [[ ${BME_PROJECT_NAME} =~ $re ]]; then
+		bme_log "${C_BOLD}'${BME_PROJECT_NAME}'${C_NC} shouldn't start with a number." fatal
+		bad_name=true
+	fi
+	
+# exit on error
+	if ($bad_name); then
+		bme_log "${C_BOLD}'BME_PROJECT_NAME'${C_NC} should be a valid name (see above)." fatal
+		return -1
+	fi
 }

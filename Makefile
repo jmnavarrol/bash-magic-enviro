@@ -1,5 +1,5 @@
 # Main project's Makefile
-VERSION := 'v1.1.1'
+VERSION := 'v2.0.0'
 SHELL := /bin/bash
 DESTDIR := $${HOME}/bin
 BUILDDIR := 'build'
@@ -51,7 +51,8 @@ dev: $(BUILDDIR)/$(SCRIPT)
 		fi; \
 		echo -en "Creating $${C_BOLD}'${DESTDIR}/${SCRIPT}'$${C_NC} symlink for development... "; \
 		current_pwd=$${PWD}; \
-		( cd ${DESTDIR} && ln -s $${current_pwd}/$(BUILDDIR)/$(SCRIPT) ${SCRIPT} ); \
+		( cd ${DESTDIR} && ln -s $${current_pwd}/src/$(SCRIPT) ${SCRIPT} ); \
+		#( cd ${DESTDIR} && ln -s $${current_pwd}/$(BUILDDIR)/$(SCRIPT) ${SCRIPT} ); \
 		echo -e "$${C_GREEN}DONE$${C_NC}"; \
 	fi
 # Then, the modules

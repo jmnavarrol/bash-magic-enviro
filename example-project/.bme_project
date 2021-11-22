@@ -1,0 +1,9 @@
+# Environment file to be loaded by Bash interactive shell
+#
+# Use this as a reference for your own '.bme_env' files
+
+#---
+# 'MAIN' .bme_project file at the root of your project
+#---
+# Set your project name (must be unique)
+BME_PROJECT_NAME='bme_example_project'
