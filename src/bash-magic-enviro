@@ -185,9 +185,15 @@ __bme_load_project() {
 	
 # Loads the new project file in a subshell to check if it's a new project
 	local new_project=$(source "${BME_PROJECT_FILE}" && echo "${BME_PROJECT_NAME}")
-# Process the new project if, in fact, new
+	if [[ -z "${new_project}" ]]; then
+		bme_log "You didn't set ${C_BOLD}'BME_PROJECT_NAME=[your_project_name]'${C_NC} in your ${C_BOLD}'${BME_PROJECT_FILE}'${C_NC} file." fatal
+		return -1
+	fi
+	
+# Processes the new project if, in fact, new
 	if [ "${BME_PROJECT_NAME}" != "${new_project}" ]; then
 		__bme_debug && echo "NEW PROJECT DETECTED: '${BME_PROJECT_NAME}' vs '${new_project}'"
+		__bme_check_project_name "${new_project}" || return $?
 	# If we already were within a project context, it has to be cleaned before loading the new one
 		if [[ -n "${BME_PROJECT_NAME}" ]]; then
 			__bme_debug && echo "PROJECT '${BME_PROJECT_NAME}' already loaded: unloading."
@@ -197,12 +203,12 @@ __bme_load_project() {
 		if ! [ -v BME_LOADED_PROJECTS[${new_project}] ]; then
 			__bme_debug && echo "${new_project} not listed."
 			source "${BME_PROJECT_FILE}"
-			__bme_check_project_name || return $?
 			BME_LOADED_PROJECTS["${BME_PROJECT_NAME}"]+="${PWD}"
 			__bme_debug && echo "new root project: ${BME_LOADED_PROJECTS[${BME_PROJECT_NAME}]}"
 		else
 			__bme_debug && echo "root project already known: ${BME_LOADED_PROJECTS[${new_project}]}"
 		fi
+		__bme_debug && echo "Currently known projects:" `typeset -p BME_LOADED_PROJECTS`
 		
 # 		if [[ -z ${PROJECT_DIR+x} ]]; then
 # 		__bme_debug && echo "BME_LOADED_PROJECTS[${new_project}]"
@@ -462,12 +468,22 @@ local test_path="${1}"
 # As per https://unix.stackexchange.com/questions/23659/can-shell-variable-name-include-a-hyphen-or-dash/23714
 # A single "token" with only ASCII letters, numbers and underscore, and it can't start with a number
 __bme_check_project_name() {
+local project_name=$1
 local bad_name=false
 
-# PROJECT_NAME must be the first thing to be set!!!
-	if [[ -z "${BME_PROJECT_NAME}" ]]; then
-		local log_msg="You didn't set ${C_BOLD}'BME_PROJECT_NAME=[your_project_name]'${C_NC} in your ${C_BOLD}'${BME_PROJECT_FILE}'${C_NC} file.\n"
-		log_msg+="\tDid you stop by your project's root directory first?"
+# "pseudo private" function protection
+	if [ "${FUNCNAME[1]}" != '__bme_load_project' ]; then
+		local log_msg="Function ${C_BOLD}'${FUNCNAME[0]}()'${C_NC} is ${C_BOLD}private${C_NC}.  You shouldn't invoke it!\n"
+		log_msg+="\tUnexpectedly called from ${C_BOLD}'${FUNCNAME[1]}'${C_NC}."
+		bme_log "${log_msg}" error
+		return -1
+	fi
+
+# Check for params
+	if [[ -z "${project_name}" ]]; then
+		local caller_data=`caller 0`
+		local log_msg="${C_RED}(INTERNAL ERROR)${C_NC} Function ${C_BOLD}'${FUNCNAME[0]}'${C_NC} didn't get expected parameter ${C_BOLD}'project_name'${C_NC}.\n"
+		log_msg+="\t${C_BOLD} FROM:${C_NC} ${caller_data}"
 		bme_log "${log_msg}" fatal
 		return -1
 	fi
@@ -475,14 +491,14 @@ local bad_name=false
 # There's a project name.  Now: is it valid?
 	# the project name should consist only on alnum or underscores
 	local re="^([[:alnum:]]|_)+$"
-	if [[ ! ${BME_PROJECT_NAME} =~ $re ]]; then
-		bme_log "${C_BOLD}'${BME_PROJECT_NAME}'${C_NC} should only consist in alnum or underscores." fatal
+	if [[ ! ${project_name} =~ $re ]]; then
+		bme_log "${C_BOLD}'${project_name}'${C_NC} should only consist in alnum or underscores." fatal
 		bad_name=true
 	fi
 	# the project name can't start with a number
 	re="^[[:digit:]]"
-	if [[ ${BME_PROJECT_NAME} =~ $re ]]; then
-		bme_log "${C_BOLD}'${BME_PROJECT_NAME}'${C_NC} shouldn't start with a number." fatal
+	if [[ ${project_name} =~ $re ]]; then
+		bme_log "${C_BOLD}'${project_name}'${C_NC} shouldn't start with a number." fatal
 		bad_name=true
 	fi
 	
