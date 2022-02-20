@@ -35,16 +35,20 @@ bme_eval_dir() {
 		MYOLDPWD="$PWD"
 		if [ -e ${BME_PROJECT_FILE} ]; then
 			if __bme_whitelist "$PWD"; then
-				__bme_load_project
+				__bme_process_known_projects "$PWD"
+				__bme_load_project "$PWD"
 			else
 				bme_log "${C_BOLD}'${BME_PROJECT_FILE}'${C_NC} file found, but load was rejected (see ${C_BOLD}'${BME_WHITELISTED_FILE}'${C_NC} contents)." warning
 			fi
 		fi
 	# this conditional matches when we go "above" the project's root directory
-# 		if [ "${PWD##$PROJECT_DIR}" == "$PWD" ] && [[ -n ${PROJECT_DIR+x} ]]; then
-# 			__bme_clean_project
-# 		fi
+		if [ "${PWD##$BME_PROJECT_DIR}" == "$PWD" ] && [[ -n ${BME_PROJECT_DIR+x} ]]; then
+			__bme_clean_project || return $?
+			echo "CHECK IF CURRENT DIRECTORY IS WITHIN A KNOWN PROJECT PATH"
+			echo "IF SO, LOAD IT"
+		fi
 	fi
+	
 # 		if [ -e ${BME_FILE} ]; then
 # 			if __bme_whitelist "$PWD"; then
 # 				__load_project
@@ -161,8 +165,40 @@ local full_message=''
 export -f bme_log
 
 
+# Manages array of known projects
+# 1st param: 'project_dir': the directory to look for a project file
+__bme_process_known_projects() {
+local project_dir="${1}"
+
+# Just once, on a new "BME session"
+	if ! [ -v BME_LOADED_PROJECTS[@] ]; then
+		__bme_debug && echo "Creating BME_LOADED_PROJECTS"
+		declare -Ag BME_LOADED_PROJECTS
+	fi
+# Loads the new project file in a subshell to check if it's a new project
+	local new_project=$(source "${project_dir}/${BME_PROJECT_FILE}" && echo "${BME_PROJECT_NAME}")
+	if [[ -z "${new_project}" ]]; then
+		bme_log "You didn't set ${C_BOLD}'BME_PROJECT_NAME=[your_project_name]'${C_NC} in your ${C_BOLD}'${BME_PROJECT_FILE}'${C_NC} file." fatal
+		return -1
+	fi
+	
+	if ! [ -v BME_LOADED_PROJECTS["${new_project}"] ]; then
+		__bme_debug && echo "${new_project} not listed."
+		__bme_check_project_name "${new_project}" || return $?
+		BME_LOADED_PROJECTS["${new_project}"]+="${PWD}"
+		__bme_debug && echo "new root project: ${BME_LOADED_PROJECTS[${new_project}]}"
+	else
+		__bme_debug && echo "root project already known: ${BME_LOADED_PROJECTS[${new_project}]}"
+	fi
+	__bme_debug && echo "Currently known projects:" `typeset -p BME_LOADED_PROJECTS`
+}
+
+
 # Loads a project's configuration
+# 1st param: 'project_dir': the directory to look for a project file
 __bme_load_project() {
+local project_dir="${1}"
+
 # A bit of debug: I need to know the place I'm stored, so I can find other includes, relative to me
 # 	echo "See what follows: $0"
 # 	echo "See what follows: $_"
@@ -177,56 +213,14 @@ __bme_load_project() {
 		return -1
 	fi
 	
-# Just once, on a new "BME session"
-	if ! [ -v BME_LOADED_PROJECTS[@] ]; then
-		__bme_debug && echo "Creating BME_LOADED_PROJECTS"
-		declare -Ag BME_LOADED_PROJECTS
-	fi
-	
-# Loads the new project file in a subshell to check if it's a new project
-	local new_project=$(source "${BME_PROJECT_FILE}" && echo "${BME_PROJECT_NAME}")
-	if [[ -z "${new_project}" ]]; then
-		bme_log "You didn't set ${C_BOLD}'BME_PROJECT_NAME=[your_project_name]'${C_NC} in your ${C_BOLD}'${BME_PROJECT_FILE}'${C_NC} file." fatal
-		return -1
-	fi
-	
-# Processes the new project if, in fact, new
-	if [ "${BME_PROJECT_NAME}" != "${new_project}" ]; then
-		__bme_debug && echo "NEW PROJECT DETECTED: '${BME_PROJECT_NAME}' vs '${new_project}'"
-		__bme_check_project_name "${new_project}" || return $?
-	# If we already were within a project context, it has to be cleaned before loading the new one
-		if [[ -n "${BME_PROJECT_NAME}" ]]; then
-			__bme_debug && echo "PROJECT '${BME_PROJECT_NAME}' already loaded: unloading."
+	# if $BME_PROJECT_NAME is defined, we are already within a "BME session"
+	if [[ -n ${BME_PROJECT_NAME+x} ]]; then
+		__bme_debug && echo "ALREADY WITHIN A PROJECT ENVIRONMENT"
+	# Loads the new project file in a subshell to check if it's a new project
+		local new_project=$(source "${project_dir}/${BME_PROJECT_FILE}" && echo ${BME_PROJECT_NAME})
+		if [ ${BME_PROJECT_NAME} != ${new_project} ]; then
+			__bme_debug && echo "ENTERING NEW PROJECT ENVIRONMENT: '${BME_PROJECT_NAME}' vs '${new_project}'"
 			__bme_clean_project
-		fi
-	# Now we can load the new project
-		if ! [ -v BME_LOADED_PROJECTS[${new_project}] ]; then
-			__bme_debug && echo "${new_project} not listed."
-			source "${BME_PROJECT_FILE}"
-			BME_LOADED_PROJECTS["${BME_PROJECT_NAME}"]+="${PWD}"
-			__bme_debug && echo "new root project: ${BME_LOADED_PROJECTS[${BME_PROJECT_NAME}]}"
-		else
-			__bme_debug && echo "root project already known: ${BME_LOADED_PROJECTS[${new_project}]}"
-		fi
-		__bme_debug && echo "Currently known projects:" `typeset -p BME_LOADED_PROJECTS`
-		
-# 		if [[ -z ${PROJECT_DIR+x} ]]; then
-# 		__bme_debug && echo "BME_LOADED_PROJECTS[${new_project}]"
-# 		BME_LOADED_PROJECTS["${BME_PROJECT_NAME}"]+="${PWD}"
-# 		if [[ -z ${PROJECT_DIR+x} ]]; then
-# 			__bme_debug && echo "PROJECT_DIR not set: new session load."
-# 		fi
-# 		source "${BME_PROJECT_FILE}"
-# 		__bme_check_project_name && __bme_load_project || return $?
-	fi
-
-# 	# if $BME_PROJECT_NAME is defined, we are already within a "BME session"
-# 	if [[ -n ${BME_PROJECT_NAME+x} ]]; then
-# 		__bme_debug && echo "ALREADY WITHIN A PROJECT ENVIRONMENT"
-# 		# Loads the new project file in a subshell to check if it's a new project
-# 			local new_project=$(source ${BME_PROJECT_FILE} && echo ${BME_PROJECT_NAME})
-# 			if [ ${BME_PROJECT_NAME} != ${new_project} ]; then
-# 				__bme_debug && echo "NEW PROJECT DETECTED: ${BME_LOADED_PROJECTS[@]} vs ${new_project}"
 # 				if [ ${BME_LOADED_PROJECTS[${BME_PROJECT_NAME}]+x} ]; then
 # 					__bme_debug && echo "root stored: ${BME_LOADED_PROJECTS[${BME_PROJECT_NAME}]}"
 # 					__bme_clean_project && source ${BME_PROJECT_FILE} && __bme_load_project
@@ -237,9 +231,9 @@ __bme_load_project() {
 # 					log_msg+="\n\tTry to replicate this circumstance and open a bug at https://github.com/jmnavarrol/bash-magic-enviro/issues."
 # 					bme_log "${log_msg}" error
 # 				fi
-# 			else
-# 				__bme_debug && echo "STILL WITHIN SAME PROJECT: ${BME_PROJECT_NAME} vs ${new_project}"
-# 			fi
+		else
+			__bme_debug && echo "STILL WITHIN SAME PROJECT: ${BME_PROJECT_NAME} vs ${new_project}"
+		fi
 # 		# Before even trying to load the new project environment, we need to preserve current environment
 # # 		if ! [ -v ${BME_PROJECT_NAME}[@] ]; then
 # # 			echo "VAR DOES NOT EXIST"
@@ -247,16 +241,16 @@ __bme_load_project() {
 # # 			echo "VAR DOES EXIST: ${!BME_PROJECT_NAME}"
 # # 			# Loads the new project file in a subshell to check if it's a new project
 # # 		fi
-# 	else
-# 	# $BME_PROJECT_NAME is not yet defined, we are entering a new "BME session"
-# 		__bme_debug && echo "FIRST PROJECT TO BE LOADED"
+	else
+	# $BME_PROJECT_NAME is not yet defined, we are entering a new "BME session"
+		__bme_debug && echo "FIRST PROJECT TO BE LOADED"
 # 		source ${BME_PROJECT_FILE}
 # 		__bme_check_project_name "${BME_PROJECT_NAME}" || return $?
 # 		if ! [ -v ${BME_LOADED_PROJECTS[@]} ]; then
 # 			declare -Ag BME_LOADED_PROJECTS
 # 		fi
 # 		BME_LOADED_PROJECTS["${BME_PROJECT_NAME}"]+="${PWD}"
-# 	fi
+	fi
 
 # 					# if a variable named after the project doesn't exist, it's because we just entered a new project environment
 # 					if ! [ -v ${BME_PROJECT_NAME}[@] ]; then
@@ -277,8 +271,8 @@ __bme_load_project() {
 # 	fi
 # 	
 # "Real" processing starts here
-# 	bme_log "project ${C_BOLD}'${BME_PROJECT_NAME}'${C_NC} environment..." loading
-# # 	bme_log "project ${C_BOLD}'${PROJECT_NAME}'${C_NC} environment..." loading
+	source "${project_dir}/${BME_PROJECT_FILE}"
+	bme_log "project ${C_BOLD}'${BME_PROJECT_NAME}'${C_NC} environment..." loading
 # 	
 # 	# First of all, check the validity of $BME_PROJECT_NAME
 # 	__bme_check_project_name "${BME_PROJECT_NAME}" || return $?
@@ -290,7 +284,7 @@ __bme_load_project() {
 # 	declare -n current_project=${project_name}
 # 	current_project['root_dir']="$PWD"
 # 	current_project['previous_path']="${PATH}"
-# 	export PROJECT_DIR="$PWD"
+	export BME_PROJECT_DIR="$PWD"
 # 	BME_ORIG_PATH=$PATH
 # 	
 # 	# Checks if current dir is within a git sandbox
@@ -347,14 +341,17 @@ __bme_load_project() {
 
 # Cleans project's environment
 __bme_clean_project() {
-# # "pseudo private" function protection
-# 	if [ "${FUNCNAME[1]}" != 'bme_eval_dir' ]; then
-# 		bme_log "Function ${C_BOLD}'${FUNCNAME[0]}()'${C_NC} is ${C_BOLD}private${C_NC}.  You shouldn't invoke it!" error
-# 		return -1
-# 	fi
-# 	
-# 	local project_name="${PROJECT_NAME}"
-# 	
+# "pseudo private" function protection
+local allowed_callers=('__bme_load_project' 'bme_eval_dir')
+	if [[ ! " ${allowed_callers[*]} " =~ " ${FUNCNAME[1]} " ]]; then
+		local log_msg="Function ${C_BOLD}'${FUNCNAME[0]}()'${C_NC} is ${C_BOLD}private${C_NC}.  You shouldn't invoke it!\n"
+		log_msg+="\tUnexpectedly called from ${C_BOLD}'${FUNCNAME[1]}'${C_NC}."
+		bme_log "${log_msg}" error
+		return -1
+	fi
+	
+	local project_name="${BME_PROJECT_NAME}"
+	
 # # Custom clean (if any)
 # 	local custom_clean=`type -t bme_custom_clean`
 # 	if [ -n "${custom_clean}" ]; then
@@ -385,8 +382,8 @@ __bme_clean_project() {
 # 	unset BME_ORIG_PATH
 # # Final clean
 # 	unset BME_WITHIN_GIT
-	unset PROJECT_NAME
-	unset PROJECT_DIR
+	unset BME_PROJECT_NAME
+	unset BME_PROJECT_DIR
 # 	unset BME_MODULES
 	bme_log "Project ${C_BOLD}'${project_name}'${C_NC} cleaned." cleaning
 }
@@ -465,14 +462,13 @@ local test_path="${1}"
 
 
 # Checks project name (since it'll become a variable name)
-# As per https://unix.stackexchange.com/questions/23659/can-shell-variable-name-include-a-hyphen-or-dash/23714
-# A single "token" with only ASCII letters, numbers and underscore, and it can't start with a number
+# 1st param: 'project_name': the project name to validate
 __bme_check_project_name() {
 local project_name=$1
 local bad_name=false
 
 # "pseudo private" function protection
-	if [ "${FUNCNAME[1]}" != '__bme_load_project' ]; then
+	if [ "${FUNCNAME[1]}" != '__bme_process_known_projects' ]; then
 		local log_msg="Function ${C_BOLD}'${FUNCNAME[0]}()'${C_NC} is ${C_BOLD}private${C_NC}.  You shouldn't invoke it!\n"
 		log_msg+="\tUnexpectedly called from ${C_BOLD}'${FUNCNAME[1]}'${C_NC}."
 		bme_log "${log_msg}" error
@@ -489,6 +485,8 @@ local bad_name=false
 	fi
 	
 # There's a project name.  Now: is it valid?
+# As per https://unix.stackexchange.com/questions/23659/can-shell-variable-name-include-a-hyphen-or-dash/23714
+# A single "token" with only ASCII letters, numbers and underscore, and it can't start with a number
 	# the project name should consist only on alnum or underscores
 	local re="^([[:alnum:]]|_)+$"
 	if [[ ! ${project_name} =~ $re ]]; then
