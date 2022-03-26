@@ -17,5 +17,10 @@ BME_MODULES=(
 	aws-support          # helps development for AWS environment
 )
 
+# Custom "clean" as supported by Bash Magic Enviro
+bme_custom_clean() {
+	unset TFENV_TERRAFORM_VERSION
+}
+
 # Sets project-wide Terraform version
 export TFENV_TERRAFORM_VERSION='1.0.1'

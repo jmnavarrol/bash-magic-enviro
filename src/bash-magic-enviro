@@ -34,9 +34,12 @@ bme_eval_dir() {
 	if [ "$PWD" != "$MYOLDPWD" ]; then
 		MYOLDPWD="$PWD"
 		if [ -e ${BME_PROJECT_FILE} ]; then
-			if [[ -n ${BME_PROJECT_DIR+x} ]]; then
-			# A new ${BME_PROJECT_FILE} found, but already within a project
-				__bme_clean_project || return $?
+			if [[ -n ${BME_PROJECT_NAME+x} ]]; then
+				local new_project=$(source "${BME_PROJECT_FILE}" && echo "${BME_PROJECT_NAME}")
+				__bme_debug && echo "A new ${BME_PROJECT_NAME} found: CURRENT '${BME_PROJECT_NAME}' vs NEW '${new_project}'"
+				if [ "${new_project}" != "${BME_PROJECT_NAME}" ]; then
+					__bme_clean_project || return $?
+				fi
 			fi
 			if __bme_whitelist "$PWD"; then
 				__bme_process_known_projects "$PWD"
@@ -58,10 +61,10 @@ bme_eval_dir() {
 					if __bme_whitelist "${project_root_dir}"; then
 						__bme_load_project "${project_root_dir}"
 					fi
-					unset project
 					break
 				fi
 			done
+			unset project
 		fi
 	# One way or the other, ${BME_PROJECT_FILE} is already processed when reaching this point.
 	# time now for the ${BME_FILE}
@@ -288,12 +291,12 @@ local project_dir="${1}"
 # 						done
 # 					fi
 	
-# #  Let's make sure we are invoked only once
-# 	if [[ -n ${PROJECT_DIR+x} ]]; then
-# 		bme_log "Function ${C_BOLD}'${FUNCNAME[0]}()'${C_NC} can only be called once per project session!" error
-# 		return -1
-# 	fi
-# 	
+#  Let's make sure we are invoked only once
+	if [[ -n ${PROJECT_DIR+x} ]]; then
+		bme_log "Function ${C_BOLD}'${FUNCNAME[0]}()'${C_NC} can only be called once per project session!" error
+		return -1
+	fi
+	
 # "Real" processing starts here
 	source "${project_dir}/${BME_PROJECT_FILE}"
 	bme_log "project ${C_BOLD}'${BME_PROJECT_NAME}'${C_NC} environment..." loading
@@ -307,23 +310,23 @@ local project_dir="${1}"
 # 	current_project['previous_path']="${PATH}"
 	export BME_PROJECT_DIR="${project_dir}"
 	BME_ORIG_PATH=$PATH
-# 	
-# 	# Checks if current dir is within a git sandbox
-# 	if git rev-parse --git-dir > /dev/null 2>&1; then
-# 		BME_WITHIN_GIT=true
-# 		# Checks .gitignore properties
-# 		if ! git check-ignore -q "${BME_HIDDEN_DIR}/"; then
-# 			bme_log "${C_BOLD}'${BME_HIDDEN_DIR}/'${C_NC} is not in your ${C_BOLD}'.gitignore'${C_NC} file.  You should add it." warning 1
-# 		fi
-# 		if ! [[ -d ${PROJECT_DIR}/${BME_HIDDEN_DIR} ]]; then
-# 			bme_log "${C_BOLD}'${PROJECT_DIR}/${BME_HIDDEN_DIR}/'${C_NC} directory requested, but not found." warning 1
-# 			mkdir ${PROJECT_DIR}/${BME_HIDDEN_DIR}
-# 			bme_log "${C_BOLD}'${PROJECT_DIR}/${BME_HIDDEN_DIR}/'${C_NC} created." info 1
-# 		fi
-# 	else
-# 		BME_WITHIN_GIT=false
-# 		bme_log "Directory ${C_BOLD}'${PWD}'${C_NC} is not within a git sandbox." info 1
-# 	fi
+	
+	# Checks if current dir is within a git sandbox
+	if git rev-parse --git-dir > /dev/null 2>&1; then
+		BME_WITHIN_GIT=true
+		# Checks .gitignore properties
+		if ! git check-ignore -q "${BME_PROJECT_DIR}/${BME_HIDDEN_DIR}/"; then
+			bme_log "${C_BOLD}'${BME_HIDDEN_DIR}/'${C_NC} is not in your ${C_BOLD}'.gitignore'${C_NC} file.  You should add it." warning 1
+		fi
+		if ! [[ -d ${BME_PROJECT_DIR}/${BME_HIDDEN_DIR} ]]; then
+			bme_log "${C_BOLD}'${BME_PROJECT_DIR}/${BME_HIDDEN_DIR}/'${C_NC} directory requested, but not found." warning 1
+			mkdir ${BME_PROJECT_DIR}/${BME_HIDDEN_DIR}
+			bme_log "${C_BOLD}'${BME_PROJECT_DIR}/${BME_HIDDEN_DIR}/'${C_NC} created." info 1
+		fi
+	else
+		BME_WITHIN_GIT=false
+		bme_log "Directory ${C_BOLD}'${PWD}'${C_NC} is not within a git sandbox." info 1
+	fi
 	
 	# Loads modules
 	if [[ -n ${BME_MODULES+x} ]]; then
@@ -340,17 +343,17 @@ local project_dir="${1}"
 		unset module
 	fi
 	
-# 	# Checks for a valid custom clean function
-# 	local custom_clean=`type -t bme_custom_clean`
-# 	if [ -n "${custom_clean}" ] && [ "${custom_clean}" != 'function' ]; then
-# 		bme_log "Custom clean object found, but it's not of type function: ${C_BOLD}'type -t bme_custom_clean: ${custom_clean}'${C_NC}." error 1
-# 	fi
-# 	
-# 	# Show notice if 'check-version' module was requested
-# 	[[ "${ACTIVE_MODULES[@]}" =~ 'check-version' ]] && check-version
-# 	
-# 	bme_log "Project ${C_BOLD}'${BME_PROJECT_NAME}'${C_NC} loaded.\n" info
-# 	
+	# Checks for a valid custom clean function
+	local custom_clean=`type -t bme_custom_clean`
+	if [ -n "${custom_clean}" ] && [ "${custom_clean}" != 'function' ]; then
+		bme_log "Custom clean object found, but it's not of type function: ${C_BOLD}'type -t bme_custom_clean: ${custom_clean}'${C_NC}." error 1
+	fi
+	
+	# Show notice if 'check-version' module was requested
+	[[ "${ACTIVE_MODULES[@]}" =~ 'check-version' ]] && check-version
+	
+	bme_log "Project ${C_BOLD}'${BME_PROJECT_NAME}'${C_NC} loaded.\n" info
+	
 # # Finally "re-run" the project's main BME_FILE, in case there is required code in-there
 # 	source ${BME_FILE}
 # # Print results
@@ -373,19 +376,19 @@ local allowed_callers=('__bme_load_project' 'bme_eval_dir')
 	
 	local project_name="${BME_PROJECT_NAME}"
 	
-# # Custom clean (if any)
-# 	local custom_clean=`type -t bme_custom_clean`
-# 	if [ -n "${custom_clean}" ]; then
-# 		if [ "${custom_clean}" == 'function' ]; then
-# 			bme_custom_clean \
-# 			&& bme_log "Custom clean function ended successfully" info 1 \
-# 			|| bme_log "Custom clean function failed" error 1
-# 			
-# 			unset -f bme_custom_clean
-# 		else
-# 			bme_log "Custom clean object found, but it's not of type function: ${C_BOLD}'type -t bme_custom_clean: ${custom_clean}'${C_NC}." error 1
-# 		fi
-# 	fi
+# Custom clean (if any)
+	local custom_clean=`type -t bme_custom_clean`
+	if [ -n "${custom_clean}" ]; then
+		if [ "${custom_clean}" == 'function' ]; then
+			bme_custom_clean \
+			&& bme_log "Custom clean function ended successfully" info 1 \
+			|| bme_log "Custom clean function failed" error 1
+			
+			unset -f bme_custom_clean
+		else
+			bme_log "Custom clean object found, but it's not of type function: ${C_BOLD}'type -t bme_custom_clean: ${custom_clean}'${C_NC}." error 1
+		fi
+	fi
 # Active modules
 	if [[ -n ${ACTIVE_MODULES+x} ]]; then
 		# List of active modules is processed in reverse order for deactivation, in case there are sorting dependencies
