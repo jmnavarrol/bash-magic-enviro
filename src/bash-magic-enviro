@@ -34,6 +34,10 @@ bme_eval_dir() {
 	if [ "$PWD" != "$MYOLDPWD" ]; then
 		MYOLDPWD="$PWD"
 		if [ -e ${BME_PROJECT_FILE} ]; then
+			if [[ -n ${BME_PROJECT_DIR+x} ]]; then
+			# A new ${BME_PROJECT_FILE} found, but already within a project
+				__bme_clean_project || return $?
+			fi
 			if __bme_whitelist "$PWD"; then
 				__bme_process_known_projects "$PWD"
 				__bme_load_project "$PWD"
@@ -58,6 +62,12 @@ bme_eval_dir() {
 					break
 				fi
 			done
+		fi
+	# One way or the other, ${BME_PROJECT_FILE} is already processed when reaching this point.
+	# time now for the ${BME_FILE}
+		if [ -e ${BME_FILE} ] && [[ -n ${BME_PROJECT_NAME+x} ]]; then
+			__bme_debug && echo "${BME_FILE} FOUND"
+			source ${BME_FILE}
 		fi
 	fi
 	
@@ -228,11 +238,12 @@ local project_dir="${1}"
 	# if $BME_PROJECT_NAME is defined, we are already within a "BME session"
 	if [[ -n ${BME_PROJECT_NAME+x} ]]; then
 		__bme_debug && echo "ALREADY WITHIN A PROJECT ENVIRONMENT"
-	# Loads the new project file in a subshell to check if it's a new project
-		local new_project=$(source "${project_dir}/${BME_PROJECT_FILE}" && echo ${BME_PROJECT_NAME})
-		if [ ${BME_PROJECT_NAME} != ${new_project} ]; then
-			__bme_debug && echo "ENTERING NEW PROJECT ENVIRONMENT: '${BME_PROJECT_NAME}' vs '${new_project}'"
-			__bme_clean_project
+		return 0
+# 	# Loads the new project file in a subshell to check if it's a new project
+# 		local new_project=$(source "${project_dir}/${BME_PROJECT_FILE}" && echo ${BME_PROJECT_NAME})
+# 		if [ ${BME_PROJECT_NAME} != ${new_project} ]; then
+# 			__bme_debug && echo "ENTERING NEW PROJECT ENVIRONMENT: '${BME_PROJECT_NAME}' vs '${new_project}'"
+# 			__bme_clean_project
 # 				if [ ${BME_LOADED_PROJECTS[${BME_PROJECT_NAME}]+x} ]; then
 # 					__bme_debug && echo "root stored: ${BME_LOADED_PROJECTS[${BME_PROJECT_NAME}]}"
 # 					__bme_clean_project && source ${BME_PROJECT_FILE} && __bme_load_project
@@ -243,9 +254,9 @@ local project_dir="${1}"
 # 					log_msg+="\n\tTry to replicate this circumstance and open a bug at https://github.com/jmnavarrol/bash-magic-enviro/issues."
 # 					bme_log "${log_msg}" error
 # 				fi
-		else
-			__bme_debug && echo "STILL WITHIN SAME PROJECT: ${BME_PROJECT_NAME} vs ${new_project}"
-		fi
+# 		else
+# 			__bme_debug && echo "STILL WITHIN SAME PROJECT: ${BME_PROJECT_NAME} vs ${new_project}"
+# 		fi
 # 		# Before even trying to load the new project environment, we need to preserve current environment
 # # 		if ! [ -v ${BME_PROJECT_NAME}[@] ]; then
 # # 			echo "VAR DOES NOT EXIST"
@@ -253,10 +264,11 @@ local project_dir="${1}"
 # # 			echo "VAR DOES EXIST: ${!BME_PROJECT_NAME}"
 # # 			# Loads the new project file in a subshell to check if it's a new project
 # # 		fi
-	else
-	# $BME_PROJECT_NAME is not yet defined, we are entering a new "BME session"
-		__bme_debug && echo "LOADING PROJECT FROM CLEAN STATUS"
-# 		source ${BME_PROJECT_FILE}
+# 	else
+# 	# $BME_PROJECT_NAME is not yet defined, we are entering a new "BME session"
+# 		__bme_debug && echo "LOADING PROJECT FROM CLEAN STATUS"
+# 		__bme_debug && echo "${project_dir}/${BME_PROJECT_FILE}"
+# 		source "${project_dir}/${BME_PROJECT_FILE}" && BME_PROJECT_DIR="${project_dir}"
 # 		__bme_check_project_name "${BME_PROJECT_NAME}" || return $?
 # 		if ! [ -v ${BME_LOADED_PROJECTS[@]} ]; then
 # 			declare -Ag BME_LOADED_PROJECTS
@@ -285,10 +297,7 @@ local project_dir="${1}"
 # "Real" processing starts here
 	source "${project_dir}/${BME_PROJECT_FILE}"
 	bme_log "project ${C_BOLD}'${BME_PROJECT_NAME}'${C_NC} environment..." loading
-# 	
-# 	# First of all, check the validity of $BME_PROJECT_NAME
-# 	__bme_check_project_name "${BME_PROJECT_NAME}" || return $?
-# 	
+	
 # 	# First of all, let's "store" the project's "root dir" and "clean" PATH
 # 	# Managing indirections for associative arrays in Bash is PITA.
 # 	# Luckily, indirections come to the rescue
@@ -296,8 +305,8 @@ local project_dir="${1}"
 # 	declare -n current_project=${project_name}
 # 	current_project['root_dir']="$PWD"
 # 	current_project['previous_path']="${PATH}"
-	export BME_PROJECT_DIR="$PWD"
-# 	BME_ORIG_PATH=$PATH
+	export BME_PROJECT_DIR="${project_dir}"
+	BME_ORIG_PATH=$PATH
 # 	
 # 	# Checks if current dir is within a git sandbox
 # 	if git rev-parse --git-dir > /dev/null 2>&1; then
@@ -315,22 +324,22 @@ local project_dir="${1}"
 # 		BME_WITHIN_GIT=false
 # 		bme_log "Directory ${C_BOLD}'${PWD}'${C_NC} is not within a git sandbox." info 1
 # 	fi
-# 	
-# 	# Loads modules
-# 	if [[ -n ${BME_MODULES+x} ]]; then
-# 		for module in "${BME_MODULES[@]}"; do
-# 			if [ -r "${BASH_SOURCE}_modules/${module}.module" ]; then
-# 				source "${BASH_SOURCE}_modules/${module}.module"
-# 				${module}_load && ACTIVE_MODULES+=("${module}")
-# 			else
-# 				local log_msg="Couldn't load ${C_BOLD}'${module}'${C_NC} module.\n"
-# 					log_msg+="\t\tFile ${C_BOLD}'${BASH_SOURCE}_modules/${module}.module'${C_NC} couldn't be found."
-# 				bme_log "${log_msg}" warning 1
-# 			fi
-# 		done
-# 		unset module
-# 	fi
-# 	
+	
+	# Loads modules
+	if [[ -n ${BME_MODULES+x} ]]; then
+		for module in "${BME_MODULES[@]}"; do
+			if [ -r "${BASH_SOURCE}_modules/${module}.module" ]; then
+				source "${BASH_SOURCE}_modules/${module}.module"
+				${module}_load && ACTIVE_MODULES+=("${module}")
+			else
+				local log_msg="Couldn't load ${C_BOLD}'${module}'${C_NC} module.\n"
+					log_msg+="\t\tFile ${C_BOLD}'${BASH_SOURCE}_modules/${module}.module'${C_NC} couldn't be found."
+				bme_log "${log_msg}" warning 1
+			fi
+		done
+		unset module
+	fi
+	
 # 	# Checks for a valid custom clean function
 # 	local custom_clean=`type -t bme_custom_clean`
 # 	if [ -n "${custom_clean}" ] && [ "${custom_clean}" != 'function' ]; then
@@ -377,26 +386,26 @@ local allowed_callers=('__bme_load_project' 'bme_eval_dir')
 # 			bme_log "Custom clean object found, but it's not of type function: ${C_BOLD}'type -t bme_custom_clean: ${custom_clean}'${C_NC}." error 1
 # 		fi
 # 	fi
-# # Active modules
-# 	if [[ -n ${ACTIVE_MODULES+x} ]]; then
-# 		# List of active modules is processed in reverse order for deactivation, in case there are sorting dependencies
-# 		# See https://stackoverflow.com/a/13360181/12237334 (hopefully this array will NOT have "holes" within)
-# 		for (( module=${#ACTIVE_MODULES[@]}-1; module>=0; module-- )); do
-# 			${ACTIVE_MODULES[module]}_unload
-# 			unset -f ${ACTIVE_MODULES[module]}_load
-# 			unset -f ${ACTIVE_MODULES[module]}_unload
-# 		done
-# 	fi
-# 	unset module
-# 	unset ACTIVE_MODULES
-# # Restore path
-# 	PATH=$BME_ORIG_PATH
-# 	unset BME_ORIG_PATH
-# # Final clean
-# 	unset BME_WITHIN_GIT
+# Active modules
+	if [[ -n ${ACTIVE_MODULES+x} ]]; then
+		# List of active modules is processed in reverse order for deactivation, in case there are sorting dependencies
+		# See https://stackoverflow.com/a/13360181/12237334 (hopefully this array will NOT have "holes" within)
+		for (( module=${#ACTIVE_MODULES[@]}-1; module>=0; module-- )); do
+			${ACTIVE_MODULES[module]}_unload
+			unset -f ${ACTIVE_MODULES[module]}_load
+			unset -f ${ACTIVE_MODULES[module]}_unload
+		done
+	fi
+	unset module
+	unset ACTIVE_MODULES
+# Restore path
+	PATH=$BME_ORIG_PATH
+	unset BME_ORIG_PATH
+# Final clean
+	unset BME_WITHIN_GIT
 	unset BME_PROJECT_NAME
 	unset BME_PROJECT_DIR
-# 	unset BME_MODULES
+	unset BME_MODULES
 	bme_log "Project ${C_BOLD}'${project_name}'${C_NC} cleaned." cleaning
 }
 

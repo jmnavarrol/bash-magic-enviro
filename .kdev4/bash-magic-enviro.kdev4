@@ -136,17 +136,17 @@ targets=1
 
 [Filters][32]
 inclusive=1
-pattern=.bme_env
+pattern=.gitattributes
 targets=1
 
 [Filters][33]
 inclusive=1
-pattern=.gitattributes
+pattern=.bme_project
 targets=1
 
 [Filters][34]
 inclusive=1
-pattern=.bme_project
+pattern=.bme_env
 targets=1
 
 [Filters][4]

@@ -7,3 +7,15 @@
 #---
 # Set your project name (must be unique)
 BME_PROJECT_NAME='bme_example_project'
+
+# Modules' activation (modules are disabled by default, so uncomment those you want to enable
+BME_MODULES=(
+	bindir               # adds project's bin/ dir to $PATH
+	check-version        # Compares current and remote version of this product
+	terraform-support    # sets terraform-related features
+	python3-virtualenvs  # manages Python 3 virtualenvs
+	aws-support          # helps development for AWS environment
+)
+
+# Sets project-wide Terraform version
+export TFENV_TERRAFORM_VERSION='1.0.1'

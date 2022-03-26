@@ -3,15 +3,15 @@
 
 # Checks for project's bin directory to be in path
 bindir_load() {
-	if ! [[ -d ${PROJECT_DIR}/bin ]]; then
-		bme_log "${C_BOLD}'${PROJECT_DIR}/bin/'${C_NC} directory requested, but not found." warning 1
-		mkdir ${PROJECT_DIR}/bin
-		bme_log "${C_BOLD}'${PROJECT_DIR}/bin'${C_NC} created." info 1
+	if ! [[ -d ${BME_PROJECT_DIR}/bin ]]; then
+		bme_log "${C_BOLD}'${BME_PROJECT_DIR}/bin/'${C_NC} directory requested, but not found." warning 1
+		mkdir ${BME_PROJECT_DIR}/bin
+		bme_log "${C_BOLD}'${BME_PROJECT_DIR}/bin'${C_NC} created." info 1
 	fi
-	# Adds ${PROJECT_DIR}/bin if not already there
-	if ! [[ "$PATH" =~ (^|:)"${PROJECT_DIR}/bin"(:|$) ]]; then
-		PATH="${PROJECT_DIR}/bin":$PATH
-		bme_log "${C_BOLD}'${PROJECT_DIR}/bin'${C_NC} added to local path." info 1
+	# Adds ${BME_PROJECT_DIR}/bin if not already there
+	if ! [[ "$PATH" =~ (^|:)"${BME_PROJECT_DIR}/bin"(:|$) ]]; then
+		PATH="${BME_PROJECT_DIR}/bin":$PATH
+		bme_log "${C_BOLD}'${BME_PROJECT_DIR}/bin'${C_NC} added to local path." info 1
 	fi
 }
 
@@ -21,7 +21,7 @@ bindir_unload() {
 	local OLD_IFS=$IFS && IFS=:
 	local tmp_path=($PATH) && IFS=$OLD_IFS
 # array operation to delete project's bin entry from path
-	tmp_path=(${tmp_path[@]%%*${PROJECT_DIR}/bin*})
+	tmp_path=(${tmp_path[@]%%*${BME_PROJECT_DIR}/bin*})
 	IFS=:
 # sets the new path
 	PATH=`echo "${tmp_path[*]}"` && IFS=$OLD_IFS

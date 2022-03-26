@@ -7,7 +7,7 @@
 # so it can regenerate the virtualenv when the md5sum doesn't match.
 
 
-virtualenvs_requirements="${PROJECT_DIR}/python-virtualenvs"
+virtualenvs_requirements="${BME_PROJECT_DIR}/python-virtualenvs"
 # Since virtualenv names are "global" per user account, so it will be locking and md5sums storage.
 virtualenvs_md5sums="${BME_CONFIG_DIR}/python-virtualenvs.md5"
 virtualenvs_lockfile="${BME_CONFIG_DIR}/python-virtualenvs.lockfile"

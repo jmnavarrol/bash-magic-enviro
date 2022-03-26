@@ -26,26 +26,26 @@ local unmet_dependencies=false
 	fi
 	
 	# makes sure tfenv repo is in place
-	if [ -d ${PROJECT_DIR}/${BME_HIDDEN_DIR}/tfenv ]; then
+	if [ -d ${BME_PROJECT_DIR}/${BME_HIDDEN_DIR}/tfenv ]; then
 	# Already cloned: check version in case we need to update
 		# this below happens in a subshell
 		(
-			cd ${PROJECT_DIR}/${BME_HIDDEN_DIR}/tfenv && current_tfenv_version=`git describe --tags`
+			cd ${BME_PROJECT_DIR}/${BME_HIDDEN_DIR}/tfenv && current_tfenv_version=`git describe --tags`
 			if [ "${tfenv_version}" != "${current_tfenv_version}" ]; then
 				local bme_msg="About to update ${C_BOLD}'tfenv'${C_NC}: "
 				bme_msg+="${C_BOLD}'${current_tfenv_version}'${C_NC} -> ${C_BOLD}'${tfenv_version}'${C_NC}"
 				bme_log "${bme_msg}" warning 1
 				
-				cd ${PROJECT_DIR}/${BME_HIDDEN_DIR} && rm -rf tfenv/
+				cd ${BME_PROJECT_DIR}/${BME_HIDDEN_DIR} && rm -rf tfenv/
 			fi
 		)
 	fi
 	
 	# no: it's not an 'else' because we may have deleted the repo above
-	if ! [ -d ${PROJECT_DIR}/${BME_HIDDEN_DIR}/tfenv ]; then
+	if ! [ -d ${BME_PROJECT_DIR}/${BME_HIDDEN_DIR}/tfenv ]; then
 	# About to clone tfenv repo
 		bme_log "${C_BOLD}'tfenv'${C_NC} repository not found: cloning it." warning 1
-		if ! git clone --depth 1 --branch ${tfenv_version} ${tfenv_repo} "${PROJECT_DIR}/${BME_HIDDEN_DIR}/tfenv"; then
+		if ! git clone --depth 1 --branch ${tfenv_version} ${tfenv_repo} "${BME_PROJECT_DIR}/${BME_HIDDEN_DIR}/tfenv"; then
 			bme_log "While cloning repository (see above): ${C_BOLD}'${tfenv_repo}' ('${tfenv_version}')${C_NC}." error 1
 			unmet_dependencies=true
 		fi
@@ -53,10 +53,10 @@ local unmet_dependencies=false
 	
 	# Creating tfenv-related symlinks
 	for tfenv_link in 'bin/tfenv' 'bin/terraform'; do
-		if ! [[ -L ${PROJECT_DIR}/${tfenv_link} ]]; then
+		if ! [[ -L ${BME_PROJECT_DIR}/${tfenv_link} ]]; then
 			# make sure this symlink is relative to the project's root dir
 			(
-				cd ${PROJECT_DIR}/bin && rm -rf "${tfenv_link}"  # just in case
+				cd ${BME_PROJECT_DIR}/bin && rm -rf "${tfenv_link}"  # just in case
 				ln -s ../${BME_HIDDEN_DIR}/tfenv/${tfenv_link}
 				bme_log "Symlink ${C_BOLD}'${tfenv_link}'${C_NC} created." info 1
 			)
@@ -72,9 +72,9 @@ local unmet_dependencies=false
 	fi
 	
 	# Project-level plugins dir
-	if ! [ -d "${PROJECT_DIR}/${BME_HIDDEN_DIR}/.terraform.d/plugin-cache" ]; then
-		mkdir -p "${PROJECT_DIR}/${BME_HIDDEN_DIR}/.terraform.d/plugin-cache"
-		bme_log "Project's Terraform plugins cache dir created: ${C_BOLD}'${PROJECT_DIR}/${BME_HIDDEN_DIR}/.terraform.d/plugin-cache'${C_NC}." info 1
+	if ! [ -d "${BME_PROJECT_DIR}/${BME_HIDDEN_DIR}/.terraform.d/plugin-cache" ]; then
+		mkdir -p "${BME_PROJECT_DIR}/${BME_HIDDEN_DIR}/.terraform.d/plugin-cache"
+		bme_log "Project's Terraform plugins cache dir created: ${C_BOLD}'${BME_PROJECT_DIR}/${BME_HIDDEN_DIR}/.terraform.d/plugin-cache'${C_NC}." info 1
 	fi
 	
 # Final message
@@ -83,7 +83,7 @@ local unmet_dependencies=false
 		bme_log "${C_BOLD}'terraform-support'${C_NC} not loaded. See missed dependencies above." error 1
 		return -1
 	else
-		export TF_PLUGIN_CACHE_DIR="${PROJECT_DIR}/${BME_HIDDEN_DIR}/.terraform.d/plugin-cache"
+		export TF_PLUGIN_CACHE_DIR="${BME_PROJECT_DIR}/${BME_HIDDEN_DIR}/.terraform.d/plugin-cache"
 		bme_log "${C_BOLD}'terraform-support'${C_NC} loaded." info 1
 	fi
 }
