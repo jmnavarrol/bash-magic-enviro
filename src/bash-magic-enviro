@@ -68,9 +68,15 @@ bme_eval_dir() {
 		fi
 	# One way or the other, ${BME_PROJECT_FILE} is already processed when reaching this point.
 	# time now for the ${BME_FILE}
-		if [ -e ${BME_FILE} ] && [[ -n ${BME_PROJECT_NAME+x} ]]; then
+		if [ -e ${BME_FILE} ]; then
 			__bme_debug && echo "${BME_FILE} FOUND"
-			source ${BME_FILE}
+			if [[ -n ${BME_PROJECT_NAME+x} ]]; then
+				source ${BME_FILE}
+			else
+				local log_msg="${C_BOLD}'${BME_FILE}'${C_NC} file found, but ${C_BOLD}'\$BME_PROJECT_NAME'${C_NC} unset.\n"
+				log_msg+="\tDid you stop by your project's root directory first?"
+				bme_log "${log_msg}" error
+			fi
 		fi
 	fi
 }
