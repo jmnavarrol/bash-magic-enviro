@@ -44,8 +44,20 @@ bme_eval_dir() {
 	# this conditional matches when we go "above" the project's root directory
 		if [ "${PWD##$BME_PROJECT_DIR}" == "$PWD" ] && [[ -n ${BME_PROJECT_DIR+x} ]]; then
 			__bme_clean_project || return $?
-			echo "CHECK IF CURRENT DIRECTORY IS WITHIN A KNOWN PROJECT PATH"
-			echo "IF SO, LOAD IT"
+		# now, check if current dir belongs to an already known project
+			local project
+			for project in "${!BME_LOADED_PROJECTS[@]}"; do
+				local project_root_dir="${BME_LOADED_PROJECTS[${project}]}"
+				if ! [ "${PWD##$project_root_dir}" == "$PWD" ]; then
+				# Within an already known project
+					__bme_debug && echo "WITHIN PROJECT AT '${project_root_dir}'"
+					if __bme_whitelist "${project_root_dir}"; then
+						__bme_load_project "${project_root_dir}"
+					fi
+					unset project
+					break
+				fi
+			done
 		fi
 	fi
 	
@@ -243,7 +255,7 @@ local project_dir="${1}"
 # # 		fi
 	else
 	# $BME_PROJECT_NAME is not yet defined, we are entering a new "BME session"
-		__bme_debug && echo "FIRST PROJECT TO BE LOADED"
+		__bme_debug && echo "LOADING PROJECT FROM CLEAN STATUS"
 # 		source ${BME_PROJECT_FILE}
 # 		__bme_check_project_name "${BME_PROJECT_NAME}" || return $?
 # 		if ! [ -v ${BME_LOADED_PROJECTS[@]} ]; then
@@ -505,4 +517,16 @@ local bad_name=false
 		bme_log "${C_BOLD}'BME_PROJECT_NAME'${C_NC} should be a valid name (see above)." fatal
 		return -1
 	fi
+}
+
+
+# Checks if current path belongs to a known project
+__bme_check_project_path() {
+	local project
+	for project in "${!BME_LOADED_PROJECTS[@]}"; do
+		local project_root_dir="${BME_LOADED_PROJECTS[${project}]}"
+		if ! [ "${PWD##$project_root_dir}" == "$PWD" ]; then
+			echo "${project_root_dir}"
+		fi
+	done
 }
