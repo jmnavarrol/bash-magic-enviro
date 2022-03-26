@@ -42,8 +42,8 @@ bme_eval_dir() {
 				fi
 			fi
 			if __bme_whitelist "$PWD"; then
-				__bme_process_known_projects "$PWD"
-				__bme_load_project "$PWD"
+				__bme_process_known_projects "$PWD" || return $?
+				__bme_load_project "$PWD" || return $?
 			else
 				bme_log "${C_BOLD}'${BME_PROJECT_FILE}'${C_NC} file found, but load was rejected (see ${C_BOLD}'${BME_WHITELISTED_FILE}'${C_NC} contents)." warning
 			fi
@@ -73,42 +73,6 @@ bme_eval_dir() {
 			source ${BME_FILE}
 		fi
 	fi
-	
-# 		if [ -e ${BME_FILE} ]; then
-# 			if __bme_whitelist "$PWD"; then
-# 				__load_project
-# 				source ${BME_FILE}
-# 				# PROJECT_NAME must be the first thing to be set!!!
-# 				if [[ -z ${BME_PROJECT_NAME+x} ]]; then
-# 					local log_msg="You didn't set ${C_BOLD}'BME_PROJECT_NAME=[your_project_name]'${C_NC} in your ${C_BOLD}'${BME_PROJECT_FILE}'${C_NC} file.\n"
-# 					log_msg+="\tDid you stop by your project's root directory first?"
-# 					bme_log "${log_msg}" fatal
-# 					return -1
-# 				elif [[ -z ${PROJECT_DIR+x} ]]; then
-# 					__bme_check_project_name "${BME_PROJECT_NAME}" || return $?
-# 					# if a variable named after the project doesn't exist, it's because we just entered a new project environment
-# 					if ! [ -v ${BME_PROJECT_NAME}[@] ]; then
-# 						echo "VAR DOES NOT EXIST"
-# 						__load_project ${BME_PROJECT_NAME}
-# 					else
-# 						echo "VAR DOES EXIST: ${!BME_PROJECT_NAME}"
-# 						declare -n current_project=${BME_PROJECT_NAME}
-# 						for key in "${!current_project[@]}"; do
-# 							echo "$key => ${current_project[$key]}"
-# 						done
-# 					fi
-# 				# If PROJECT_DIR is not set, it's because we just entered a new project enviroment
-# 					__load_project
-# 				fi
-# 			else
-# 				bme_log "${C_BOLD}'${BME_FILE}'${C_NC} file found, but load was rejected (see ${C_BOLD}'${BME_WHITELISTED_FILE}'${C_NC} contents)." warning
-# 			fi
-# 		fi
-# 	# this conditional matches when we go "above" the project's root directory
-# 		if [ "${PWD##$PROJECT_DIR}" == "$PWD" ] && [[ -n ${PROJECT_DIR+x} ]]; then
-# 			__clean_project
-# 		fi
-# 	fi
 }
 
 
@@ -242,54 +206,7 @@ local project_dir="${1}"
 	if [[ -n ${BME_PROJECT_NAME+x} ]]; then
 		__bme_debug && echo "ALREADY WITHIN A PROJECT ENVIRONMENT"
 		return 0
-# 	# Loads the new project file in a subshell to check if it's a new project
-# 		local new_project=$(source "${project_dir}/${BME_PROJECT_FILE}" && echo ${BME_PROJECT_NAME})
-# 		if [ ${BME_PROJECT_NAME} != ${new_project} ]; then
-# 			__bme_debug && echo "ENTERING NEW PROJECT ENVIRONMENT: '${BME_PROJECT_NAME}' vs '${new_project}'"
-# 			__bme_clean_project
-# 				if [ ${BME_LOADED_PROJECTS[${BME_PROJECT_NAME}]+x} ]; then
-# 					__bme_debug && echo "root stored: ${BME_LOADED_PROJECTS[${BME_PROJECT_NAME}]}"
-# 					__bme_clean_project && source ${BME_PROJECT_FILE} && __bme_load_project
-# 				else
-# 					__bme_debug && echo "root not yet stored"
-# 					local log_msg="Something wrong happened."
-# 					log_msg+="\n\tProject ${C_BOLD}'${BME_PROJECT_NAME}'${C_NC} activated, but no root known."
-# 					log_msg+="\n\tTry to replicate this circumstance and open a bug at https://github.com/jmnavarrol/bash-magic-enviro/issues."
-# 					bme_log "${log_msg}" error
-# 				fi
-# 		else
-# 			__bme_debug && echo "STILL WITHIN SAME PROJECT: ${BME_PROJECT_NAME} vs ${new_project}"
-# 		fi
-# 		# Before even trying to load the new project environment, we need to preserve current environment
-# # 		if ! [ -v ${BME_PROJECT_NAME}[@] ]; then
-# # 			echo "VAR DOES NOT EXIST"
-# # 		else
-# # 			echo "VAR DOES EXIST: ${!BME_PROJECT_NAME}"
-# # 			# Loads the new project file in a subshell to check if it's a new project
-# # 		fi
-# 	else
-# 	# $BME_PROJECT_NAME is not yet defined, we are entering a new "BME session"
-# 		__bme_debug && echo "LOADING PROJECT FROM CLEAN STATUS"
-# 		__bme_debug && echo "${project_dir}/${BME_PROJECT_FILE}"
-# 		source "${project_dir}/${BME_PROJECT_FILE}" && BME_PROJECT_DIR="${project_dir}"
-# 		__bme_check_project_name "${BME_PROJECT_NAME}" || return $?
-# 		if ! [ -v ${BME_LOADED_PROJECTS[@]} ]; then
-# 			declare -Ag BME_LOADED_PROJECTS
-# 		fi
-# 		BME_LOADED_PROJECTS["${BME_PROJECT_NAME}"]+="${PWD}"
 	fi
-
-# 					# if a variable named after the project doesn't exist, it's because we just entered a new project environment
-# 					if ! [ -v ${BME_PROJECT_NAME}[@] ]; then
-# 						echo "VAR DOES NOT EXIST"
-# 						__load_project ${BME_PROJECT_NAME}
-# 					else
-# 						echo "VAR DOES EXIST: ${!BME_PROJECT_NAME}"
-# 						declare -n current_project=${BME_PROJECT_NAME}
-# 						for key in "${!current_project[@]}"; do
-# 							echo "$key => ${current_project[$key]}"
-# 						done
-# 					fi
 	
 #  Let's make sure we are invoked only once
 	if [[ -n ${PROJECT_DIR+x} ]]; then
@@ -301,13 +218,6 @@ local project_dir="${1}"
 	source "${project_dir}/${BME_PROJECT_FILE}"
 	bme_log "project ${C_BOLD}'${BME_PROJECT_NAME}'${C_NC} environment..." loading
 	
-# 	# First of all, let's "store" the project's "root dir" and "clean" PATH
-# 	# Managing indirections for associative arrays in Bash is PITA.
-# 	# Luckily, indirections come to the rescue
-# 	declare -Ag ${project_name}
-# 	declare -n current_project=${project_name}
-# 	current_project['root_dir']="$PWD"
-# 	current_project['previous_path']="${PATH}"
 	export BME_PROJECT_DIR="${project_dir}"
 	BME_ORIG_PATH=$PATH
 	
@@ -353,13 +263,6 @@ local project_dir="${1}"
 	[[ "${ACTIVE_MODULES[@]}" =~ 'check-version' ]] && check-version
 	
 	bme_log "Project ${C_BOLD}'${BME_PROJECT_NAME}'${C_NC} loaded.\n" info
-	
-# # Finally "re-run" the project's main BME_FILE, in case there is required code in-there
-# 	source ${BME_FILE}
-# # Print results
-# 	for key in "${!current_project[@]}"; do
-# 		echo "$key => ${current_project[$key]}"
-# 	done
 }
 
 
