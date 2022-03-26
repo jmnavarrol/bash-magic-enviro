@@ -16,7 +16,7 @@ local unmet_dependencies=false
 	
 	# checks '.gitignore' contents
 	if ($BME_WITHIN_GIT); then
-		for tfenv_ignore in 'bin/tfenv' 'bin/terraform'; do
+		for tfenv_ignore in "${BME_PROJECT_DIR}/bin/tfenv" "${BME_PROJECT_DIR}/bin/terraform"; do
 			if ! git check-ignore -q ${tfenv_ignore}; then
 				bme_log "${C_BOLD}'${tfenv_ignore}'${C_NC} is not in your '.gitignore' file.  You should add it." error 1
 				unmet_dependencies=true
