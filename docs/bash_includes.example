@@ -6,6 +6,7 @@
 # Your AWS multifactor authentication device
 # (required if you use the 'aws-support' module)
 #export AWS_MFA=arn:aws:iam::NNNNNNNNNNNN:mfa/your.user
+# (...) other "secrets" you may need to export come here
 
 # Adds user's bin dir to path, if it exists -it better should, or else Bash Magic Enviro won't work ;^)
 if [ -d ~/bin ]; then
@@ -19,8 +20,8 @@ fi
 # 	source /usr/share/virtualenvwrapper/virtualenvwrapper.sh
 # fi
 
-# By the "export" below, the function 'bme_load' is run every time we change directories
-# Then, it's a matter of what you include within the '.bme_env' file on each one
+# By the "export" below, the function 'bme_eval_dir()' is run every time we change directories
+# Then, it's a matter of what you include within the '.bme_*' files on each dir.
 if ! source bash-magic-enviro; then
 	echo "Please make sure 'bash-magic-enviro' is installed and in your path!"
 	return -1

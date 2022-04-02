@@ -1,31 +1,18 @@
-# Environment file to be loaded by Bash interactive shell
+# Environment file to be sourced by Bash interactive shell
 #
 # Use this as a reference for your own '.bme_env' files
 
-#---
-# 'MAIN' .bme_env file at the root of your project
-#---
-# Uncomment and set your project name (must be unique)
-#PROJECT_NAME='my-project-name'
+# Call a function loaded by one of your active modules.
+# See how we use '|| return $?' so eventual errors can be properly managed.
+#load_virtualenv 'bme-example-virtualenv' || return $?
 
-# Modules' activation (modules are disabled by default, so uncomment those you want to enable
-BME_MODULES=(
-# 	bindir               # adds project's bin/ dir to $PATH
-# 	check-version        # Compares current and remote version of this product
-# 	terraform-support    # sets terraform-related features
-# 	python3-virtualenvs  # manages Python 3 virtualenvs
-# 	aws-support          # helps development for AWS environment
-)
+# An informational message.  See 'bme_log' usage.
+#bme_log "This is an informational message" info
 
-# Custom "clean" as supported by Bash Magic Enviro
-# bme_custom_clean() {
-# 	unset SOME_PROJECT_VAR
-# 	unset -f SOME_PROJECT_FUNCTION
-# 	bme_log "Custom cleaning finished" info 1
-# }
+# You may want to export an environment variable here
+#export MY_CUSTOM_VARIABLE='some_value'
 
-# Sets project-wide Terraform version
-# export TFENV_TERRAFORM_VERSION='1.0.1'
+# You could even run custom commands
+#ls -la .
 
-# This check is required, in case you want to apply customizations on the "root" project dir
-# [ -n "${PROJECT_DIR}" ] && echo "Post-run"
+# Always remember cleaning after you, most possibly taking advantage of the provided 'bme_custom_clean()' support.

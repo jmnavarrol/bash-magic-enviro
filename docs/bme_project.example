@@ -1,0 +1,33 @@
+# Environment file to be sourced by Bash interactive shell
+#
+# Use this as a reference for your own '.bme_project' files
+
+#---
+# 'MAIN' .bme_project file at the root of your project
+#---
+# Uncomment and set your project name.  Must be unique, and a valid name for a Bash variable.
+# It should not begin with a digit and only ASCII-7 letters, digits, and the '_' (underscore) are allowed.
+# See https://pubs.opengroup.org/onlinepubs/000095399/basedefs/xbd_chap08.html
+#BME_PROJECT_NAME='my_project_name'
+
+# Modules' activation (modules are disabled by default, so uncomment those you want to enable
+BME_MODULES=(
+# 	bindir               # adds project's bin/ dir to $PATH
+# 	check-version        # Compares BME's installed and remote versions
+# 	terraform-support    # sets terraform-related features
+# 	python3-virtualenvs  # manages Python 3 virtualenvs
+# 	aws-support          # helps development on AWS environments
+)
+
+# Custom "clean" as supported by Bash Magic Enviro
+# bme_custom_clean() {
+# 	unset SOME_OTHER_PROJECT_VAR
+# 	unset -f SOME_PROJECT_FUNCTION
+# 	bme_log "Custom cleaning finished" info 1
+# }
+
+# Sets project-wide Terraform version (an example)
+# export TFENV_TERRAFORM_VERSION='1.0.1'
+
+# Other project-wide configuration below
+# (...)

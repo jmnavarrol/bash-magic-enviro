@@ -1,4 +1,4 @@
-# Meant to be sourced by 'magic-enviro'
+# Meant to be sourced by 'Bash Magic Enviro'
 # Adds support for Python3 virtualenvs
 #
 # This module creates/loads a named virtualenv "populating" with a configuration-by-convention requirements file.

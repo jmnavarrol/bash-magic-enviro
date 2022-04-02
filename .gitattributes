@@ -4,6 +4,8 @@
 src/bash-magic-enviro linguist-language=bash
 docs/bash_includes.example linguist-language=bash
 docs/bme_env.example linguist-language=bash
+docs/bme_project.example linguist-language=bash
+.bme_project linguist-language=bash
 .bme_env linguist-language=bash
 *.module linguist-language=bash
 docs/aws_dir/*.example linguist-language=INI

@@ -19,8 +19,11 @@ BME_MODULES=(
 
 # Custom "clean" as supported by Bash Magic Enviro
 bme_custom_clean() {
-	unset TFENV_TERRAFORM_VERSION
+	bme_log "Custom cleaning..." info 1
+	unset ANOTHER_VAR
+	bme_log "Custom cleaning finished" info 1
 }
 
 # Sets project-wide Terraform version
 export TFENV_TERRAFORM_VERSION='1.0.1'
+export ANOTHER_VAR='foo'

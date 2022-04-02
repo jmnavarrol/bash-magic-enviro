@@ -1,4 +1,4 @@
-# Meant to be sourced by 'magic-enviro'
+# Meant to be sourced by 'Bash Magic Enviro'
 # Adds project's bin dir to path
 
 # Checks for project's bin directory to be in path
