@@ -23,7 +23,7 @@ declare -i BOOL=(0 1)
 true=${BOOL[0]}
 false=${BOOL[1]}
 
-DEBUG=$true
+# DEBUG=$true
 
 #--
 # FUNCTIONS
@@ -185,7 +185,9 @@ local project_dir="${1}"
 	else
 		__bme_debug && echo "root project already known: ${BME_LOADED_PROJECTS[${new_project}]}"
 	fi
-	__bme_debug && echo "Currently known projects:" `typeset -p BME_LOADED_PROJECTS`
+	__bme_debug && echo "Currently known projects:" `typeset -p BME_LOADED_PROJECTS` "."
+# Makes sure this function returns something
+	return 0
 }
 
 
