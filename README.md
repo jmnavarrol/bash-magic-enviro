@@ -26,6 +26,7 @@ Once you *"cd out"* from the project's hierarchy all these customizations will b
    1. [install Bash Magic Enviro](#make_install)
    1. [configure your project(s)](#project)
 1. [Available features](#features)<a name="feature_list"></a>
+   * [jumping among projects](#jumping_projects)
    * [directory whitelisting](#whitelisting)
    * [logging function](#log)
    * [colored output](#colors)
@@ -150,6 +151,25 @@ See also the included [example project](./example-project).
 
 ## Available features<a name="features"></a>
 Features are always active and can't be turned off.
+
+### jumping among projects<a name="jumping_projects"></a>
+As stated, in order to load a project's configuration, you first need to *"stop"* by its root directory, i.e.: `cd [some project's dir]`.
+
+If you do this when another project's configuration is already loaded, the first one will be immediately unloaded and the new one will be loaded (unless forbidden by the [whitelisting protection](#whitelisting)).  This can be useful if you want to define *"subprojects"* within a main one.
+
+Also, once you enter a project, its root directory will be *"remembered"* for as long as you remain in the same console session.  This means that you can `cd` deep into an already known project and the proper configuration will be loaded.  I.e.:
+```sh
+$ cd first_project_root  # 'first_project' will be loaded and its root directory remembered
+$ cd subproject_root  # 'first_project' will be unloaded and 'subproject' will be loaded instead
+$ cd ../../another_project_root  # 'another_project' will be loaded
+$ cd ../first_project_root/subproject_root/some_subdir  # 'some_subdir' will be discovered as within 'subproject' tree, so 'subproject' configuration will be loaded
+$ cd ../../another_subdir  # 'another_subdir' belongs to 'first_project', so 'first_project' will be loaded
+$ cd ~/unknown_project_root/subdir  # this project's root is still unknown.  If there's a '.bme_env' file within subdir, and error message will be shown
+```
+
+**WARNING:** Remember that [when you whitelist a project](#whitelisting), you are whitelisting its root directory **and any subdirectory within**.  Don't be fooled into entering a *"subproject"* without noticing.
+
+<sub>[back to feature list](#feature_list).</sub>
 
 ### directory whitelisting<a name="whitelisting"></a>
 The first time a **'.bme_project'** file is found in a directory hierarchy, you'll be prompted to either allow or forbid BME to source it.  
