@@ -2,10 +2,10 @@
 
 terraform {
 # Remember activating strict versions before going live
-  required_version = "= 1.0.1"
+  required_version = "= 1.1.8"
   
   required_providers {
-    local = "= 2.1.0"
+    local = "= 2.2.2"
   }
 }
   
@@ -14,8 +14,9 @@ locals {
 }
 
 resource "local_file" "project_name" {
-  content  = local.project_name
-  filename = "${path.module}/${local.project_name}.txt"
+  filename        = "${path.module}/${local.project_name}.txt"
+  file_permission = "0640"
+  content         = "${local.project_name}\n"
 }
 
 output "hello_world" {

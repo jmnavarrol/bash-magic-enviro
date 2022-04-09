@@ -11,6 +11,5 @@ Pending actions, general notes, etc. (in no particular order):
   * Make the module not to require the *$AWS_MFA* environment variable, as it can be read from the proper AWS profile, or even not requested at all by means of *"bypassing"* its request right to aws-cli.
   * Add flexibility to authentication methods, so MFA is not mandatory.
   * Add flexibility to which the requested AWS profile should be used within a project.
-* **[terraform-support module](./src/bash-magic-enviro_modules/terraform-support.module):** new [tfenv v2.2.3](https://github.com/tfutils/tfenv/tree/v2.2.3) available.
 
 ## IN PROGRESS
