@@ -53,7 +53,7 @@ Once you *"cd out"* from the project's hierarchy all these customizations will b
 <sub>[back to contents](#contents).</sub>
 
 ## Security<a name="security"></a>
-**A WORD OF CAUTION:** Remember your are sourcing pure Bash code within those all *'.bme_project'* and *'.bme_env'* files, so whatever that can be programmed **will** be run at your privilege level (including *sudo* commands, i.e.: `sudo rm -rf /`).  This means you are just a `cd` away from starting a Global Nuclear War or, at the very least, to happily sweep out your full home directory.
+**A WORD OF CAUTION:** Remember your are sourcing pure Bash code within all those *'.bme_project'* and *'.bme_env'* files, so whatever that can be programmed **will** be run at your privilege level (including *sudo* commands, i.e.: `sudo rm -rf /`).  This means you are just a `cd` away from starting a Global Nuclear War or, at the very least, to happily sweep out your full home directory.
 
 Make sure you review the *'.bme_project'* and *'.bme_env'* files you are going to source **BEFORE** entering a directory for first time.
 
@@ -173,7 +173,7 @@ $ cd ~/unknown_project_root/subdir  # this project's root is still unknown.  If 
 
 ### directory whitelisting<a name="whitelisting"></a>
 The first time a **'.bme_project'** file is found in a directory hierarchy, you'll be prompted to either allow or forbid BME to source it.  
-Your answer will apply to that directory and **all its subdirectories** and it will be stored in the **'~/.bme.d/whitelistedpaths.txt'** file, ^in the form of an associative array.
+Your answer will apply to that directory and **all its subdirectories** and it will be stored in the **'~/.bme.d/whitelistedpaths.txt'** file, in the form of an associative array.
 
 You can manually edit your *'~/.bme.d/whitelistedpaths.txt'* file, but be aware the file will be overwritten each time the answer for a new directory is collected (so, i.e.: your comments won't be preserved).
 
@@ -182,7 +182,7 @@ You can manually edit your *'~/.bme.d/whitelistedpaths.txt'* file, but be aware 
 <sub>[back to feature list](#feature_list).</sub>
 
 ### logging function<a name="log"></a>
-A function named **bme_log** is exported so you can use it in your *'.bme_\*'* files, which accepts three (positional) params:
+A function named [**bme_log()**](https://github.com/jmnavarrol/bash-magic-enviro/blob/770e375bbfe593fe4e2a153feeca5ad3e7a4835a/src/bash-magic-enviro#L97) is exported so you can use it in your *'.bme_\*'* files, which accepts three (positional) params:
 1. **log message [mandatory]:** the log message itself.  It accepts codes for colored output (see [below](#colors)).
 1. **log type [optional]:** the type of log, i.e.: *warning*, *info*...  It is represented as a colored uppercase prefix to the message.  Run `bme_log` without parameters to get a list of known *log types* and the color it will be used along the prefix.
 1. **log level [optional]:** when set, it indents your message by as many *tabs* as the number you pass (defaults *0*, no indentation).  Remember that, since Bash function parameters are positional, you need to provide a *log type* when you want to provide a *log level*.
@@ -215,7 +215,7 @@ Once *bme_custom_clean* is run, it will also be *unset* to avoid cluttering your
 <sub>[back to feature list](#feature_list) | [back to contents](#contents).</sub>
 
 ## Available modules<a name="modules"></a>
-Modules are *"turned off"* by default, but you can *"turn on"* those you need bye means of the **BME_MODULES=()** array (see [example project file](./docs/bme_project.example)).
+Modules are *"turned off"* by default, but you can *"turn on"* those you need by means of the **BME_MODULES=()** array (see [example project file](./docs/bme_project.example)).
 
 On top of this README, you can also check your **'~/bin/bash-magic-enviro_modules/'** directory: each file within has the exact name (with *'.module'* extension) of one module you can activate.
 
@@ -284,6 +284,7 @@ As of now, it works on the expectation that you own a *"personal AWS account"*, 
 * *$AWS_MFA* environment variable.  You need to export your MFA device to this variable, usually from your [bash_includes file](./docs/bash_includes.example).  Make sure it matches the **mfa_serial** configuration from [your **default** AWS profile](./docs/aws_dir/credentials.example).
 * [AWS CLI](https://docs.aws.amazon.com/cli/latest/userguide/cli-chap-welcome.html): most possibly, your best approach is including it in a python virtualenv with the help of our [python3-virtualenvs module](#virtualenvs).
 * [python3-virtualenvs module](#virtualenvs): if you load your *awscli* support from within a python virtualenv.
+* This module can only be used in an interactive Bash session.
 
 **Functions:**
 * **load_aws_credentials:** it contacts, with the help of AWS CLI, AWS's API endpoint to grab an *aws session token* using your *default profile's* credentials.  
@@ -292,7 +293,7 @@ Upon loading, it will ask for a single use password from your MFA device, which 
 <sub>[back to module list](#module_list).</sub>
 
 ### Terraform support<a name="terraform"></a>
-**[terraform-support module](./src/bash-magic-enviro_modules/terraform-support.module):** Adds support for [Terraform](https://www.terraform.io/intro/index.html) development.  It peruses [the tfenv project](https://github.com/tfutils/tfenv/tree/v2.2.2) to allow using different per-project Terraform versions, suited to your hardware.
+**[terraform-support module](./src/bash-magic-enviro_modules/terraform-support.module):** Adds support for [Terraform](https://www.terraform.io/intro/index.html) development.  It peruses [the tfenv project](https://github.com/tfutils/tfenv/tree/v2.2.3) to allow using different per-project Terraform versions, suited to your hardware.
 
 For this to happen, *Bash Magic Enviro* clones [the tfenv repository](https://github.com/tfutils/tfenv) to the *'.bme.d/tfenv/'* subdirectory relative to your project's root and configures it for usage within your project scope, so make sure you add *'.bme.d/'* to your ['.gitignore' file](./example-project/.gitignore) (an error will be thrown otherwise).
 
