@@ -1,8 +1,10 @@
 # Main Bash Magic Enviro manager
 #
 # This file is meant to be sourced, not run
-BME_SRC_DIR=<% BME_SRC_DIR %>
-BME_VERSION=<% BME_VERSION %>
+BME_SRC_DIR='/home/jmnav/REPOS/bash-magic-enviro'
+BME_VERSION='v1.2.3'
+# BME_SRC_DIR=<% BME_SRC_DIR %>
+# BME_VERSION=<% BME_VERSION %>
 BME_PROJECT_FILE='.bme_project'
 BME_FILE='.bme_env'
 BME_HIDDEN_DIR='.bme.d'
@@ -21,7 +23,9 @@ declare -i BOOL=(0 1)
 true=${BOOL[0]}
 false=${BOOL[1]}
 
-# DEBUG=$true
+DEBUG=$true
+
+# See at the end of this script one-off "pseudo-main" code
 
 #--
 # FUNCTIONS
@@ -40,41 +44,47 @@ bme_eval_dir() {
 				fi
 			fi
 			if __bme_whitelist "$PWD"; then
-				__bme_process_known_projects "$PWD" || return $?
-				__bme_load_project "$PWD" || return $?
+				__bme_debug && echo "project whitelisted"
+# 				__bme_process_known_projects "$PWD" || return $?
+# 				__bme_load_project "$PWD" || return $?
 			else
 				bme_log "${C_BOLD}'${BME_PROJECT_FILE}'${C_NC} file found, but load was rejected (see ${C_BOLD}'${BME_WHITELISTED_FILE}'${C_NC} contents)." warning
 			fi
 		fi
 	# this conditional matches when we go "above" the project's root directory
-		if [ "${PWD##$BME_PROJECT_DIR}" == "$PWD" ] && [[ -n ${BME_PROJECT_DIR+x} ]]; then
-			__bme_clean_project || return $?
-		# now, check if current dir belongs to an already known project
-			local project
-			for project in "${!BME_LOADED_PROJECTS[@]}"; do
-				local project_root_dir="${BME_LOADED_PROJECTS[${project}]}"
-				if ! [ "${PWD##$project_root_dir}" == "$PWD" ]; then
-				# Within an already known project
-					__bme_debug && echo "WITHIN PROJECT AT '${project_root_dir}'"
-					if __bme_whitelist "${project_root_dir}"; then
-						__bme_load_project "${project_root_dir}"
-					fi
-					break
-				fi
-			done
-			unset project
-		fi
+# 		if [ "${PWD##$BME_PROJECT_DIR}" == "$PWD" ] && [[ -n ${BME_PROJECT_DIR+x} ]]; then
+# 			__bme_clean_project || return $?
+# 		# now, check if current dir belongs to an already known project
+# 			local project
+# 			for project in "${!BME_LOADED_PROJECTS[@]}"; do
+# 				local project_root_dir="${BME_LOADED_PROJECTS[${project}]}"
+# 				if ! [ "${PWD##$project_root_dir}" == "$PWD" ]; then
+# 				# Within an already known project
+# 					__bme_debug && echo "WITHIN PROJECT AT '${project_root_dir}'"
+# 					if __bme_whitelist "${project_root_dir}"; then
+# 						__bme_load_project "${project_root_dir}"
+# 					fi
+# 					break
+# 				fi
+# 			done
+# 			unset project
+# 		fi
 	# One way or the other, ${BME_PROJECT_FILE} is already processed when reaching this point.
 	# time now for the ${BME_FILE}
 		if [ -e ${BME_FILE} ]; then
 			__bme_debug && echo "${BME_FILE} FOUND"
-			if [[ -n ${BME_PROJECT_NAME+x} ]]; then
-				source ${BME_FILE}
+			if __bme_whitelist "$PWD"; then
+				__bme_debug && echo "${BME_FILE} WHITELISTED"
 			else
-				local log_msg="${C_BOLD}'${BME_FILE}'${C_NC} file found, but ${C_BOLD}'\$BME_PROJECT_NAME'${C_NC} unset.\n"
-				log_msg+="\tDid you stop by your project's root directory first?"
-				bme_log "${log_msg}" error
+				bme_log "${C_BOLD}'${BME_FILE}'${C_NC} file found, but load was rejected (see ${C_BOLD}'${BME_WHITELISTED_FILE}'${C_NC} contents)." warning
 			fi
+# 			if [[ -n ${BME_PROJECT_NAME+x} ]]; then
+# 				source ${BME_FILE}
+# 			else
+# 				local log_msg="${C_BOLD}'${BME_FILE}'${C_NC} file found, but ${C_BOLD}'\$BME_PROJECT_NAME'${C_NC} unset.\n"
+# 				log_msg+="\tDid you stop by your project's root directory first?"
+# 				bme_log "${log_msg}" error
+# 			fi
 		fi
 	fi
 }
@@ -327,38 +337,60 @@ __bme_whitelist() {
 local test_path="${1}"
 
 # "pseudo private" function protection
-	if [ "${FUNCNAME[1]}" != 'bme_eval_dir' ]; then
-		bme_log "Function ${C_BOLD}'${FUNCNAME[0]}()'${C_NC} is ${C_BOLD}private${C_NC}.  You shouldn't invoke it!" error
+# "pseudo private" function protection
+local allowed_callers=('bme_eval_dir' '__bme_whitelist')
+	if [[ ! " ${allowed_callers[*]} " =~ " ${FUNCNAME[1]} " ]]; then
+		local log_msg="Function ${C_BOLD}'${FUNCNAME[0]}()'${C_NC} is ${C_BOLD}private${C_NC}.  You shouldn't invoke it!\n"
+		log_msg+="\tUnexpectedly called from ${C_BOLD}'${FUNCNAME[1]}'${C_NC}."
+		bme_log "${log_msg}" error
 		return -1
 	fi
 	
-# Loads list of known directories
-	if ! [ -v BME_WHITELISTED_PATHS[@] ]; then
-	# BME_WHITELISTED_PATHS associative array not yet loaded
-		if [ -r "${BME_WHITELISTED_FILE}" ]; then
-			source "${BME_WHITELISTED_FILE}"
-		else
-		# First time configuration
-			if ! [ -d "${BME_CONFIG_DIR}" ]; then
-				bme_log "${C_BOLD}'${BME_CONFIG_DIR}'${C_NC} directory doesn't exist.  Creating it" info
-				mkdir -p "${BME_CONFIG_DIR}"
-			fi
-			declare -gA BME_WHITELISTED_PATHS
-		fi
-	fi
-	
 # Checks whitelisting status of known directories
+	__bme_debug && echo -n "Checking whitelist status of "
+	if [ -e "${test_path}/${BME_PROJECT_FILE}" ]; then
+		local match='exact'
+		__bme_debug && echo -n "project directory "
+	elif [ -e "${test_path}/${BME_FILE}" ]; then
+		local match='parent'
+		__bme_debug && echo -n "enviro directory "
+	fi
+	__bme_debug && echo "'${test_path}'"
+	
 	local dir
+	local candidate_dir=""
 	for dir in "${!BME_WHITELISTED_PATHS[@]}"; do
-		# remember how this returns false if we are "within" a directory and true if not
-		if ! [ "${test_path##$dir}" == "${test_path}" ]; then
-			# returns the true/false allowance value associated with this directory
-			return ${!BME_WHITELISTED_PATHS[$dir]}
+		__bme_debug && echo -e "...against directory '${dir}'"
+		if [ $match == 'exact' ]; then
+			if [ "$dir" == "${test_path}" ]; then
+				# returns the true/false allowance value associated with this directory
+				__bme_debug && echo "exact match for project dir"
+				return ${!BME_WHITELISTED_PATHS[$dir]}
+			fi
+		elif [ $match == 'parent' ]; then
+		# in case of parent matching, there can be more than one "parent" above current dir (subprojects)
+		# First, we try to find the "deepest" parent
+			# remember how this returns false if we are "within" a directory and true if not
+			if ! [ "${test_path##$dir}" == "${test_path}" ]; then
+				__bme_debug && echo "parent match for enviro dir"
+				((${#dir} > ${#candidate_dir})) && candidate_dir="${dir}"
+			fi
 		fi
 	done
+	# Here, either already exited this function or found the deepest project "candidate" for a .bme_env file
+	if [ -n "${candidate_dir}" ]; then
+		__bme_debug && echo "Testing candidate dir '${candidate_dir}'"
+		# ...even then, there can be an still unknown project file between current dir and deepest candidate
+		# recursive search and return if an answer is found
+		while [ "${test_path##$candidate_dir}" ]; do
+			test_path=$(dirname "${test_path}")
+			__bme_whitelist "${test_path}"
+			return $?
+		done
+	fi
 	
-# If we reach here, it's a new directory
-	bme_log "${C_BOLD}'${BME_FILE}'${C_NC} file found at ${C_BOLD}'${test_path}'${C_NC}." info
+# If we reached here, it's a new directory
+	bme_log "${C_BOLD}'${BME_PROJECT_FILE}'${C_NC} file found at ${C_BOLD}'${test_path}'${C_NC}." info
 	echo -en 'Do you want to whitelist this directory? [y/N]: '
 	while true; do
 		read -r REPLY
@@ -451,3 +483,17 @@ __bme_check_project_path() {
 		fi
 	done
 }
+
+#--
+# MAIN
+# this is meant to be run just once, when this file is sourced
+#--
+# First time configuration
+if ! [ -d "${BME_CONFIG_DIR}" ]; then
+	bme_log "${C_BOLD}'${BME_CONFIG_DIR}'${C_NC} directory doesn't exist.  Creating it" info
+	mkdir -p "${BME_CONFIG_DIR}" || return $?
+fi
+if ! [ -r "${BME_WHITELISTED_FILE}" ]; then
+	echo -e "declare -gA BME_WHITELISTED_PATHS=(\n)" > "${BME_WHITELISTED_FILE}"
+fi
+source "${BME_WHITELISTED_FILE}"

@@ -51,7 +51,7 @@ dev: $(BUILDDIR)/$(SCRIPT)
 		fi; \
 		echo -en "Creating $${C_BOLD}'${DESTDIR}/${SCRIPT}'$${C_NC} symlink for development... "; \
 		current_pwd=$${PWD}; \
-		( cd ${DESTDIR} && ln -s $${current_pwd}/$(BUILDDIR)/$(SCRIPT) ${SCRIPT} ); \
+		( cd ${DESTDIR} && ln -s $${current_pwd}/src/$(SCRIPT) ${SCRIPT} ); \
 		echo -e "$${C_GREEN}DONE$${C_NC}"; \
 	fi
 # Then, the modules

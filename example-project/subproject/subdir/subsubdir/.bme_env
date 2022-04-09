@@ -1,0 +1,8 @@
+# subdirectory-level BME enviro file
+# Terraform example config
+
+# A friendly reminder to avoid surprises
+bme_log "${C_BOLD}Terraform version:${C_NC}"
+terraform --version
+bme_log "\n${C_BOLD}Terraform workspaces:${C_NC}"
+terraform workspace list
