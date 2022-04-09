@@ -1,10 +1,8 @@
 # Main Bash Magic Enviro manager
 #
 # This file is meant to be sourced, not run
-BME_SRC_DIR='/home/jmnav/REPOS/bash-magic-enviro'
-BME_VERSION='v1.2.0'
-# BME_SRC_DIR=<% BME_SRC_DIR %>
-# BME_VERSION=<% BME_VERSION %>
+BME_SRC_DIR=<% BME_SRC_DIR %>
+BME_VERSION=<% BME_VERSION %>
 BME_PROJECT_FILE='.bme_project'
 BME_FILE='.bme_env'
 BME_HIDDEN_DIR='.bme.d'

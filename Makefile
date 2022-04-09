@@ -1,5 +1,5 @@
 # Main project's Makefile
-VERSION := 'v2.0.0'
+VERSION := 'v1.2.0'
 SHELL := /bin/bash
 DESTDIR := $${HOME}/bin
 BUILDDIR := 'build'
@@ -51,8 +51,7 @@ dev: $(BUILDDIR)/$(SCRIPT)
 		fi; \
 		echo -en "Creating $${C_BOLD}'${DESTDIR}/${SCRIPT}'$${C_NC} symlink for development... "; \
 		current_pwd=$${PWD}; \
-		( cd ${DESTDIR} && ln -s $${current_pwd}/src/$(SCRIPT) ${SCRIPT} ); \
-		#( cd ${DESTDIR} && ln -s $${current_pwd}/$(BUILDDIR)/$(SCRIPT) ${SCRIPT} ); \
+		( cd ${DESTDIR} && ln -s $${current_pwd}/$(BUILDDIR)/$(SCRIPT) ${SCRIPT} ); \
 		echo -e "$${C_GREEN}DONE$${C_NC}"; \
 	fi
 # Then, the modules
@@ -77,7 +76,7 @@ install: check $(BUILDDIR)/$(SCRIPT)
 	fi
 	install --target-directory="$(DESTDIR)/$(SCRIPT)_modules" --mode=0640 -D src/$(SCRIPT)_modules/*
 	
-uninstall:
+uninstall: clean
 	rm -f "$(DESTDIR)/$(SCRIPT)"
 	rm -rf "$(DESTDIR)/$(SCRIPT)_modules"
 	@echo -e "$${C_BOLD}'magic enviro'$${C_NC} script uninstalled: $${C_GREEN}OK$${C_NC}"
