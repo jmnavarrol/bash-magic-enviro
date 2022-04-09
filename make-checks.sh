@@ -14,7 +14,6 @@ check_bash_version() {
 	fi
 }
 
-
 # Checks if ~/bin exists
 check_bin() {
 	if [ ! -d ~/bin ]; then
@@ -41,7 +40,6 @@ check_bin() {
 	fi
 }
 
-
 # Checks if ~/bin is in path
 check_bin_in_path() {
 	if [[ "$PATH" =~ (^|:)"${HOME}/bin"(:|$) ]]; then
@@ -52,7 +50,6 @@ check_bin_in_path() {
 		error_dependencies=true
 	fi
 }
-
 
 # Checks if virtualenvwrapper can be found
 # This is not trivial, since "commands" are in fact sourced functions.
@@ -68,7 +65,7 @@ check_virtualenvwrapper() {
 	fi
 }
 
-# Checks for md5sum
+# Checks for md5sum (python virtualenvs dependency)
 check_md5sum() {
 	if md5sum --version > /dev/null 2>&1; then
 		echo -e "${C_BOLD}*${C_NC} ${C_BOLD}'md5sum'${C_NC} found: ${C_GREEN}OK${C_NC}"
@@ -80,7 +77,19 @@ check_md5sum() {
 	fi
 }
 
-# Checks for jq
+# Checks for flock (python virtualenvs dependency)
+check_flock() {
+	if flock --version > /dev/null 2>&1; then
+		echo -e "${C_BOLD}*${C_NC} ${C_BOLD}'flock'${C_NC} found: ${C_GREEN}OK${C_NC}"
+	else
+		echo -e "${C_BOLD}*${C_NC} ${C_YELLOW}WARNING:${C_NC} ${C_BOLD}'flock'${C_NC} couldn't be found."
+		echo -e "\tYou won't be able to use Python virtualenv-related features."
+		echo -e "\tYou should install your system's ${C_BOLD}'util-linux'${C_NC} package."
+		warning_dependencies=true
+	fi
+}
+
+# Checks for jq (aws module dependency)
 check_jq() {
 	if jq --version > /dev/null 2>&1; then
 		echo -e "${C_BOLD}*${C_NC} ${C_BOLD}'jq'${C_NC} found: ${C_GREEN}OK${C_NC}"
@@ -102,6 +111,7 @@ check_bin
 check_bin_in_path
 check_virtualenvwrapper
 check_md5sum
+check_flock
 check_jq
 
 # Check overall results
