@@ -44,31 +44,30 @@ bme_eval_dir() {
 				fi
 			fi
 			if __bme_whitelist "$PWD"; then
-				__bme_debug && echo "project whitelisted"
-# 				__bme_process_known_projects "$PWD" || return $?
-# 				__bme_load_project "$PWD" || return $?
+				__bme_process_known_projects "$PWD" || return $?
+				__bme_load_project "$PWD" || return $?
 			else
-				bme_log "${C_BOLD}'${BME_PROJECT_FILE}'${C_NC} file found, but load was rejected (see ${C_BOLD}'${BME_WHITELISTED_FILE}'${C_NC} contents)." warning
+				bme_log "${C_BOLD}'${BME_PROJECT_FILE}'${C_NC} file found, but load was rejected." fail
 			fi
 		fi
 	# this conditional matches when we go "above" the project's root directory
-# 		if [ "${PWD##$BME_PROJECT_DIR}" == "$PWD" ] && [[ -n ${BME_PROJECT_DIR+x} ]]; then
-# 			__bme_clean_project || return $?
-# 		# now, check if current dir belongs to an already known project
-# 			local project
-# 			for project in "${!BME_LOADED_PROJECTS[@]}"; do
-# 				local project_root_dir="${BME_LOADED_PROJECTS[${project}]}"
-# 				if ! [ "${PWD##$project_root_dir}" == "$PWD" ]; then
-# 				# Within an already known project
-# 					__bme_debug && echo "WITHIN PROJECT AT '${project_root_dir}'"
-# 					if __bme_whitelist "${project_root_dir}"; then
-# 						__bme_load_project "${project_root_dir}"
-# 					fi
-# 					break
-# 				fi
-# 			done
-# 			unset project
-# 		fi
+		if [ "${PWD##$BME_PROJECT_DIR}" == "$PWD" ] && [[ -n ${BME_PROJECT_DIR+x} ]]; then
+			__bme_clean_project || return $?
+		# now, check if current dir belongs to an already known project
+			local project
+			for project in "${!BME_LOADED_PROJECTS[@]}"; do
+				local project_root_dir="${BME_LOADED_PROJECTS[${project}]}"
+				if ! [ "${PWD##$project_root_dir}" == "$PWD" ]; then
+				# Within an already known project
+					__bme_debug && echo "WITHIN PROJECT AT '${project_root_dir}'"
+					if __bme_whitelist "${project_root_dir}"; then
+						__bme_load_project "${project_root_dir}"
+					fi
+					break
+				fi
+			done
+			unset project
+		fi
 	# One way or the other, ${BME_PROJECT_FILE} is already processed when reaching this point.
 	# time now for the ${BME_FILE}
 		if [ -e ${BME_FILE} ]; then
@@ -78,13 +77,26 @@ bme_eval_dir() {
 			else
 				bme_log "${C_BOLD}'${BME_FILE}'${C_NC} file found, but load was rejected (see ${C_BOLD}'${BME_WHITELISTED_FILE}'${C_NC} contents)." warning
 			fi
-# 			if [[ -n ${BME_PROJECT_NAME+x} ]]; then
-# 				source ${BME_FILE}
-# 			else
-# 				local log_msg="${C_BOLD}'${BME_FILE}'${C_NC} file found, but ${C_BOLD}'\$BME_PROJECT_NAME'${C_NC} unset.\n"
-# 				log_msg+="\tDid you stop by your project's root directory first?"
-# 				bme_log "${log_msg}" error
-# 			fi
+			if [[ -n ${BME_PROJECT_NAME+x} ]]; then
+				source ${BME_FILE}
+			else
+			# Trying to find the "deepest" parent
+				local project_dir=""
+				for dir in "${!BME_WHITELISTED_PATHS[@]}"; do
+					# remember how this returns false if we are "within" a directory and true if not
+					if ! [ "${PWD##$dir}" == "${PWD}" ]; then
+						__bme_debug && echo "parent match for enviro dir"
+						((${#dir} > ${#project_dir})) && project_dir="${dir}"
+					fi
+				done
+				if [ -n "${project_dir}" ]; then
+					__bme_load_project "${project_dir}" || return $?
+				else
+					local log_msg="${C_BOLD}'${BME_FILE}'${C_NC} file found, but no project root found.\n"
+					log_msg+="\tReview your directory hierarchy leading to ${C_BOLD}'${PWD}'${C_NC}."
+					bme_log "${log_msg}" error
+				fi
+			fi
 		fi
 	fi
 }
@@ -180,14 +192,14 @@ local project_dir="${1}"
 	fi
 # Loads the new project file in a subshell to check if it's a new project
 	local new_project=$(source "${project_dir}/${BME_PROJECT_FILE}" && echo "${BME_PROJECT_NAME}")
-	if [[ -z "${new_project}" ]]; then
-		bme_log "You didn't set ${C_BOLD}'BME_PROJECT_NAME=[your_project_name]'${C_NC} in your ${C_BOLD}'${BME_PROJECT_FILE}'${C_NC} file." fatal
-		return -1
-	fi
+# 	if [[ -z "${new_project}" ]]; then
+# 		bme_log "You didn't set ${C_BOLD}'BME_PROJECT_NAME=[your_project_name]'${C_NC} in your ${C_BOLD}'${BME_PROJECT_FILE}'${C_NC} file." fatal
+# 		return -1
+# 	fi
 	
 	if ! [ -v BME_LOADED_PROJECTS["${new_project}"] ]; then
 		__bme_debug && echo "${new_project} not listed."
-		__bme_check_project_name "${new_project}" || return $?
+# 		__bme_check_project_name "${new_project}" || return $?
 		BME_LOADED_PROJECTS["${new_project}"]+="${PWD}"
 		__bme_debug && echo "new root project: ${BME_LOADED_PROJECTS[${new_project}]}"
 	else
@@ -337,7 +349,6 @@ __bme_whitelist() {
 local test_path="${1}"
 
 # "pseudo private" function protection
-# "pseudo private" function protection
 local allowed_callers=('bme_eval_dir' '__bme_whitelist')
 	if [[ ! " ${allowed_callers[*]} " =~ " ${FUNCNAME[1]} " ]]; then
 		local log_msg="Function ${C_BOLD}'${FUNCNAME[0]}()'${C_NC} is ${C_BOLD}private${C_NC}.  You shouldn't invoke it!\n"
@@ -389,8 +400,17 @@ local allowed_callers=('bme_eval_dir' '__bme_whitelist')
 		done
 	fi
 	
-# If we reached here, it's a new directory
+# If we reached here, it's a new project
 	bme_log "${C_BOLD}'${BME_PROJECT_FILE}'${C_NC} file found at ${C_BOLD}'${test_path}'${C_NC}." info
+	# First, check if its name is valid
+	local new_project=$(source "${test_path}/${BME_PROJECT_FILE}" && echo "${BME_PROJECT_NAME}")
+	if [[ -z "${new_project}" ]]; then
+		bme_log "You didn't set ${C_BOLD}'BME_PROJECT_NAME=[your_project_name]'${C_NC} in your ${C_BOLD}'${BME_PROJECT_FILE}'${C_NC} file." fatal
+		return -1
+	fi
+	__bme_debug && echo "New project name is '${new_project}'"
+	__bme_check_project_name "${new_project}" || return $?
+	
 	echo -en 'Do you want to whitelist this directory? [y/N]: '
 	while true; do
 		read -r REPLY
@@ -432,14 +452,14 @@ __bme_check_project_name() {
 local project_name=$1
 local bad_name=false
 
-# "pseudo private" function protection
-	if [ "${FUNCNAME[1]}" != '__bme_process_known_projects' ]; then
+local allowed_callers=('__bme_process_known_projects' '__bme_whitelist')
+	if [[ ! " ${allowed_callers[*]} " =~ " ${FUNCNAME[1]} " ]]; then
 		local log_msg="Function ${C_BOLD}'${FUNCNAME[0]}()'${C_NC} is ${C_BOLD}private${C_NC}.  You shouldn't invoke it!\n"
 		log_msg+="\tUnexpectedly called from ${C_BOLD}'${FUNCNAME[1]}'${C_NC}."
 		bme_log "${log_msg}" error
 		return -1
 	fi
-
+	
 # Check for params
 	if [[ -z "${project_name}" ]]; then
 		local caller_data=`caller 0`
