@@ -76,13 +76,13 @@ local unmet_dependencies=false
 
 
 python3-virtualenvs_unload() {
+	[ "$VIRTUAL_ENV" ] && deactivate  # deactivates virtualenv (if any active)
 	unset -f load_virtualenv
 	unset SYSTEM_PYTHON
 	unset virtualenvs_requirements
 	unset virtualenvs_md5sums
 	unset virtualenvs_lockfile
 	unset -f __create_python_virtualenv
-	hash deactivate 2>/dev/null && deactivate  # deactivates virtualenv (if any active)
 }
 
 
@@ -101,7 +101,7 @@ local requested_virtualenv="${1}"
 # if $venv_outdated holds output, it's because stored md5sum for the associated requirements file doesn't match
 	if [ -n "${venv_outdated}" ]; then
 		echo -e "${venv_outdated}"
-		hash deactivate 2>/dev/null && deactivate  # deactivates virtualenv (if any active and just in case)
+		[ "$VIRTUAL_ENV" ] && deactivate  # deactivates virtualenv (if any active and just in case)
 		rmvirtualenv "${requested_virtualenv}"
 	fi
 	
