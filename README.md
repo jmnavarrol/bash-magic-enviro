@@ -22,8 +22,8 @@ Once you *"cd out"* from the project's hierarchy all these customizations will b
 1. [Requirements](#requirements)
 1. [Security](#security)
 1. [Install](#install)
-   1. [update your Bash prompt](#prompt)
    1. [install Bash Magic Enviro](#make_install)
+   1. [update your Bash prompt](#prompt)
    1. [configure your project(s)](#project)
 1. [Available features](#features)<a name="feature_list"></a>
    * [jumping among projects](#jumping_projects)
@@ -39,6 +39,7 @@ Once you *"cd out"* from the project's hierarchy all these customizations will b
    * [Terraform support](#terraform)
 1. [Development](#development)
    * [modules' development](#dev-modules)
+1. [Support](#support)
 1. [License](#license)
 
 ----
@@ -59,9 +60,9 @@ Make sure you review the *'.bme_project'* and *'.bme_env'* files you are going t
 
 **YOU'VE BEEN WARNED!!!**
 
-In order to slightly protect you, BME will ask for your permission the first time it finds a *.bme_\** file in a directory.  If you **reject** access, no *.bme_\** files will be sourced within the directory hierarchy.  If you **accept**, *.bme_\** files within that directory **and all its subdirectories** will be *sourced*.
+In order to slightly protect you, BME will ask for your permission the first time it finds a *.bme_\** file in a directory.  If you **reject** access, no *.bme_\** files will be sourced within the directory hierarchy for a project.  If you **accept**, *.bme_\** files within that project's root **and all its subdirectories** will be *sourced* when found.
 
-Your answer will be stored at **~/.bme.d/whitelistedpaths.txt** in the form of a Bash associative array, which will also be exported to an environment variable.  You can edit this file, but be aware that the contents in memory will remain for as long as your console session, and they will be overwritten if new changes are requested.
+Your answer will be stored at **~/.bme.d/whitelistedpaths** in the form of a Bash associative array, which will also be exported to an environment variable.  You can edit this file, but be aware that the contents in memory will remain for as long as your console session, and they will be overwritten if new changes are requested.
 
 See also the [*'whitelisting'* feature's section](#whitelisting).
 
@@ -70,10 +71,18 @@ See also the [*'whitelisting'* feature's section](#whitelisting).
 ## Install<a name="install"></a>
 First of all clone [this repository](https://github.com/jmnavarrol/bash-magic-enviro), then follow the steps below.
 
+### install Bash Magic Enviro<a name="make_install"></a>
+Use [the included Makefile](./Makefile).  See the output of the bare `make` command for available targets.
+* `make check`, as the name implies, runs some tests trying to insure required dependencies are in place.
+* `make install`, installs Bash Magic Enviro into your personal *~/bin/* directory.  This means that *~/bin/* must be in your *$PATH* (see section [*"Update your Bash prompt"*](#prompt) above).
+* `make uninstall` deletes this code from your *~/bin/* dir.
+
+<sub>[back to contents](#contents).</sub>
+
 ### update your Bash prompt<a name="prompt"></a>
 This tool works by altering your Bash prompt so it can process files it finds each time you traverse a directory on the console (by means of Bash' source function).
 
-For this to happen, you need to source *Bash Magic Enviro's* main file ([*'bash-magic-enviro'*](./src/bash-magic-enviro)) and then make your *"prompt command"* to run its main function ([*'bme_eval_dir'*](https://github.com/jmnavarrol/bash-magic-enviro/blob/8f6384b259b74a7b19c3761b8ad71e4563ad16e3/src/bash-magic-enviro#L33)) each time you `cd` into a new directory.
+For this to happen, you need to source *Bash Magic Enviro's* main file ([*'bash-magic-enviro'*](./src/bash-magic-enviro)) and then make your *"prompt command"* to run its main function ([*'bme_eval_dir()'*](https://github.com/jmnavarrol/bash-magic-enviro/blob/24b6de1f364c0b25a5082bd33408a566df8cf76d/src/bash-magic-enviro#L34)) each time you `cd` into a new directory.
 1. Create your own *~/bash_includes* file using [this 'bash_includes.example'](./docs/bash_includes.example) as reference.  It provides two features:
    1. It adds your `~/bin` directory (if it exists) to your $PATH.  This way, the helper functions provided by this repository can be found and eventually loaded (of course, if you already added `~/bin` to your $PATH by other means, you won't need to do it here again).
    1. The critical part: it sources the main *bash-magic-enviro* file and alters your Bash prompt so it runs the **bme_eval_dir()** function each time your change directories, which is the one that makes possible looking for (and eventually sourcing) *.bme_\** files.  
@@ -90,19 +99,11 @@ Once you open a new terminal, changes will be loaded.
 
 <sub>[back to contents](#contents).</sub>
 
-### install Bash Magic Enviro<a name="make_install"></a>
-Use [the included Makefile](./Makefile).  See the output of the bare `make` command for available targets.
-* `make check`, as the name implies, runs some tests trying to insure required dependencies are in place.
-* `make install`, installs Bash Magic Enviro into your personal *~/bin/* directory.  This means that *~/bin/* must be in your *$PATH* (see section [*"Update your Bash prompt"*](#prompt) above).
-* `make uninstall` deletes this code from your *~/bin/* dir.
-
-<sub>[back to contents](#contents).</sub>
-
 ### configure your project(s)<a name="project"></a>
 Once you properly installed and configured your console for *Bash Magic Enviro*, you may configure your projects to use it.
 1. Add a **'.bme_project'** file to your project(s)' *"root directory"* to activate and configure their related environment (see [example](./docs/bme_project.example)).  
    Doing this at your git repository's root is preferred.  
-   In order for this main *'.bme_project'* to be sourced, you need to first *"stop"* by your project's root directory **before** entering any other subdirectory, i.e.:
+   Whenever you `cd` into a project's filesystem hierarchy, its related *'.bme_project'* file will be searched for starting on the current directory and upwards to '/'.  Once found, its [*whitelisting status*](#whitelisting) will be checked and, if allowed, both the *'.bme_project'* file and the current *'.bme_env'* file (if any) will be sourced.
    ```bash
    ~$: cd ~/REPOS/example-project
    LOADING: project 'bme_example_project' environment...
@@ -127,7 +128,7 @@ Once you properly installed and configured your console for *Bash Magic Enviro*,
 1. Once your main project's configuracion is loaded by means of its *'.bme_project'* file, you can set configurations for each of your project's subdirectories (including its root one) with the help of **'.bme_env'** files.  
    Just remember *'.bme_env'* files are just standard Bash files to be sourced, so you can add whatever Bash code you can run this way, typically calls to previously sourced functions, exports of further environment variables, informational outputs, etc.  
    See [an example *'.bme_env'* file for reference](./docs/bme_env.example), and also take a look at [the provided example project](./example-project/) for inspiration.
-1. Once you move *"above"* a project's root dir (i.e.: `cd ~`) the project's environment will be automatically cleaned.
+1. Once you move away from any BME project space (i.e.: `cd ~`) the environment will be automatically cleaned.
    ```bash
    ~/REPOS/example-project$: cd
            INFO: Custom cleaning finished
@@ -153,29 +154,25 @@ See also the included [example project](./example-project).
 Features are always active and can't be turned off.
 
 ### jumping among projects<a name="jumping_projects"></a>
-As stated, in order to load a project's configuration, you first need to *"stop"* by its root directory, i.e.: `cd [some project's dir]`.
+You can freely `cd` among directories in your console and BME will try its best to find the proper *'.bme_project'* file to load (the one *"nearest"* upwards in the filesystem hierarchy).  If a BME project was already loaded it will be cleaned before sourcing the new one.
 
-If you do this when another project's configuration is already loaded, the first one will be immediately unloaded and the new one will be loaded (unless forbidden by the [whitelisting protection](#whitelisting)).  This can be useful if you want to define *"subprojects"* within a main one.
-
-Also, once you enter a project, its root directory will be *"remembered"* for as long as you remain in the same console session.  This means that you can `cd` deep into an already known project and the proper configuration will be loaded.  I.e.:
+Be careful, though, for a *"deeper"* *'.bme_env'* file not to depend on configurations from a *"higer"* one, since those won't be automatically loaded.  Just the project's *'.bme_project'* file and the *'.bme_env'* in the current directory (if any) will be sourced.  I.e.:
 ```sh
 $ cd first_project_root  # 'first_project' will be loaded and its root directory remembered
 $ cd subproject_root  # 'first_project' will be unloaded and 'subproject' will be loaded instead
 $ cd ../../another_project_root  # 'another_project' will be loaded
 $ cd ../first_project_root/subproject_root/some_subdir  # 'some_subdir' will be discovered as within 'subproject' tree, so 'subproject' configuration will be loaded
 $ cd ../../another_subdir  # 'another_subdir' belongs to 'first_project', so 'first_project' will be loaded
-$ cd ~/unknown_project_root/subdir  # this project's root is still unknown.  If there's a '.bme_env' file within subdir, and error message will be shown
+$ cd ~/unknown_project_root/subdir  # this project's root is still unknown.  You'll be asked for its desired withelisting status
 ```
-
-**WARNING:** Remember that [when you whitelist a project](#whitelisting), you are whitelisting its root directory **and any subdirectory within**.  Don't be fooled into entering a *"subproject"* without noticing.
 
 <sub>[back to feature list](#feature_list).</sub>
 
 ### directory whitelisting<a name="whitelisting"></a>
 The first time a **'.bme_project'** file is found in a directory hierarchy, you'll be prompted to either allow or forbid BME to source it.  
-Your answer will apply to that directory and **all its subdirectories** and it will be stored in the **'~/.bme.d/whitelistedpaths.txt'** file, in the form of an associative array.
+Your answer will apply to that directory and **all the project's subdirectories** and it will be stored in the **'~/.bme.d/whitelistedpaths'** file, in the form of an associative array.
 
-You can manually edit your *'~/.bme.d/whitelistedpaths.txt'* file, but be aware the file will be overwritten each time the answer for a new directory is collected (so, i.e.: your comments won't be preserved).
+You can manually edit your *'~/.bme.d/whitelistedpaths'* file, but be aware the file will be overwritten each time the answer for a new directory is collected (so, i.e.: your comments won't be preserved).
 
 **WARNING:** as already stated at [the Security section](#security), be aware this is by no means is a secure protection, but more of a convenience to avoid glaring overlooks.  You still are fully responsible to review all *.bme_\** contents before entering a directory.  Be also aware of tricks like symlinks, etc. that can fool you into sourcing unexpected code.
 
@@ -350,6 +347,13 @@ This means that, at the very minimum, every module needs to define these two fun
 1. **[modulename]_unload:** it should clean any modification to the shell the module introduces.  A good test while developing a new module can be running `set > before.txt` and `set > after.txt` when loading/unloading the module and check the *diff* between both files: there should be no *diff*.
 
 Other than that, anything that can be *sourced* by Bash can be added to the module's file, since that's exactly what will happen (the file is *sourced* when the module is requested).
+
+<sub>[back to contents](#contents).</sub>
+
+### Support<a name="support"></a>
+This is a hobby project I work on my free time, so you shouldn't expect but a *"best effort"* support.  You are welcome to [open issues](https://github.com/jmnavarrol/bash-magic-enviro/issues) and offer *pull requests* [on its GitHub page](https://github.com/jmnavarrol/bash-magic-enviro).
+
+I also maintain [an unestructured TODO file](./TODO.md) so you can get an idea on what I'm hoping to work in the future.
 
 <sub>[back to contents](#contents).</sub>
 
