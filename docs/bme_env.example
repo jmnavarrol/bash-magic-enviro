@@ -4,15 +4,15 @@
 
 # Call a function loaded by one of your active modules.
 # See how we use '|| return $?' so eventual errors can be properly managed.
-#load_virtualenv 'bme-example-virtualenv' || return $?
+load_virtualenv 'bme-example-virtualenv' || return $?
 
 # An informational message.  See 'bme_log' usage.
-#bme_log "This is an informational message" info
+bme_log "This is an informational message" info
 
 # You may want to export an environment variable here
-#export MY_CUSTOM_VARIABLE='some_value'
+export MY_CUSTOM_VARIABLE='some_value'
 
 # You could even run custom commands
-#ls -la .
+ls -la .
 
 # Always remember cleaning after you, most possibly taking advantage of the provided 'bme_custom_clean()' support.

@@ -18,4 +18,3 @@ Pending actions, general notes, etc. (in no particular order):
   * self-management of *.gitignore* entries for ~/bin/[terraform,tfvenv] symlinks.
 
 ## IN PROGRESS
-* Implicit module loading as dependency of a requested module.

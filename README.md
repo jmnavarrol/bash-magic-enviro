@@ -216,7 +216,7 @@ Modules are *"turned off"* by default, but you can *"turn on"* those you need by
 
 On top of this README, you can also check your **'~/bin/bash-magic-enviro_modules/'** directory: each file within has the exact name (with *'.module'* extension) of one module you can activate.
 
-**NOTE:** As you may notice, modules are loaded/unloaded by means of a Bash array.  As such, sorting order matters (i.e.: *'terraform-support'* depends on *'bindir'* which means *'bindir'* must be listed **before** *'terraform-support'*).
+**NOTE:** As you may notice, modules are loaded/unloaded by means of a Bash array.  As such, sorting order matters (i.e.: if you want to activate *'aws-support'* loading *awscli* by means of a python virtualenv, make sure you list *'python3-virtualenvs'* module **before** *'aws-support'*).
 
 ### look for new *Bash Magic Enviro* versions<a name="check-versions"></a>
 **[check-version module](./src/bash-magic-enviro_modules/check-version.module):** as the name implies, helps you noticing if your current *Bash Magic Enviro* version is up to date.
@@ -303,7 +303,6 @@ This module also sets the **'TF_PLUGIN_CACHE_DIR'** environment variable pointin
 **NOTE:** when a given terraform version is requested, *symlinks* will be created under the project's *'bin/'* directory for both *tfenv* and *terraform*.  You should include them in your *'.gitignore'* file (see [example](./example-project/.gitignore)).
 
 **Requirements:**
-* **[bindir module](#bindir)** to be listed **before** *terraform-support*.
 * git command
 * Internet connectivity
 
@@ -317,13 +316,13 @@ There's a `make dev` target on [the Makefile](./Makefile), that creates *symboli
 ### modules' development<a name="dev-modules"></a>
 *Modules* are the way to add new functionality to *Bash Magic Enviro*.  Any file named *[modulename].module* under the [*'bash-magic-enviro_modules/'* directory](./src/bash-magic-enviro_modules) becomes a module by that name.
 
-*Modules* are loaded by including their *modulename* in the **BME_MODULES() array** of your project's *.bme_project* file (see [example](./docs/bme_project.example)).  Upon entering into your project's root directory, the file represented by the module name is first sourced and then its *[modulename]_load* function is called with no parameters.
+*Modules* are loaded by including their *modulename* in the **BME_MODULES() array** of your project's *.bme_project* file (see [example](./docs/bme_project.example)).  Upon entering into your project's root directory, the file represented by the module name is first sourced and then its *[modulename]_load()* function is called with no parameters.
 
-When you `cd` out of your project's space, all modules are unloaded by calling their *[modulename]_unload* function without parameters.
+When you `cd` out of your project's space, all modules are unloaded by calling their *[modulename]_unload()* function without parameters.
 
-This means that, at the very minimum, every module needs to define these two functions: *[modulename]_load* and *[modulename]_unload*:
-1. **[modulename]_load:** it should run any preparation the module may need, i.e.: exporting new environment variables, check for the presence of pre-requirements, etc.  
-   It is expected that, in case of problems running *[modulename]_load*, your module cleans after itself before returning, i.e.:
+This means that, at the very minimum, every module needs to define these two functions: *[modulename]_load()* and *[modulename]_unload()*:
+1. **[modulename]_load():** it should run any preparation the module may need, i.e.: exporting new environment variables, check for the presence of pre-requirements, etc.  
+   It is expected that, in case of problems running *[modulename]_load()*, your module cleans after itself before returning, i.e.:
    ```bash
    [modulename]_load() {
      local unmet_dependencies=false  # true and false are defined in the global bash-magic-enviro file
@@ -344,9 +343,22 @@ This means that, at the very minimum, every module needs to define these two fun
 
    ```
    You can also look at [other modules](./src/bash-magic-enviro_modules/) to get some inspiration.
-1. **[modulename]_unload:** it should clean any modification to the shell the module introduces.  A good test while developing a new module can be running `set > before.txt` and `set > after.txt` when loading/unloading the module and check the *diff* between both files: there should be no *diff*.
+1. **[modulename]_unload():** it should clean any modification to the shell the module introduces.  A good test while developing a new module can be running `set > before.txt` and `set > after.txt` when loading/unloading the module and check the *diff* between both files: there should be no *diff*.
 
 Other than that, anything that can be *sourced* by Bash can be added to the module's file, since that's exactly what will happen (the file is *sourced* when the module is requested).
+
+#### modules' dependencies
+If your module depends on other modules to be already loaded (i.e.: [terraform module](#terraform) depends on [bindir module](#bindir)) you can *"pre-load"* them calling the **__bme_modules_load()** function with the desired module as parameter, one at a time, in dependency order, i.e.:
+```bash
+# Load module pre-dependencies
+__bme_modules_load 'first_module'
+__bme_modules_load 'second_module'
+
+```
+
+This should be made outside of any function, preferred early on your module file, so the *"pre-loading"* is run when the module code is sourced, before your own *[module]_load()* function is run.  This way the dependency order is insured both at module loading and unloading.
+
+See [the terraform module's source code for an example](./src/bash-magic-enviro_modules/terraform-support.module).
 
 <sub>[back to contents](#contents).</sub>
 
