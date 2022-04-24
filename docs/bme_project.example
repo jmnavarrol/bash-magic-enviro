@@ -10,7 +10,7 @@
 # See https://pubs.opengroup.org/onlinepubs/000095399/basedefs/xbd_chap08.html
 #BME_PROJECT_NAME='my_project_name'
 
-# Modules' activation (modules are disabled by default, so uncomment those you want to enable
+# Modules' activation (modules are disabled by default, so uncomment those you want to enable)
 BME_MODULES=(
 # 	bindir               # adds project's bin/ dir to $PATH
 # 	check-version        # Compares BME's installed and remote versions

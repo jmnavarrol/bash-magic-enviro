@@ -126,7 +126,7 @@ Once you properly installed and configured your console for *Bash Magic Enviro*,
    ~/REPOS/example-project$: cd some_subdir
    ```
 1. Once your main project's configuracion is loaded by means of its *'.bme_project'* file, you can set configurations for each of your project's subdirectories (including its root one) with the help of **'.bme_env'** files.  
-   Just remember *'.bme_env'* files are just standard Bash files to be sourced, so you can add whatever Bash code you can run this way, typically calls to previously sourced functions, exports of further environment variables, informational outputs, etc.  
+   Just remember *'.bme_env'* files are nothing but standard Bash files to be sourced, so you can add whatever Bash code you can run this way, typically calls to previously sourced functions, exports of further environment variables, informational outputs, etc.  
    See [an example *'.bme_env'* file for reference](./docs/bme_env.example), and also take a look at [the provided example project](./example-project/) for inspiration.
 1. Once you move away from any BME project space (i.e.: `cd ~`) the environment will be automatically cleaned.
    ```bash
@@ -216,7 +216,7 @@ Modules are *"turned off"* by default, but you can *"turn on"* those you need by
 
 On top of this README, you can also check your **'~/bin/bash-magic-enviro_modules/'** directory: each file within has the exact name (with *'.module'* extension) of one module you can activate.
 
-As you may note, modules are loaded/unloaded by means of a Bash array.  As such, sorting order matters (i.e.: *'terraform-support'* depends on *'bindir'* which means *'bindir'* must be listed **before** *'terraform-support'*).
+**NOTE:** As you may notice, modules are loaded/unloaded by means of a Bash array.  As such, sorting order matters (i.e.: *'terraform-support'* depends on *'bindir'* which means *'bindir'* must be listed **before** *'terraform-support'*).
 
 ### look for new *Bash Magic Enviro* versions<a name="check-versions"></a>
 **[check-version module](./src/bash-magic-enviro_modules/check-version.module):** as the name implies, helps you noticing if your current *Bash Magic Enviro* version is up to date.
@@ -300,7 +300,7 @@ You can globably set your project's Terraform version by means of the **'TFENV_T
 
 This module also sets the **'TF_PLUGIN_CACHE_DIR'** environment variable pointing to the *.bme.d/.terraform.d/plugin-cache/* directory relative to your project's root, so plugins can be reused within different Terraform plans in your project (also unset at project exit).
 
-**NOTE:** when a given terraform version is requested, *symlinks* will created under the project's *'bin/'* directory for both *tfenv* and *terraform*.  You should include them in your *'.gitignore'* file (see [example](./example-project/.gitignore)).
+**NOTE:** when a given terraform version is requested, *symlinks* will be created under the project's *'bin/'* directory for both *tfenv* and *terraform*.  You should include them in your *'.gitignore'* file (see [example](./example-project/.gitignore)).
 
 **Requirements:**
 * **[bindir module](#bindir)** to be listed **before** *terraform-support*.

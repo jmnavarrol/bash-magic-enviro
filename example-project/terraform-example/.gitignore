@@ -9,5 +9,5 @@ terraform.tfstate.backup
 # plan-level plugins dir
 .terraform/
 
-# the example file from this Terraform plan
+# the example output file from this Terraform plan
 bme-terraform-example.txt

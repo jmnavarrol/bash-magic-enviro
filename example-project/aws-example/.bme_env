@@ -2,10 +2,10 @@
 # AWS example config
 
 # awscli will be loaded from a custom virtualenv
-load_virtualenv 'bme-example-aws' || return -1
+load_virtualenv 'bme-example-aws' || return $?
 
 # now, load my AWS credentials
-load_aws_credentials || return -1
+load_aws_credentials || return $?
 
 # An example output
 local log_msg="Current AWS credentials:\n"
