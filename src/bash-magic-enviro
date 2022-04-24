@@ -232,19 +232,7 @@ local project_dir="${1}"
 	fi
 	
 	# Loads modules
-	if [[ -n ${BME_MODULES+x} ]]; then
-		for module in "${BME_MODULES[@]}"; do
-			if [ -r "${BASH_SOURCE}_modules/${module}.module" ]; then
-				source "${BASH_SOURCE}_modules/${module}.module"
-				${module}_load && ACTIVE_MODULES+=("${module}")
-			else
-				local log_msg="Couldn't load ${C_BOLD}'${module}'${C_NC} module.\n"
-					log_msg+="\t\tFile ${C_BOLD}'${BASH_SOURCE}_modules/${module}.module'${C_NC} couldn't be found."
-				bme_log "${log_msg}" warning 1
-			fi
-		done
-		unset module
-	fi
+	__bme_modules_load
 	
 	# Checks for a valid custom clean function
 	local custom_clean=`type -t bme_custom_clean`
@@ -286,18 +274,8 @@ local allowed_callers=('__bme_load_project' 'bme_eval_dir')
 			bme_log "Custom clean object found, but it's not of type function: ${C_BOLD}'type -t bme_custom_clean: ${custom_clean}'${C_NC}." error 1
 		fi
 	fi
-# Active modules
-	if [[ -n ${ACTIVE_MODULES+x} ]]; then
-		# List of active modules is processed in reverse order for deactivation, in case there are sorting dependencies
-		# See https://stackoverflow.com/a/13360181/12237334 (hopefully this array will NOT have "holes" within)
-		for (( module=${#ACTIVE_MODULES[@]}-1; module>=0; module-- )); do
-			${ACTIVE_MODULES[module]}_unload
-			unset -f ${ACTIVE_MODULES[module]}_load
-			unset -f ${ACTIVE_MODULES[module]}_unload
-		done
-	fi
-	unset module
-	unset ACTIVE_MODULES
+# Unloads active modules
+	__bme_modules_unload
 # Restore path
 	PATH=$BME_ORIG_PATH
 	unset BME_ORIG_PATH
@@ -391,6 +369,40 @@ local allowed_callers=('__bme_load_project')
 	echo ")" >> "${BME_WHITELISTED_FILE}"
 	
 	[ "$REPLY" == 'Y' ] && return $true || return $false
+}
+
+
+# Loads requested modules as per the BME_MODULES array
+__bme_modules_load() {
+	if [[ -n ${BME_MODULES+x} ]]; then
+		for module in "${BME_MODULES[@]}"; do
+			if [ -r "${BASH_SOURCE}_modules/${module}.module" ]; then
+				source "${BASH_SOURCE}_modules/${module}.module"
+				${module}_load && ACTIVE_MODULES+=("${module}")
+			else
+				local log_msg="Couldn't load ${C_BOLD}'${module}'${C_NC} module.\n"
+					log_msg+="\t\tFile ${C_BOLD}'${BASH_SOURCE}_modules/${module}.module'${C_NC} couldn't be found."
+				bme_log "${log_msg}" warning 1
+			fi
+		done
+		unset module
+	fi
+}
+
+
+# Unloads modules as per the ACTIVE_MODULES array
+__bme_modules_unload() {
+	if [[ -n ${ACTIVE_MODULES+x} ]]; then
+		# List of active modules is processed in reverse order for deactivation, in case there are sorting dependencies
+		# See https://stackoverflow.com/a/13360181/12237334 (hopefully this array will NOT have "holes" within)
+		for (( module=${#ACTIVE_MODULES[@]}-1; module>=0; module-- )); do
+			${ACTIVE_MODULES[module]}_unload
+			unset -f ${ACTIVE_MODULES[module]}_load
+			unset -f ${ACTIVE_MODULES[module]}_unload
+		done
+	fi
+	unset module
+	unset ACTIVE_MODULES
 }
 
 
