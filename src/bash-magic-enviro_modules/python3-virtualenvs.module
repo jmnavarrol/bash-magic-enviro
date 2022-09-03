@@ -98,6 +98,50 @@ local requested_virtualenv="${1}"
 		fi
 	)
 	
+# if $venv_outdated is empty, the main virtualenv is up to date.
+# but it can point to includes that we should consider
+	if [ -z "${venv_outdated}" ]; then
+		venv_outdated=$(
+			cd "${virtualenvs_requirements}"
+		# matches lines like:
+		# -rpath
+		# -r path
+		# --requirement path
+		# --requirement=path
+			local include_list=$(
+				grep --perl-regexp \
+				     --ignore-case \
+				     --only-matching \
+				     '^((-r|--requirement)(=|[[:space:]])*)\K(.+)' \
+				     ${requested_virtualenv}.requirements
+			)
+		# Check found includes
+			local include
+			for include in ${include_list}; do
+				real_path=`realpath -qe "${include}"`
+				local current_error=$?
+				if [ $current_error -eq 0 ]; then
+					if ! grep " ${real_path}$" "${virtualenvs_md5sums}" | md5sum --check --status > /dev/null 2>&1; then
+						bme_log "Virtualenv ${C_BOLD}'${real_path}'${C_NC} outdated." warning
+					# Updates included file's MD5SUM.
+					# Technically, I should do this after virtualenv creation, not before
+					# ${real_path//\//\\/} escapes backslashes in so sed is happy
+						sed --in-place "/ ${real_path//\//\\/}/d" ${virtualenvs_md5sums}
+						md5sum "${real_path}" >> "${virtualenvs_md5sums}"
+						bme_log "md5sum for ${C_BOLD}'${include}'${C_NC} virtualenv collected." info 1
+					fi
+				else
+					bme_log "Virtualenv ${C_BOLD}'${requested_virtualenv}'${C_NC}: included file ${C_BOLD}'${include}'${C_NC} doesn't exist." error
+					return $current_error
+				fi
+			done
+		)
+		if [ $? -ne 0 ]; then
+			echo -e "LOLO: ${venv_outdated}"
+			return 1
+		fi
+	fi
+	
 # if $venv_outdated holds output, it's because stored md5sum for the associated requirements file doesn't match
 	if [ -n "${venv_outdated}" ]; then
 		echo -e "${venv_outdated}"
