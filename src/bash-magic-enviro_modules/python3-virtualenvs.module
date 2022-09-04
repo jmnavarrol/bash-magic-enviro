@@ -91,6 +91,7 @@ local requested_virtualenv="${1}"
 
 # Checks the requirements file's md5sum
 	# running in a subshell so I can securely change directories
+	# the idea is to populate $venv_outdated **only** if the virtualenv needs to be regenerated.
 	local venv_outdated=$(
 		cd "${virtualenvs_requirements}"
 		if ! grep " ${requested_virtualenv}.requirements$" "${virtualenvs_md5sums}" | md5sum --check --status > /dev/null 2>&1; then
@@ -116,19 +117,14 @@ local requested_virtualenv="${1}"
 				     ${requested_virtualenv}.requirements
 			)
 		# Check found includes
-			local include
 			for include in ${include_list}; do
 				real_path=`realpath -qe "${include}"`
 				local current_error=$?
 				if [ $current_error -eq 0 ]; then
 					if ! grep " ${real_path}$" "${virtualenvs_md5sums}" | md5sum --check --status > /dev/null 2>&1; then
-						bme_log "Virtualenv ${C_BOLD}'${real_path}'${C_NC} outdated." warning
-					# Updates included file's MD5SUM.
-					# Technically, I should do this after virtualenv creation, not before
-					# ${real_path//\//\\/} escapes backslashes in so sed is happy
-						sed --in-place "/ ${real_path//\//\\/}/d" ${virtualenvs_md5sums}
-						md5sum "${real_path}" >> "${virtualenvs_md5sums}"
-						bme_log "md5sum for ${C_BOLD}'${include}'${C_NC} virtualenv collected." info 1
+						local log_msg="Virtualenv ${C_BOLD}'${real_path}'${C_NC} outdated.\n"
+						log_msg+="\tIncluded from ${C_BOLD}'${requested_virtualenv}'${C_NC}."
+						bme_log "${log_msg}" warning
 					fi
 				else
 					bme_log "Virtualenv ${C_BOLD}'${requested_virtualenv}'${C_NC}: included file ${C_BOLD}'${include}'${C_NC} doesn't exist." error
@@ -137,7 +133,7 @@ local requested_virtualenv="${1}"
 			done
 		)
 		if [ $? -ne 0 ]; then
-			echo -e "LOLO: ${venv_outdated}"
+			echo -e "${venv_outdated}"
 			return 1
 		fi
 	fi
@@ -215,11 +211,41 @@ local requested_virtualenv="${1}"
 				# running in a subshell so I securely can change directories
 				(
 					cd "${virtualenvs_requirements}"
+				# Updates the 'main' requirements md5sum
 					if ! grep " ${requested_virtualenv}.requirements$" "${virtualenvs_md5sums}" | md5sum --check --status > /dev/null 2>&1; then
 						sed --in-place "/ ${requested_virtualenv}.requirements/d" ${virtualenvs_md5sums}
 						md5sum "${requested_virtualenv}.requirements" >> "${virtualenvs_md5sums}"
 						bme_log "md5sum for ${C_BOLD}'${requested_virtualenv}'${C_NC} virtualenv collected." info 1
 					fi
+				# But there can also be references to included requirements
+				# matches lines like:
+				# -rpath
+				# -r path
+				# --requirement path
+				# --requirement=path
+					local include_list=$(
+						grep --perl-regexp \
+						     --ignore-case \
+						     --only-matching \
+						     '^((-r|--requirement)(=|[[:space:]])*)\K(.+)' \
+						     ${requested_virtualenv}.requirements
+					)
+				# Check found includes
+					for include in ${include_list}; do
+						real_path=`realpath -qe "${include}"`
+						local current_error=$?
+						if [ $current_error -eq 0 ]; then
+							if ! grep " ${real_path}$" "${virtualenvs_md5sums}" | md5sum --check --status > /dev/null 2>&1; then
+							# ${real_path//\//\\/} escapes backslashes in so sed is happy
+								sed --in-place "/ ${real_path//\//\\/}/d" ${virtualenvs_md5sums}
+								md5sum "${real_path}" >> "${virtualenvs_md5sums}"
+								bme_log "md5sum for ${C_BOLD}'${include}'${C_NC} virtualenv collected." info 1
+							fi
+						else
+							bme_log "Virtualenv ${C_BOLD}'${requested_virtualenv}'${C_NC}: included file ${C_BOLD}'${include}'${C_NC} doesn't exist." error
+							return $current_error
+						fi
+					done
 				)
 				bme_log "${C_BOLD}'${requested_virtualenv}'${C_NC} virtualenv created." info
 			fi
