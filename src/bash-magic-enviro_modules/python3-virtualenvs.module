@@ -83,6 +83,7 @@ python3-virtualenvs_unload() {
 	unset virtualenvs_md5sums
 	unset virtualenvs_lockfile
 	unset -f __create_python_virtualenv
+	unset -f __check_requirements_includes
 }
 
 
@@ -91,7 +92,7 @@ local requested_virtualenv="${1}"
 
 # Checks the requirements file's md5sum
 	# running in a subshell so I can securely change directories
-	# the idea is to populate $venv_outdated **only** if the virtualenv needs to be regenerated.
+	# the idea is to populate ${venv_outdated} **only** if the virtualenv needs to be regenerated.
 	local venv_outdated=$(
 		cd "${virtualenvs_requirements}"
 		if ! grep " ${requested_virtualenv}.requirements$" "${virtualenvs_md5sums}" | md5sum --check --status > /dev/null 2>&1; then
@@ -102,40 +103,7 @@ local requested_virtualenv="${1}"
 # if $venv_outdated is empty, the main virtualenv is up to date.
 # but it can point to includes that we should consider
 	if [ -z "${venv_outdated}" ]; then
-		venv_outdated=$(
-			cd "${virtualenvs_requirements}"
-		# matches lines like:
-		# -rpath
-		# -r path
-		# --requirement path
-		# --requirement=path
-			local include_list=$(
-				grep --perl-regexp \
-				     --ignore-case \
-				     --only-matching \
-				     '^((-r|--requirement)(=|[[:space:]])*)\K(.+)' \
-				     ${requested_virtualenv}.requirements
-			)
-		# Check found includes
-			for include in ${include_list}; do
-				real_path=`realpath -qe "${include}"`
-				local current_error=$?
-				if [ $current_error -eq 0 ]; then
-					if ! grep " ${real_path}$" "${virtualenvs_md5sums}" | md5sum --check --status > /dev/null 2>&1; then
-						local log_msg="Virtualenv ${C_BOLD}'${real_path}'${C_NC} outdated.\n"
-						log_msg+="\tIncluded from ${C_BOLD}'${requested_virtualenv}'${C_NC}."
-						bme_log "${log_msg}" warning
-					fi
-				else
-					bme_log "Virtualenv ${C_BOLD}'${requested_virtualenv}'${C_NC}: included file ${C_BOLD}'${include}'${C_NC} doesn't exist." error
-					return $current_error
-				fi
-			done
-		)
-		if [ $? -ne 0 ]; then
-			echo -e "${venv_outdated}"
-			return 1
-		fi
+		venv_outdated=$(__check_requirements_includes "${requested_virtualenv}")
 	fi
 	
 # if $venv_outdated holds output, it's because stored md5sum for the associated requirements file doesn't match
@@ -218,34 +186,7 @@ local requested_virtualenv="${1}"
 						bme_log "md5sum for ${C_BOLD}'${requested_virtualenv}'${C_NC} virtualenv collected." info 1
 					fi
 				# But there can also be references to included requirements
-				# matches lines like:
-				# -rpath
-				# -r path
-				# --requirement path
-				# --requirement=path
-					local include_list=$(
-						grep --perl-regexp \
-						     --ignore-case \
-						     --only-matching \
-						     '^((-r|--requirement)(=|[[:space:]])*)\K(.+)' \
-						     ${requested_virtualenv}.requirements
-					)
-				# Check found includes
-					for include in ${include_list}; do
-						real_path=`realpath -qe "${include}"`
-						local current_error=$?
-						if [ $current_error -eq 0 ]; then
-							if ! grep " ${real_path}$" "${virtualenvs_md5sums}" | md5sum --check --status > /dev/null 2>&1; then
-							# ${real_path//\//\\/} escapes backslashes in so sed is happy
-								sed --in-place "/ ${real_path//\//\\/}/d" ${virtualenvs_md5sums}
-								md5sum "${real_path}" >> "${virtualenvs_md5sums}"
-								bme_log "md5sum for ${C_BOLD}'${include}'${C_NC} virtualenv collected." info 1
-							fi
-						else
-							bme_log "Virtualenv ${C_BOLD}'${requested_virtualenv}'${C_NC}: included file ${C_BOLD}'${include}'${C_NC} doesn't exist." error
-							return $current_error
-						fi
-					done
+					__check_requirements_includes "${requested_virtualenv}" true
 				)
 				bme_log "${C_BOLD}'${requested_virtualenv}'${C_NC} virtualenv created." info
 			fi
@@ -256,4 +197,73 @@ local requested_virtualenv="${1}"
 			return 1
 		fi
 	) 100>"${virtualenvs_lockfile}"
+}
+
+
+# Looks for includes in a requirements file and check their status
+# Param $1: the virtualenv to check
+# Param $2: requests MD5SUM update (defaults to false)
+__check_requirements_includes() {
+local requested_virtualenv="${1}"
+local update_md5="${2:-false}"
+
+# "pseudo private" function protection
+local allowed_callers=(
+	'load_virtualenv'
+	'__create_python_virtualenv'
+)
+	if [[ ! " ${allowed_callers[*]} " =~ " ${FUNCNAME[1]} " ]]; then
+		local log_msg="Function ${C_BOLD}'${FUNCNAME[0]}()'${C_NC} is ${C_BOLD}private${C_NC}.  You shouldn't invoke it!\n"
+		log_msg+="\tUnexpectedly called from ${C_BOLD}'${FUNCNAME[1]}'${C_NC}."
+		bme_log "${log_msg}" error
+		return -1
+	fi
+	
+# running in a subshell so I securely can change directories
+# the function will implicitly return the subshell's output
+	(
+		cd "${virtualenvs_requirements}"
+		
+	# matches lines like:
+	# -rpath
+	# -r path
+	# --requirement path
+	# --requirement=path
+		local include_list=$(
+			grep --perl-regexp \
+			     --ignore-case \
+			     --only-matching \
+			     '^((-r|--requirement)(=|[[:space:]])*)\K(.+)' \
+			     ${requested_virtualenv}.requirements
+		)
+	# Checks found includes (if any)
+		for include in ${include_list}; do
+		# Real path holds the absolute path to the file to be included.
+			local real_path=`realpath -qe "${include}"`
+			local current_error=$?
+			if [ $current_error -eq 0 ]; then
+			# This checks if the md5sum currently recorded matches the current one
+				if ! grep " ${real_path}$" "${virtualenvs_md5sums}" \
+				     | md5sum --check --status > /dev/null 2>&1; then
+					if ( $update_md5 ); then
+					# ${real_path//\//\\/} escapes backslashes so sed is happy
+						sed --in-place "/ ${real_path//\//\\/}/d" ${virtualenvs_md5sums}
+						md5sum "${real_path}" >> "${virtualenvs_md5sums}"
+						bme_log "md5sum for ${C_BOLD}'${real_path}'${C_NC} virtualenv collected." info 1
+					else
+					# wrong match, but only logging requested
+						local log_msg="Virtualenv ${C_BOLD}'${real_path}'${C_NC} outdated.\n"
+						log_msg+="\tIncluded from ${C_BOLD}'${requested_virtualenv}'${C_NC}."
+						bme_log "${log_msg}" warning
+					fi
+				fi
+			# ...except there's an error trying to find it!
+			else
+				local log_msg="Virtualenv ${C_BOLD}'${requested_virtualenv}'${C_NC}:\n"
+				log_msg+="\tincluded file ${C_BOLD}'${include}'${C_NC} couldn't be accessed."
+				log_msg+="\t'${current_error}'"
+				bme_log "${log_msg}" error
+			fi
+		done
+	)
 }
