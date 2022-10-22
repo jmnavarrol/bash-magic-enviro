@@ -214,7 +214,7 @@ Once *bme_custom_clean* is run, it will also be *unset* to avoid cluttering your
 ### *Bash Magic Enviro* version checking<a name="check-versions"></a>
 As the name implies, helps you noticing if your current *Bash Magic Enviro* version is up to date.
 
-A function named [**bme_check_version()**](https://github.com/jmnavarrol/bash-magic-enviro/blob/41c7c8e9ad7629b9ae5c16dde8b1e7a290c01840/src/bash-magic-enviro#L155) (no parameters) is exported so you can call it wherever you feel proper (i.e.: *.bme_project* and *.bme_env* files or command prompt).
+A function named [**bme_check_version()**](https://github.com/jmnavarrol/bash-magic-enviro/blob/e69fb64217aaf3844997edd6ca19e905d2e33401/src/bash-magic-enviro#L155) (no parameters) is exported so you can call it wherever you feel proper (i.e.: *.bme_project* and *.bme_env* files or command prompt).
 
 This function compares your current *Bash Magic Enviro's* version against the highest version available, defined as *git tags* at your *git remote*.  Shows a message about current version status.
 
