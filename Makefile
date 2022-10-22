@@ -1,5 +1,5 @@
 # Main project's Makefile
-VERSION := 'v1.3.3'
+VERSION := 'v1.4.0'
 SHELL := /bin/bash
 DESTDIR := $${HOME}/bin
 BUILDDIR := 'build'

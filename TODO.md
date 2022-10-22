@@ -13,7 +13,6 @@ Pending actions, general notes, etc. (in no particular order):
   * Add flexibility to which the requested AWS profile should be used within a project.
 * Easier/global management of whitelisting and projects' root directories.
 * Auto white/blacklisting of subdirectories (i.e.: to make easy using BME on non-interactive sessions).
-* Evaluate if *check-version* should really be a module (thus usable only within a project context) or a global BME *"feature"* (thus, always available).
 * **[terraform-support module](./src/bash-magic-enviro_modules/aws-support.module):**
   * self-management of *.gitignore* entries for ~/bin/[terraform,tfvenv] symlinks.
 

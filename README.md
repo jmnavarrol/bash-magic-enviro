@@ -31,8 +31,8 @@ Once you *"cd out"* from the project's hierarchy all these customizations will b
    * [logging function](#log)
    * [colored output](#colors)
    * [custom clean function](#custom_clean)
+   * [*Bash Magic Enviro* version checking](#check-versions)
 1. [Available modules](#modules)<a name="module_list"></a>
-   * [look for new *Bash Magic Enviro* versions](#check-versions)
    * [load project's bin dir](#bindir)
    * [load Python3 *virtualenvs*](#virtualenvs)
    * [AWS support](#aws)
@@ -209,6 +209,15 @@ For this to happen you should declare a *custom clean function* named **bme_cust
 
 Once *bme_custom_clean* is run, it will also be *unset* to avoid cluttering your environment.
 
+<sub>[back to feature list](#feature_list).</sub>
+
+### *Bash Magic Enviro* version checking<a name="check-versions"></a>
+As the name implies, helps you noticing if your current *Bash Magic Enviro* version is up to date.
+
+A function named [**bme_check_version()**](https://github.com/jmnavarrol/bash-magic-enviro/blob/41c7c8e9ad7629b9ae5c16dde8b1e7a290c01840/src/bash-magic-enviro#L155) (no parameters) is exported so you can call it wherever you feel proper (i.e.: *.bme_project* and *.bme_env* files or command prompt).
+
+This function compares your current *Bash Magic Enviro's* version against the highest version available, defined as *git tags* at your *git remote*.  Shows a message about current version status.
+
 <sub>[back to feature list](#feature_list) | [back to contents](#contents).</sub>
 
 ## Available modules<a name="modules"></a>
@@ -217,22 +226,6 @@ Modules are *"turned off"* by default, but you can *"turn on"* those you need by
 On top of this README, you can also check your **'~/bin/bash-magic-enviro_modules/'** directory: each file within has the exact name (with *'.module'* extension) of one module you can activate.
 
 **NOTE:** As you may notice, modules are loaded/unloaded by means of a Bash array.  As such, sorting order matters (i.e.: if you want to activate *'aws-support'* loading *awscli* by means of a python virtualenv, make sure you list *'python3-virtualenvs'* module **before** *'aws-support'*).
-
-### look for new *Bash Magic Enviro* versions<a name="check-versions"></a>
-**[check-version module](./src/bash-magic-enviro_modules/check-version.module):** as the name implies, helps you noticing if your current *Bash Magic Enviro* version is up to date.
-
-**Requirements:**
-* git command
-* Internet connectivity
-
-**Functions:**
-* **check-version (no params):** it compares your current *Bash Magic Enviro's* version against the highest version available, defined as *git tags* at your *git remote*.  Shows a message about current version status.
-
-**NOTES:**
-1. When this module is requested, it will show *check-version's* result at project activation (i.e.: when you `cd` into your project's root dir).
-1. Version comparation is very crude and limits itself to show differences between *local* and *remote* versions.  Use your own judgement when considering an upgrade.
-
-<sub>[back to module list](#module_list).</sub>
 
 ### project's bin dir<a name="bindir"></a>
 **[bindir module](./src/bash-magic-enviro_modules/bindir.module):** the **'bin/'** directory relative to the project's root will be added to $PATH, so custom script helpers, binaries, etc. are automatically available to the environment.
