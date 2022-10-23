@@ -13,7 +13,6 @@ BME_PROJECT_NAME='my_project_name'
 # Modules' activation (modules are disabled by default, so uncomment those you want to enable)
 BME_MODULES=(
 	bindir               # adds project's bin/ dir to $PATH
-	check-version        # Compares BME's installed and remote versions
 	terraform-support    # sets terraform-related features
 	python3-virtualenvs  # manages Python 3 virtualenvs
 	aws-support          # helps development on AWS environments

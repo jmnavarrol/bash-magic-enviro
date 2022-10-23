@@ -1,6 +1,6 @@
 # Environment file to be loaded by Bash interactive shell
 #
-# Use this as a reference for your own '.bme_env' files
+# Use this as a reference for your own '.bme_project' files
 
 #---
 # 'MAIN' .bme_project file at the root of your project
