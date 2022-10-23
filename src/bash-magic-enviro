@@ -160,7 +160,7 @@ bme_check_version() {
 	
 # Shows version comparation results
 	if [ "${BME_VERSION}" == "${highest_tag}" ]; then
-		bme_log "${C_BOLD}'Bash Magic Enviro'${C_NC} is up to date." info 0
+		bme_log "${C_BOLD}'Bash Magic Enviro'${C_NC} is up to date: ${C_BOLD}'${BME_VERSION}'${C_NC}." info 0
 	elif [[ " ${remote_tags[*]} " =~ " ${BME_VERSION} " ]]; then
 	# Our current version is found in the list of remote tags but, since it's not the highest one, it must be lower
 		local log_msg="New ${C_BOLD}'Bash Magic Enviro'${C_NC} version available.  Please, consider upgrading.\n"
