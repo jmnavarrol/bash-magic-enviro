@@ -13,7 +13,8 @@ Pending actions, general notes, etc. (in no particular order):
   * Add flexibility to which the requested AWS profile should be used within a project.
 * Easier/global management of whitelisting and projects' root directories.
 * Auto white/blacklisting of subdirectories (i.e.: to make easy using BME on non-interactive sessions).
-* **[terraform-support module](./src/bash-magic-enviro_modules/aws-support.module):**
+* **[terraform-support module](./src/bash-magic-enviro_modules/terraform-support.module):**
   * self-management of *.gitignore* entries for ~/bin/[terraform,tfvenv] symlinks.
+  * New major [tfenv](https://github.com/tfutils/tfenv) version available.
 
 ## IN PROGRESS

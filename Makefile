@@ -1,9 +1,12 @@
 # Main project's Makefile
-VERSION := 'v1.4.0'
 SHELL := /bin/bash
-DESTDIR := $${HOME}/bin
-BUILDDIR := 'build'
-SCRIPT := bash-magic-enviro
+
+export VERSION := v1.4.1
+export DESTDIR := $${HOME}/bin
+export SRCDIR := src
+export BUILDDIR := build
+export SCRIPT := bash-magic-enviro
+
 
 # Style table
 export C_BOLD := \033[1m
@@ -30,16 +33,8 @@ check:
 	
 # Expands templated values from main script
 $(BUILDDIR)/$(SCRIPT): Makefile src/$(SCRIPT)
-	@mkdir -p $(BUILDDIR)
-	@OLD_IFS=$$IFS; \
-	IFS=''; \
-	cat /dev/null > $(BUILDDIR)/$(SCRIPT); \
-	while read -r LINE; do \
-		LINE="$${LINE//'<% BME_SRC_DIR %>'/"'$${PWD}'"}"; \
-		LINE="$${LINE//'<% BME_VERSION %>'/"$(VERSION)"}"; \
-		echo "$${LINE}" >> $(BUILDDIR)/$(SCRIPT); \
-	done < src/$(SCRIPT); \
-	IFS=$$OLD_IFS
+	@echo -e "$${C_BOLD}Expanding templated values...$${C_NC}"
+	@./make-templating.sh
 	
 dev: $(BUILDDIR)/$(SCRIPT)
 # Symlinks the main script
@@ -51,7 +46,7 @@ dev: $(BUILDDIR)/$(SCRIPT)
 		fi; \
 		echo -en "Creating $${C_BOLD}'${DESTDIR}/${SCRIPT}'$${C_NC} symlink for development... "; \
 		current_pwd=$${PWD}; \
-		( cd ${DESTDIR} && ln -s $${current_pwd}/src/$(SCRIPT) ${SCRIPT} ); \
+		( cd ${DESTDIR} && ln -s $${current_pwd}/build/$(SCRIPT) ${SCRIPT} ); \
 		echo -e "$${C_GREEN}DONE$${C_NC}"; \
 	fi
 # Then, the modules
