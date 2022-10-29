@@ -74,7 +74,7 @@ First of all clone [this repository](https://github.com/jmnavarrol/bash-magic-en
 ### install Bash Magic Enviro<a name="make_install"></a>
 Use [the included Makefile](./Makefile).  See the output of the bare `make` command for available targets.
 * `make check`, as the name implies, runs some tests trying to insure required dependencies are in place.
-* `make install`, installs Bash Magic Enviro into your personal *~/bin/* directory.  This means that *~/bin/* must be in your *$PATH* (see section [*"Update your Bash prompt"*](#prompt) above).
+* `make install`, installs Bash Magic Enviro into your personal *~/bin/* directory.  This means that *~/bin/* must be in your *$PATH* (see section [*"Update your Bash prompt"*](#prompt) below).
 * `make uninstall` deletes this code from your *~/bin/* dir.
 
 <sub>[back to contents](#contents).</sub>
@@ -252,21 +252,21 @@ See also [the included example](./example-project/virtualenv-example/.bme_env).
 
 **Functions:**
 * **load_virtualenv [virtualenv]:** loads, with the help of *virtualenvwrapper*, the requested virtualenv *[virtualenv]* if it exists (it's equivalent to virtualenvwrapper's `workon [virtualenv]` command).
-  1. If the function can't find the requested virtualenv *[virtualenv]*, it will look for its requirements file at *"${BME_PROJECT_NAME}/python-virtualenvs/[virtualenv].requirements"* and it will create the requested *virtualenv* using it.
+  1. If the function can't find the requested virtualenv *[virtualenv]*, it will look for its requirements file at *"${BME_PROJECT_DIR}/python-virtualenvs/[virtualenv].requirements"* and it will create the requested *virtualenv* using it.
   1. If the requirements file can't be found, it will create an *"empty"* virtualenv *[virtualenv]*, along with an empty *requirements* file, so you can start installing packages on it.
   1. If *pip* is listed in the *requirements* file, and given the requirements' file format is quite sensible about the exact version of *pip* in use, *load_virtualenv* will try to honor your requested pip version before installing the remaining packages into the virtualenv.
   1. This function also stores the requirements file's *md5sum* under the *'~/.bme.d/'* hidden directory, so it can update the virtualenv when changes are detected.
   
   **NOTE:** Python virtualenv's names are per-user global.  This means that if two projects share the same virtualenv name, whenever you activate one or the other, the virtualenv will be regenerated **unless** the md5sum of their respective requirements files match.  This is on purpose, and you should try to either call them differently of share their requirements file so md5sum matching is guaranteed.
 
-The expectation is that you will install whatever required pips within your virtualenv and, once satisfied with the results, you'll "dump" its contents to its requirements file, i.e.: `pip freeze > ${BME_PROJECT_NAME}/python-virtualenvs/[virtualenv].requirements`.
+The expectation is that you will install whatever required pips within your virtualenv and, once satisfied with the results, you'll "dump" its contents to its requirements file, i.e.: `pip freeze > ${BME_PROJECT_DIR}/python-virtualenvs/[virtualenv].requirements`.
 
 <sub>[back to module list](#module_list).</sub>
 
 ### AWS support<a name="aws"></a>
 **[aws-support module](./src/bash-magic-enviro_modules/aws-support.module):** Adds support for [AWS-based](https://aws.amazon.com/) development.
 
-As of now, it works on the expectation that you own a *"personal AWS account"*, protected by means of [MultiFactor Authentication](https://docs.aws.amazon.com/IAM/latest/UserGuide/id_credentials_mfa.html) and a [software OTP device](https://docs.aws.amazon.com/IAM/latest/UserGuide/id_credentials_mfa_enable_virtual.html).  Your account is, then, granted further access and privileges by means of role impersonation.
+As of now, it works on the expectation that you own a *"personal AWS account"*, protected by means of [MultiFactor Authentication](https://docs.aws.amazon.com/IAM/latest/UserGuide/id_credentials_mfa.html) and a [software OTP device](https://docs.aws.amazon.com/IAM/latest/UserGuide/id_credentials_mfa_enable_virtual.html).  Your account is, then, granted further access and privileges by means of [role impersonation](https://docs.aws.amazon.com/IAM/latest/UserGuide/id_roles_use_switch-role-console.html).
 
 **Requirements:**
 * [jq](https://github.com/stedolan/jq): a *"lightweight and flexible command-line JSON processor"*.  It is used here to parse AWS API responses.  You should most possibly install it with the help of your system's package manager (i.e.: `sudo apt install jq`).
