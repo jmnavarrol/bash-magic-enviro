@@ -205,7 +205,7 @@ local project_dir="${1}"
 # if $BME_PROJECT_NAME is defined, we are already within a "BME session"
 	if [[ -n ${BME_PROJECT_NAME+x} ]]; then
 		__bme_debug && echo "${FUNCNAME[0]}: ALREADY WITHIN A PROJECT ENVIRONMENT"
-		local new_project=$(source "${project_dir}/${BME_PROJECT_FILE}" && echo "${BME_PROJECT_NAME}")
+		local new_project=$(source "${project_dir}/${BME_PROJECT_FILE}" > /dev/null && echo "${BME_PROJECT_NAME}")
 		if [[ -z "${new_project}" ]]; then
 			bme_log "You didn't set ${C_BOLD}'BME_PROJECT_NAME=[your_project_name]'${C_NC} in your ${C_BOLD}'${BME_PROJECT_FILE}'${C_NC} file." error
 			return -1
@@ -213,6 +213,7 @@ local project_dir="${1}"
 		
 		if [ "${new_project}" != "${BME_PROJECT_NAME}" ]; then
 		# New project: clean old one
+			__bme_debug && echo "${FUNCNAME[0]}: DIFFERENT PROJECT - OLD '${BME_PROJECT_NAME}' vs NEW '${new_project}'."
 			__bme_clean_project || return $?
 		elif [ "${project_dir}" != "${BME_PROJECT_DIR}" ]; then
 		# Weird: it seems we found the same project name at two different locations
@@ -343,15 +344,6 @@ local allowed_callers=('__bme_load_project')
 		__bme_debug && echo -e "\t'${test_path}' whitelist status is '${BME_WHITELISTED_PATHS[$test_path]}'."
 		return ${!BME_WHITELISTED_PATHS[$test_path]}
 	fi
-	
-# 	for dir in "${!BME_WHITELISTED_PATHS[@]}"; do
-# 		if [ "$dir" == "${test_path}" ]; then
-# 		# returns the true/false allowance value associated with this directory
-# 			__bme_debug && echo "${FUNCNAME[0]} called from ${FUNCNAME[1]}: exact match for project dir."
-# 			__bme_debug && echo -e "\t'${test_path}' belongs to '${dir}'."
-# 			return ${!BME_WHITELISTED_PATHS[$dir]}
-# 		fi
-# 	done
 	
 # If we reached here, it's a new project directory
 	bme_log "${C_BOLD}'${BME_PROJECT_FILE}'${C_NC} file found at ${C_BOLD}'${test_path}'${C_NC}." info
