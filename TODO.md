@@ -16,5 +16,6 @@ Pending actions, general notes, etc. (in no particular order):
 * **[terraform-support module](./src/bash-magic-enviro_modules/terraform-support.module):**
   * self-management of *.gitignore* entries for ~/bin/[terraform,tfvenv] symlinks.
   * New major [tfenv](https://github.com/tfutils/tfenv) version available.
+  * Review [terraform-switcher](https://github.com/warrensbox/terraform-switcher) instead of tfenv as one of its declared features is honoring terraform's *required_version* variable.
 
 ## IN PROGRESS
