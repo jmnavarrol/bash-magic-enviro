@@ -66,12 +66,12 @@ local unmet_dependencies=false
 		fi
 	done
 	unset tfenv_link
-	# ...trying to control tfenv bug. See https://github.com/tfutils/tfenv/issues/245
-	if [ -n "${TFENV_TERRAFORM_VERSION+x}" ] && ! tfenv list > /dev/null 2>&1; then
-		if ! tfenv install; then
-			bme_log "While trying to install Terraform version ${C_BOLD}'${TFENV_TERRAFORM_VERSION}${C_NC} (see above)." error 1
-			unmet_dependencies=true
-		fi
+	# ...trying to cope with a tfenv limitation.  See https://github.com/tfutils/tfenv/issues/367
+	# If TFENV_TERRAFORM_VERSION is defined and non-empty, just let it as-is.
+	# If TFENV_TERRAFORM_VERSION undefined or empty, set it to 'min-required', since this will make it work (while not optimally).
+	if [ -z ${TFENV_TERRAFORM_VERSION+x} ]; then
+		bme_log "${C_BOLD}'TFENV_TERRAFORM_VERSION'${C_NC} environment variable is not set.  Setting it to ${C_BOLD}'min-required'${C_NC} by default." info 1
+		export TFENV_TERRAFORM_VERSION=min-required
 	fi
 	
 	# Project-level plugins dir

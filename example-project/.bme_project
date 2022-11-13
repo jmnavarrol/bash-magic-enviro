@@ -23,8 +23,7 @@ bme_custom_clean() {
 	bme_log "Custom cleaning finished" info 1
 }
 
-# Sets project-wide Terraform version
-export TFENV_TERRAFORM_VERSION='1.1.8'
+# Sets a project-wide environment variable
 export ANOTHER_VAR='foo'
 
 # Finally, check current version status

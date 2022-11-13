@@ -15,8 +15,6 @@ Pending actions, general notes, etc. (in no particular order):
 * Auto white/blacklisting of subdirectories (i.e.: to make easy using BME on non-interactive sessions).
 * **[terraform-support module](./src/bash-magic-enviro_modules/terraform-support.module):**
   * self-management of *.gitignore* entries for ~/bin/[terraform,tfvenv] symlinks.
-  * New major [tfenv](https://github.com/tfutils/tfenv) version available.
-  * Review [terraform-switcher](https://github.com/warrensbox/terraform-switcher) instead of tfenv as one of its declared features is honoring terraform's *required_version* variable.
-  * Also [terraform-config-inspect](https://github.com/hashicorp/terraform-config-inspect), which allows to extract configurations from terraform.
+  * Review [terraform-config-inspect](https://github.com/hashicorp/terraform-config-inspect), which allows to extract configurations from terraform.
 
 ## IN PROGRESS
