@@ -289,7 +289,13 @@ For this to happen, *Bash Magic Enviro* clones [the tfenv repository](https://gi
 
 Once *tfenv* is (automatically) configured for your project, you can normally use any suitable terraform or [tfenv command](https://github.com/tfutils/tfenv/tree/v2.2.0#usage).
 
-You can globably set your project's Terraform version by means of the **'TFENV_TERRAFORM_VERSION'** environment variable defined on your project's main *.bme_project file* (See [example project](./example-project/.bme_project)).  This variable is unset when you go outside the project's directory tree along *Bash Magic Enviro*'s cleaning process.
+You should set your desired terraform version [in terraform's code itself](https://developer.hashicorp.com/terraform/language/settings), i.e.:
+```tf
+terraform {
+  required_version = "= 1.2.6"
+}
+```
+This way, this module will set for you the environment variable `TFENV_TERRAFORM_VERSION=min-required` with which a suitable terraform version will be installed upon your first terraform command invocation.  See [a .bme_env example](./example-project/terraform-example/.bme_env).  This *TFENV_TERRAFORM_VERSION* variable is unset when you go outside the project's directory tree along *Bash Magic Enviro*'s cleaning process.
 
 This module also sets the **'TF_PLUGIN_CACHE_DIR'** environment variable pointing to the *.bme.d/.terraform.d/plugin-cache/* directory relative to your project's root, so plugins can be reused within different Terraform plans in your project (also unset at project exit).
 
