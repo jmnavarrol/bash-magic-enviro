@@ -76,6 +76,14 @@ Use [the included Makefile](./Makefile).  See the output of the bare `make` comm
 * `make check`, as the name implies, runs some tests trying to insure required dependencies are in place.
 * `make install`, installs Bash Magic Enviro into your personal *~/bin/* directory.  This means that *~/bin/* must be in your *$PATH* (see section [*"Update your Bash prompt"*](#prompt) below).
 * `make uninstall` deletes this code from your *~/bin/* dir.
+  
+**NOTES:**
+* `make check` is implicitly run before `make install` so you should honor BME's mandatory requirements before succesfully installing it.  
+  Pay attention to make's output for errors and hints on how to correct them.
+* You can also install/uninstall BME globally with the help of the **DESTDIR** variable, i.e.:  
+  `make DESTDIR=/opt/bme install`  
+  In this case, you also should add *DESTDIR* to the system's global PATH.  
+  Note that it is **highly discouraged** to install BME globally.  While it might make sense a global setup on some scenarios, like a shared container for demonstration purposes or as a helper development tool, carefully pay attention to the [security considerations](#security) anyway.
 
 <sub>[back to contents](#contents).</sub>
 

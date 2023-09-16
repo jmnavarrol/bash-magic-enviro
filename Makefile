@@ -24,7 +24,11 @@ targets:
 	@echo -e "\t$${C_BOLD}check:$${C_NC} checks requirements."
 	@echo -e "\t$${C_BOLD}dev:$${C_NC} creates symlinks for easier development of this tool."
 	@echo -e "\t$${C_BOLD}install:$${C_NC} installs this product to your ~/bin/ directory."
+	@echo -e "\t\tYou can also install BME globally with the help of $${C_BOLD}DESTDIR$${C_NC} var, i.e. (as root):"
+	@echo -e "\t\t\`make DESTDIR=/opt/bme install\`"
 	@echo -e "\t$${C_BOLD}uninstall:$${C_NC} uninstalls this product."
+	@echo -e "\t\tYou can uninstall globally with $${C_BOLD}DESTDIR$${C_NC} var, i.e. (as root):"
+	@echo -e "\t\t\`make DESTDIR=/opt/bme uninstall\`"
 	@echo -e "\t$${C_BOLD}clean:$${C_NC} cleans build artifacts under source code."
 	
 check:
@@ -35,6 +39,10 @@ check:
 $(BUILDDIR)/$(SCRIPT): Makefile src/$(SCRIPT)
 	@echo -e "$${C_BOLD}Expanding templated values...$${C_NC}"
 	@./make-templating.sh
+	
+# Makes sure DESTDIR is in place
+$(DESTDIR):
+	mkdir --parents ${DESTDIR}
 	
 dev: $(BUILDDIR)/$(SCRIPT)
 # Symlinks the main script
@@ -62,14 +70,14 @@ dev: $(BUILDDIR)/$(SCRIPT)
 		echo -e "$${C_GREEN}DONE$${C_NC}"; \
 	fi
 	
-install: check $(BUILDDIR)/$(SCRIPT)
-	install --mode=0640 $(BUILDDIR)/$(SCRIPT) $(DESTDIR)/$(SCRIPT)
+install: check $(BUILDDIR)/$(SCRIPT) $(DESTDIR)
+	install --mode=0644 $(BUILDDIR)/$(SCRIPT) $(DESTDIR)/$(SCRIPT)
 	@if [ -L "$(DESTDIR)/$(SCRIPT)_modules" ]; then \
 		echo -en "$${C_YELLOW}WARNING:$${C_NC} about to delete $${C_BOLD}'$(DESTDIR)/$(SCRIPT)_modules$${C_NC}'... "; \
 		rm -rf "$(DESTDIR)/$(SCRIPT)_modules"; \
 		echo -e "$${C_GREEN}DONE$${C_NC}"; \
 	fi
-	install --target-directory="$(DESTDIR)/$(SCRIPT)_modules" --mode=0640 -D src/$(SCRIPT)_modules/*
+	install --target-directory="$(DESTDIR)/$(SCRIPT)_modules" --mode=0644 -D src/$(SCRIPT)_modules/*
 	
 uninstall: clean
 	rm -f "$(DESTDIR)/$(SCRIPT)"
