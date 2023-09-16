@@ -2,7 +2,7 @@
 SHELL := /bin/bash
 
 export VERSION := v1.4.5
-export DESTDIR := $${HOME}/bin
+export DESTDIR := ${HOME}/bin
 export SRCDIR := src
 export BUILDDIR := build
 export SCRIPT := bash-magic-enviro
