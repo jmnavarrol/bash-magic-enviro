@@ -5,7 +5,7 @@
 __bme_modules_load 'bindir'
 
 terraform-support_load() {
-local tfenv_repo='git@github.com:tfutils/tfenv.git'
+local tfenv_repo='https://github.com/tfutils/tfenv.git'
 local tfenv_version='v3.0.0'
 local unmet_dependencies=false
 
