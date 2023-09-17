@@ -1,0 +1,23 @@
+# Environment file to be loaded by Bash interactive shell
+# See /usr/local/src/bash-magic-enviro/build/bash-magic-enviro
+
+#---
+# 'MAIN' .bme_project file at the root of your project
+#---
+# Set your project name (must be unique)
+BME_PROJECT_NAME='bme_example_project'
+
+# You can add and overwrite this project's configurations:
+# For that, you should add a 'bme_project_local' file at your project's root.
+project_base_dir=`dirname "${BASH_SOURCE}"`
+if [ -r "${project_base_dir}/bme_project_local" ]; then
+	bme_log "Sourcing local customizations from ${C_BOLD}'${project_base_dir}/bme_project_local'${C_NC}..." info
+	source "${project_base_dir}/bme_project_local"
+	bme_log "DONE!" info
+else
+	log_msg="Remember you can create your own BME project customizations:\n"
+	log_msg+="\tEdit your ${C_BOLD}'${project_base_dir}/bme_project_local'${C_NC} file for that.\n"
+	bme_log "${log_msg}" info
+	unset log_msg
+fi
+unset project_base_dir

@@ -20,5 +20,4 @@ Pending actions, general notes, etc. (in no particular order):
 ## IN PROGRESS
 * **[#7](/../../issues/7): Add ability for relocation to Makefile:**
   * `make uninstall` should honor last `make install` run.
-  * add example docker container to repo (and document it).
   * publish docker container so it can be just used.

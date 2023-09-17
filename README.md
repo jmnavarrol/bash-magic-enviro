@@ -17,7 +17,6 @@ This tool also allows you to add your own project-specific extensions/customizat
 Once you *"cd out"* from the project's hierarchy all these customizations will be automatically cleaned out.
 
 ----
-
 **Contents:**<a name="contents"></a>
 1. [Requirements](#requirements)
 1. [Security](#security)
@@ -25,6 +24,7 @@ Once you *"cd out"* from the project's hierarchy all these customizations will b
    1. [install Bash Magic Enviro](#make_install)
    1. [update your Bash prompt](#prompt)
    1. [configure your project(s)](#project)
+1. [BME docker container](#docker-container)
 1. [Available features](#features)<a name="feature_list"></a>
    * [jumping among projects](#jumping_projects)
    * [directory whitelisting](#whitelisting)
@@ -41,7 +41,6 @@ Once you *"cd out"* from the project's hierarchy all these customizations will b
    * [modules' development](#dev-modules)
 1. [Support](#support)
 1. [License](#license)
-
 ----
 
 ## Requirements<a name="requirements"></a>
@@ -155,6 +154,13 @@ Once you properly installed and configured your console for *Bash Magic Enviro*,
 ```
 
 See also the included [example project](./example-project).
+
+<sub>[back to contents](#contents).</sub>
+
+## BME docker container<a name="docker-container"></a>
+Provided as an alternate way to use and test BME, a docker container configuration is provided under the [*'docker-container/'* directory](./docker-container).
+
+As of now, you should build this container locally.  See further info [at its README](./docker-container).
 
 <sub>[back to contents](#contents).</sub>
 

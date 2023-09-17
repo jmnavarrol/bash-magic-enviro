@@ -1,0 +1,4 @@
+# This should overwrite similar directive on the main sudoers file
+
+# Allow members of group sudo to run any command without password
+%sudo	ALL=NOPASSWD: ALL
