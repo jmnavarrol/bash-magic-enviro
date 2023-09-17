@@ -269,7 +269,7 @@ local project_dir="${1}"
 	fi
 	
 	# Show notice if 'check-version' module was requested
-	[[ "${ACTIVE_MODULES[@]}" =~ 'check-version' ]] && check-version
+	[[ "${BME_ACTIVE_MODULES[@]}" =~ 'check-version' ]] && check-version
 	
 	bme_log "Project ${C_BOLD}'${BME_PROJECT_NAME}'${C_NC} loaded.\n" info
 }
@@ -348,7 +348,7 @@ local allowed_callers=('__bme_load_project')
 # If we reached here, it's a new project directory
 	bme_log "${C_BOLD}'${BME_PROJECT_FILE}'${C_NC} file found at ${C_BOLD}'${test_path}'${C_NC}." info
 	# First, check if its name is valid
-	local new_project=$(source "${test_path}/${BME_PROJECT_FILE}" && echo "${BME_PROJECT_NAME}")
+	local new_project=$(source "${test_path}/${BME_PROJECT_FILE}" > /dev/null && echo "${BME_PROJECT_NAME}")
 	if [[ -z "${new_project}" ]]; then
 		bme_log "You didn't set ${C_BOLD}'BME_PROJECT_NAME=[your_project_name]'${C_NC} in your ${C_BOLD}'${BME_PROJECT_FILE}'${C_NC} file." fatal
 		return -1
@@ -392,7 +392,7 @@ local allowed_callers=('__bme_load_project')
 
 
 # Loads requested modules as per the BME_MODULES array
-# 1st param: 'module' a single module to load into ACTIVE_MODULES array
+# 1st param: 'module' a single module to load into BME_ACTIVE_MODULES array
 __bme_modules_load() {
 local module=$1
 
@@ -412,11 +412,11 @@ local module=$1
 	
 	__bme_debug && echo "${FUNCNAME[0]}: CURRENT LOAD MODULE LIST: '${module_list[@]}'"
 	for module in "${module_list[@]}"; do
-		if [[ ! " ${ACTIVE_MODULES[*]} " =~ " ${module} " ]]; then
+		if [[ ! " ${BME_ACTIVE_MODULES[*]} " =~ " ${module} " ]]; then
 			__bme_debug && echo "${FUNCNAME[0]}: ABOUT TO LOAD MODULE '${module}'"
 			if [ -r "${BASH_SOURCE}_modules/${module}.module" ]; then
 				source "${BASH_SOURCE}_modules/${module}.module"
-				${module}_load && ACTIVE_MODULES+=("${module}")
+				${module}_load && BME_ACTIVE_MODULES+=("${module}")
 			else
 				local log_msg="Couldn't load ${C_BOLD}'${module}'${C_NC} module.\n"
 					log_msg+="\t\tFile ${C_BOLD}'${BASH_SOURCE}_modules/${module}.module'${C_NC} couldn't be found."
@@ -426,24 +426,24 @@ local module=$1
 			__bme_debug && echo "${FUNCNAME[0]}: MODULE '${module}' ALREADY LOADED. SKIPPING"
 		fi
 	done
-	__bme_debug && echo "${FUNCNAME[0]}: CURRENT LIST OF LOADED MODULES: '${ACTIVE_MODULES[@]}'"
+	__bme_debug && echo "${FUNCNAME[0]}: CURRENT LIST OF LOADED MODULES: '${BME_ACTIVE_MODULES[@]}'"
 }
 
 
-# Unloads modules as per the ACTIVE_MODULES array
+# Unloads modules as per the BME_ACTIVE_MODULES array
 __bme_modules_unload() {
-	if [[ -n ${ACTIVE_MODULES+x} ]]; then
+	if [[ -n ${BME_ACTIVE_MODULES+x} ]]; then
 		# List of active modules is processed in reverse order for deactivation, in case there are sorting dependencies
 		# See https://stackoverflow.com/a/13360181/12237334 (hopefully this array will NOT have "holes" within)
-		__bme_debug && echo "${FUNCNAME[0]}: CURRENT LIST OF MODULES TO UNLOAD: '${ACTIVE_MODULES[@]}'"
-		for (( module=${#ACTIVE_MODULES[@]}-1; module>=0; module-- )); do
-			${ACTIVE_MODULES[module]}_unload
-			unset -f ${ACTIVE_MODULES[module]}_load
-			unset -f ${ACTIVE_MODULES[module]}_unload
+		__bme_debug && echo "${FUNCNAME[0]}: CURRENT LIST OF MODULES TO UNLOAD: '${BME_ACTIVE_MODULES[@]}'"
+		for (( module=${#BME_ACTIVE_MODULES[@]}-1; module>=0; module-- )); do
+			${BME_ACTIVE_MODULES[module]}_unload
+			unset -f ${BME_ACTIVE_MODULES[module]}_load
+			unset -f ${BME_ACTIVE_MODULES[module]}_unload
 		done
 	fi
 	unset module
-	unset ACTIVE_MODULES
+	unset BME_ACTIVE_MODULES
 }
 
 

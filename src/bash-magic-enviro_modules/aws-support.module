@@ -12,7 +12,7 @@ local unmet_dependencies=false
 	
 # Check awscli (optional, since it can also be loaded form a virtualenv)
 	if ! which aws > /dev/null; then
-		if ! [[ "${ACTIVE_MODULES[@]}" =~ 'python3-virtualenvs' ]]; then
+		if ! [[ "${BME_ACTIVE_MODULES[@]}" =~ 'python3-virtualenvs' ]]; then
 			local log_msg="${C_BOLD}'aws'${C_NC} command not found.\n"
 			log_msg+="\t\tYou should activate the ${C_BOLD}'python3-virtualenvs'${C_NC}  ${C_BOLD}BEFORE${C_NC} this one,\n"
 			log_msg+="\t\tand load a suitable python virtualenv before calling ${C_BOLD}'load_aws_credentials'${C_NC}."
