@@ -1,8 +1,13 @@
 # TO-DO: bash-magic-enviro
 Pending actions, general notes, etc. (in no particular order):
+* `make uninstall` should honor last `make install` run.
+* publish docker container so it can be just used.
 * Automatic support for project root's '.bme.d/' directory '.gitignore' inclusion.
 * Easy support for custom, per-project, modules.
 * Find a way for modules to provide their own (formatted) help.
+* Easier/global management of whitelisting and projects' root directories.
+* Auto white/blacklisting of subdirectories (i.e.: to make easy using BME on non-interactive sessions).
+* Possibly directory traversing should load `.bme_env` files found at the project's root current dir, in that order (currently it only loads the one on the current directory).
 * **[python3-virtualenvs module](./src/bash-magic-enviro_modules/python3-virtualenvs.module):**
   * I think Python3 provides better virtualenv support than Phython2 so, maybe, virtualenvwrapper support is not needed anymore.  Consider this and act accordingly (See [Python3 doc](https://docs.python.org/3/library/venv.html)).
   * Consider making python *virtualenvs* project-restricted instead of user-wide.
@@ -10,13 +15,8 @@ Pending actions, general notes, etc. (in no particular order):
   * Make the module not to require the *$AWS_MFA* environment variable, as it can be read from the proper AWS profile, or even not requested at all by means of *"bypassing"* its request right to aws-cli.
   * Add flexibility to authentication methods, so MFA is not mandatory.
   * Add flexibility to which the requested AWS profile should be used within a project.
-* Easier/global management of whitelisting and projects' root directories.
-* Auto white/blacklisting of subdirectories (i.e.: to make easy using BME on non-interactive sessions).
 * **[terraform-support module](./src/bash-magic-enviro_modules/terraform-support.module):**
   * self-management of *.gitignore* entries for ~/bin/[terraform,tfvenv] symlinks.
   * Review [terraform-config-inspect](https://github.com/hashicorp/terraform-config-inspect), which allows to extract configurations from terraform.
 
 ## IN PROGRESS
-* **[#7](/../../issues/7): Add ability for relocation to Makefile:**
-  * `make uninstall` should honor last `make install` run.
-  * publish docker container so it can be just used.
