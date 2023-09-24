@@ -1,18 +1,35 @@
-#!/bin/bash
+#!/usr/bin/env bash
+
 # Template substitution (to be run from Makefile)
 # translates <% VARIABLE %> into VARIABLE's value
 #
 # Expected environment variables:
 # SRCDIR: directory holding source code
-# SCRIPT: the name of the main script (which will be found at ${SRCDIR}/${SCRIPT})
+# VERSION_FILE: the name of templated file (its source will be found at ${SRCDIR}/${VERSION_FILE}.tpl)
 # BUILDDIR: the output directory (output file will be ${BUILDDIR}/${SCRIPT})
 
 # Gets current remote origin
 REMOTE_GIT=`git ls-remote --get-url`
 
+readonly MANDATORY_VARS=(
+	'SRCDIR'
+	'BUILDDIR'
+	'VERSION_FILE'
+)
+readonly TEMPLATE_FILE="${SRCDIR}/${VERSION_FILE}.tpl"
+readonly OUTPUT_FILE="${BUILDDIR}/${VERSION_FILE}"
+
+# Checks environment
+for mandatory_var in ${MANDATORY_VARS[@]}; do
+	if [ -z "${!mandatory_var}" ]; then
+		echo -e "${C_RED}ERROR:${C_NC} Mandatory environment variable ${C_BOLD}'${mandatory_var}'${C_NC} is unset or empty."
+		exit 1
+	fi
+done
+
 # Make sure the output directory exists and the output file is empty
-mkdir -p "${BUILDDIR}"
-cat /dev/null > "${BUILDDIR}/${SCRIPT}"
+# mkdir -p "${BUILDDIR}"
+cat /dev/null > "${OUTPUT_FILE}"
 
 # Now process source file line by line
 while IFS= read -r LINE; do
@@ -27,7 +44,7 @@ while IFS= read -r LINE; do
 		echo -e "'${LINE}'"
 	fi
 	# Sends the line, modified if required, to output file
-	echo "${LINE}" >> "${BUILDDIR}/${SCRIPT}"
-done < "${SRCDIR}/${SCRIPT}"
+	echo "${LINE}" >> "${OUTPUT_FILE}"
+done < "${TEMPLATE_FILE}"
 
 echo -e "${C_BOLD}templating:${C_NC} ${C_GREEN}DONE${C_NC}."

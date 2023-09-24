@@ -1,6 +1,5 @@
 # TO-DO: bash-magic-enviro
 Pending actions, general notes, etc. (in no particular order):
-* Think of a less invassive development model.
 * Automatic support for project root's '.bme.d/' directory '.gitignore' inclusion.
 * Easy support for custom, per-project, modules.
 * Find a way for modules to provide their own (formatted) help.

@@ -1,8 +1,7 @@
 # Main Bash Magic Enviro manager
 #
 # This file is meant to be sourced, not run
-BME_REMOTE_GIT=<% REMOTE_GIT %>
-BME_VERSION=<% VERSION %>
+source "${BASH_SOURCE}.version"
 BME_PROJECT_FILE='.bme_project'
 BME_FILE='.bme_env'
 BME_HIDDEN_DIR='.bme.d'
