@@ -1,5 +1,8 @@
 # CHANGELOG
 
+## Next Release
+* New module: [githooks](./src/bash-magin-enviro_modules/githooks.module)
+
 ## v1.5.0 (2023-SEP-30)
 * differences from [previous tag](/../../compare/v1.4.7-1…v1.5.0).
 * *bme_env* at project's root always loaded, not only current dir's.

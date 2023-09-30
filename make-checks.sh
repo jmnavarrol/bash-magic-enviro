@@ -25,6 +25,42 @@ check_destdir_in_path() {
 	fi
 }
 
+# Checks Git >= 2.9
+check_git_version() {
+	if ! git version > /dev/null 2>&1; then
+		echo -e "${C_RED}ERROR:${C_NC} ${C_BOLD}'git'${C_NC} couldn't be found. You should install it."
+		error_dependencies=true
+	else
+		local git_version=(`git version`)
+		      git_version="${git_version[2]}"
+		local git_major="${git_version%%\.*}"
+		local git_minor="${git_version#*\.}"
+		      git_minor="${git_minor%%\.*}"
+		      
+		local bad_git_version=true
+		if [ "${git_major}" -ge 2 ]; then
+			if [ "${git_minor}" -ge 9 ]; then
+				bad_git_version=false
+			fi
+		fi
+		
+		if ($bad_git_version); then
+			local log_msg="${C_RED}ERROR:${C_NC} Detected git version ${C_BOLD}'${git_version}'${C_NC} is lower than required: ${C_BOLD}'2.9'${C_NC}.\n"
+			log_msg+="\tPlease upgrade."
+			echo -e "${log_msg}"
+			error_dependencies=true
+		fi
+	fi
+
+	if [ "${BASH_VERSINFO:-0}" -ge 4 ]; then
+		echo -e "${C_BOLD}*${C_NC} Bash version ${C_GREEN}OK${C_NC}: ${BASH_VERSION}."
+	else
+		echo -e "${C_BOLD}*${C_NC} ${C_RED}ERROR:${C_NC} ${C_BOLD}BASH VERSION ERROR${C_NC}."
+		echo -e "\tYour Bash version should be ${C_BOLD}5 or higher${C_NC}: ${BASH_VERSION}."
+		error_dependencies=true
+	fi
+}
+
 # Checks if virtualenvwrapper can be found
 # This is not trivial, since "commands" are in fact sourced functions.
 # It means they can't be found neither by `which` nor as commands, hash... in subshells
@@ -82,6 +118,7 @@ check_jq() {
 #--
 check_bash_version
 check_destdir_in_path
+check_git_version
 check_virtualenvwrapper
 check_md5sum
 check_flock

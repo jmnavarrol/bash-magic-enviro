@@ -5,3 +5,5 @@
 # due to 'terraform-support'
 bin/tfenv
 bin/terraform
+# due to multigit
+githooks-example

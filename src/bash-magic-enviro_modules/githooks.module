@@ -1,0 +1,62 @@
+# Meant to be sourced by 'Bash Magic Enviro'
+# Adds support for shared githooks
+
+githooks_load() {
+local unmet_dependencies=false
+
+	bme_log "${C_BOLD}'githooks'${C_NC} support..." loading 1
+	
+# tests git availability
+	if ! git version > /dev/null 2>&1; then
+		bme_log "${C_BOLD}'git'${C_NC} couldn't be found. You should install it." fatal 1
+		unmet_dependencies=true
+	else
+		local git_version=(`git version`)
+		      git_version="${git_version[2]}"
+		local git_major="${git_version%%\.*}"
+		local git_minor="${git_version#*\.}"
+		      git_minor="${git_minor%%\.*}"
+		      
+		local bad_git_version=true
+		if [ "${git_major}" -ge 2 ]; then
+			if [ "${git_minor}" -ge 9 ]; then
+				bad_git_version=false
+			fi
+		fi
+		
+		if ($bad_git_version); then	
+			local log_msg="Detected git version ${C_BOLD}'${git_version}'${C_NC} is lower than required: ${C_BOLD}'2.9'${C_NC}.\n"
+			log_msg+="\t\tPlease upgrade."
+			bme_log "${log_msg}" fatal 1
+			unmet_dependencies=true
+		fi
+	fi
+	
+	if ! [ -d "${BME_PROJECT_DIR}/githooks" ]; then
+		local log_msg="directory ${C_BOLD}'${BME_PROJECT_DIR}/githooks'{C_NC} does NOT exist.\n"
+		log_msg+="\t\tCreating it..."
+		bme_log "directory ${C_BOLD}'${BME_PROJECT_DIR}/githooks'{C_NC} does NOT exist." warning 1
+		echo -en "\t\tCreating it... "
+		mkdir --parents "${BME_PROJECT_DIR}/githooks" \
+		|| {
+			local rc=$?
+			bme_log "Couldn't create ${C_BOLD}'${BME_PROJECT_DIR}/githooks'${C_NC}" fatal 1
+			unmet_dependencies=true
+		}
+		echo -e "${C_GREEN}DONE!${C_NC}"
+	fi
+	
+# Final message
+	if ($unmet_dependencies); then
+		githooks_unload
+		bme_log "${C_BOLD}'githooks'${C_NC} not loaded. See missed dependencies above." error 1
+		return -1
+	else
+		echo -e "\t${C_BOLD}'githooks'${C_NC} support: ${C_GREEN}LOADED!${C_ND}"
+	fi
+}
+
+
+githooks_unload() {
+	bme_log "${C_BOLD}'githooks'${C_NC} support unloaded." cleaning 1
+}

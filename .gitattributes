@@ -9,3 +9,6 @@ docs/bme_project.example linguist-language=bash
 .bme_env linguist-language=bash
 *.module linguist-language=bash
 docs/aws_dir/*.example linguist-language=INI
+
+# YAML
+subrepos linguist-language=yaml

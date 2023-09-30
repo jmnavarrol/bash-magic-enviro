@@ -1,0 +1,3 @@
+# loads a subrepos' manager
+# See https://github.com/jmnavarrol/python-multigit
+multigit==0.11.4.post2

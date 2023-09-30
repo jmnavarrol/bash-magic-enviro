@@ -1,0 +1,13 @@
+# BME enviro file on project root directory
+
+# loads a Python virtualenv
+# (see how we pass RC in case of error)
+load_virtualenv 'bme-projectlevel-virtualenv' || return $?
+
+# Once multigit is loaded, let's update our repo
+which multigit > /dev/null && multigit --run || \
+{
+	rc=$?
+	bme_log "${NC_BOLD}'multigit'${C_NC} couldn't be loaded." error 1
+	return $rc
+}

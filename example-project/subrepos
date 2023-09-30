@@ -1,0 +1,16 @@
+---
+# Subrepos' definition
+# See https://github.com/jmnavarrol/python-multigit
+#
+# subrepos:
+# - path: relative_path (mandatory)
+#   repo: URL to git service (mandatory)
+#   [commit|branch|tag]: (optional.  One and only one of commit, branch or tag)
+# - path: another subrepo
+#   repo: ...
+#   [commit|branch|tag]: ...
+# - ...
+
+subrepos:
+- path: 'githooks-example'
+  repo: 'git@github.com:jmnavarrol/bme-githooks.git'
