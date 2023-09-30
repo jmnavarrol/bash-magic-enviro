@@ -45,6 +45,22 @@ local unmet_dependencies=false
 		}
 		echo -e "${C_GREEN}DONE!${C_NC}"
 	fi
+# tests git config core.hooksPath value
+	if [[ `git config --get core.hooksPath` ]]; then
+		local git_config=`git config --get core.hooksPath`
+		if [[ "${git_config}" != "${BME_PROJECT_DIR}/githooks" ]]; then
+			local log_msg="${C_BOLD}'git config --get core.hooksPath'${C_NC} set, but wrong value:\n"
+			log_msg+="\t\tcurrent value: ${C_BOLD}'${git_config}'${C_NC}.\n"
+			log_msg+="\t\trequested value: ${C_BOLD}'${BME_PROJECT_DIR}/githooks'${C_NC}."
+			bme_log "${log_msg}" warning 1
+			echo -en "\t\tUpdating... "
+			git config --local core.hooksPath "${BME_PROJECT_DIR}/githooks"
+			echo -e "${C_GREEN}DONE!${C_NC}"
+		fi
+	else
+		bme_log "No ${C_BOLD}'core.hooksPath'${C_NC} found.  Activating it." info 1
+		git config --local core.hooksPath "${BME_PROJECT_DIR}/githooks"
+	fi
 	
 # Final message
 	if ($unmet_dependencies); then
