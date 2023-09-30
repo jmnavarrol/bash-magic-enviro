@@ -24,6 +24,7 @@ Once you *"cd out"* from the project's hierarchy all these customizations will b
    1. [install Bash Magic Enviro](#make_install)
    1. [update your Bash prompt](#prompt)
    1. [configure your project(s)](#project)
+   1. [CHANGELOG](./CHANGELOG.md)
 1. [BME docker container](#docker-container)
 1. [Available features](#features)<a name="feature_list"></a>
    * [jumping among projects](#jumping_projects)
@@ -70,6 +71,67 @@ See also the [*'whitelisting'* feature's section](#whitelisting).
 ## Install<a name="install"></a>
 First of all clone [this repository](https://github.com/jmnavarrol/bash-magic-enviro), then follow the steps below.
 
+Optionally, you may checkout a version tag so you can control what to upgrade to:
+```bash
+~/REPOS$ git clone --branch v1.4.7 https://github.com/jmnavarrol/bash-magic-enviro.git
+Cloning into 'bash-magic-enviro'...
+remote: Enumerating objects: 735, done.
+remote: Counting objects: 100% (294/294), done.
+remote: Compressing objects: 100% (137/137), done.
+remote: Total 735 (delta 197), reused 238 (delta 153), pack-reused 441
+Receiving objects: 100% (735/735), 156.81 KiB | 1.89 MiB/s, done.
+Resolving deltas: 100% (422/422), done.
+Note: switching to '2c9c025764fab97eee55ca053596463b27239857'.
+
+You are in 'detached HEAD' state. You can look around, make experimental
+changes and commit them, and you can discard any commits you make in this
+state without impacting any branches by switching back to a branch.
+
+If you want to create a new branch to retain commits you create, you may
+do so (now or later) by using -c with the switch command. Example:
+
+  git switch -c <new-branch-name>
+
+Or undo this operation with:
+
+  git switch -
+
+Turn off this advice by setting config variable advice.detachedHead to false
+
+~/REPOS$ cd bash-magic-enviro
+~/REPOS/bash-magic-enviro$
+```
+Then, when you are ready to upgrade, you may checkout a newer tag and reinstall:
+```bash
+~/REPOS/bash-magic-enviro$ git checkout v1.4.7-1
+Previous HEAD position was 2c9c025 New BME helper container added and documented.
+HEAD is now at 6661389 Version bumped: 1.4.7-1
+~/REPOS/bash-magic-enviro$ make install
+Checking requirements...
+* Bash version OK: 5.2.15(1)-release.
+* '~/bin' is in PATH: OK
+* 'virtualenvwrapper' found: OK
+        Sourced from '/usr/share/virtualenvwrapper/virtualenvwrapper.sh'.
+* 'md5sum' found: OK
+* 'flock' found: OK
+* 'jq' found: OK
+
+ALL CHECKS: PASSED.
+Checking requirements: DONE!
+Installing BME...
+'build/./bash-magic-enviro_modules/aws-support.module' -> '~/bin/./bash-magic-enviro_modules/aws-support.module'
+'build/./bash-magic-enviro_modules/bindir.module' -> '~/bin/./bash-magic-enviro_modules/bindir.module'
+'build/./bash-magic-enviro_modules/python3-virtualenvs.module' -> '~/bin/./bash-magic-enviro_modules/python3-virtualenvs.module'
+'build/./bash-magic-enviro_modules/terraform-support.module' -> '~/bin/./bash-magic-enviro_modules/terraform-support.module'
+'build/./bash-magic-enviro.version' -> '~/bin/./bash-magic-enviro.version'
+'build/./bash-magic-enviro' -> '~/bin/./bash-magic-enviro'
+Installing BME: DONE
+~/REPOS/bash-magic-enviro$
+```
+See also [CHANGELOG](./CHANGELOG.md).
+
+<sub>[back to contents](#contents).</sub>
+
 ### install Bash Magic Enviro<a name="make_install"></a>
 Use [the included Makefile](./Makefile).  See the output of the bare `make` command for available targets.
 * `make check`, as the name implies, runs some tests trying to insure required dependencies are in place.
@@ -110,27 +172,29 @@ Once you open a new terminal, changes will be loaded.
 Once you properly installed and configured your console for *Bash Magic Enviro*, you may configure your projects to use it.
 1. Add a **'.bme_project'** file to your project(s)' *"root directory"* to activate and configure their related environment (see [example](./docs/bme_project.example)).  
    Doing this at your git repository's root is preferred.  
-   Whenever you `cd` into a project's filesystem hierarchy, its related *'.bme_project'* file will be searched for starting on the current directory and upwards to '/'.  Once found, its [*whitelisting status*](#whitelisting) will be checked and, if allowed, both the *'.bme_project'* file and the current *'.bme_env'* file (if any) will be sourced.
+   Whenever you `cd` into a project's filesystem hierarchy, its related *'.bme_project'* file will be searched for starting on the current directory and upwards to '/'.  Once found, its [*whitelisting status*](#whitelisting) will be checked and, if allowed, both the *'.bme_project'* file and the *'.bme_env'* file on the project's root (if any) will be sourced.
    ```bash
-   ~$: cd ~/REPOS/example-project
+   ~$ cd ~/REPOS/bash-magic-enviro/example-project/
+   INFO: '.bme_project' file found at '~/REPOS/bash-magic-enviro/example-project'.
+           Do you want to whitelist this directory? [y/N]: y
+   INFO: Directory '~/REPOS/bash-magic-enviro/example-project' whitelisted!
+   WARNING: Your current 'Bash Magic Enviro' version couldnt be found at your remote.
+           Your local version: 'v1.4.8'.
+           Highest version at 'git@github.com:jmnavarrol/bash-magic-enviro.git': 'v1.4.7-1'.
    LOADING: project 'bme_example_project' environment...
-           INFO: '/[...]/example-project/bin' added to local path.
-           INFO: 'check-version' loaded.
-                   FUNCTION: check-version - Compares local and remote versions of BME.
+           INFO: '~/REPOS/bash-magic-enviro/example-project/bin' added to local path.
+           INFO: 'TFENV_TERRAFORM_VERSION' environment variable is not set.  Setting it to 'min-required' by default.
            INFO: 'terraform-support' loaded.
-           INFO: 'python3-virtualenvs' (Python 3.9.2) loaded.
+           INFO: 'python3-virtualenvs' (Python 3.11.2) loaded.
                    FUNCTION: load_virtualenv 'venv_name' - Loads the Python virtualenv by name 'venv_name'.
            WARNING: 'aws' command not found.
                    Make sure you load a suitable python virtualenv before calling 'load_aws_credentials'.
            ERROR: Environment variable '$AWS_MFA' can't be found.
                    Remember you should export your AWS MFA device's ID in that variable.
            ERROR: 'aws-support' not loaded. See missed dependencies above.
-   INFO: New 'Bash Magic Enviro' version available.  Please, consider upgrading.
-           Your local version: 'v1.1.1'.
-           Highest version at 'git@github.com:jmnavarrol/bash-magic-enviro.git': 'v1.2.0'.
    INFO: Project 'bme_example_project' loaded.
    
-   ~/REPOS/example-project$: cd some_subdir
+   ~/REPOS/bash-magic-enviro/example-project$: cd some_subdir
    ```
 1. Once your main project's configuracion is loaded by means of its *'.bme_project'* file, you can set configurations for each of your project's subdirectories (including its root one) with the help of **'.bme_env'** files.  
    Just remember *'.bme_env'* files are nothing but standard Bash files to be sourced, so you can add whatever Bash code you can run this way, typically calls to previously sourced functions, exports of further environment variables, informational outputs, etc.  
@@ -170,7 +234,7 @@ Features are always active and can't be turned off.
 ### jumping among projects<a name="jumping_projects"></a>
 You can freely `cd` among directories in your console and BME will try its best to find the proper *'.bme_project'* file to load (the one *"nearest"* upwards in the filesystem hierarchy).  If a BME project was already loaded it will be cleaned before sourcing the new one.
 
-Be careful, though, for a *"deeper"* *'.bme_env'* file not to depend on configurations from a *"higer"* one, since those won't be automatically loaded.  Just the project's *'.bme_project'* file and the *'.bme_env'* in the current directory (if any) will be sourced.  I.e.:
+Be careful, though, for a *"deeper"* *'.bme_env'* file not to depend on configurations from an *"intermediate"* one, since those won't be automatically loaded.  Just the project root's *'.bme_env'* file and the one in the current directory (if any) will be sourced.  I.e.:
 ```sh
 $ cd first_project_root  # 'first_project' will be loaded and its root directory remembered
 $ cd subproject_root  # 'first_project' will be unloaded and 'subproject' will be loaded instead
