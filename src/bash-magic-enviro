@@ -49,24 +49,31 @@ bme_eval_dir() {
 			fi
 		done
 		if ! $project_found && [[ -n ${BME_PROJECT_NAME+x} ]]; then
-			# Still within a project context, but no project to load found in filesystem hierarchy.
+		# Still within a project context, but no project to load found in filesystem hierarchy.
 			__bme_debug && echo "Project loop finished and no project found"
 			__bme_clean_project
+			return 0
 		fi
 		
 	# Reaching this point, a project should already be loaded, if any available.
-	# Time to process 'bme_env' files, if any
-		if [ -e ${BME_FILE} ]; then
-			__bme_debug && echo "${BME_FILE} found at ${PWD}"
-			if [[ -n ${BME_PROJECT_NAME+x} ]]; then
-			# Already within a validated project context.
-				source "${BME_FILE}"
-			else
-				local log_msg="${C_BOLD}'${BME_FILE}'${C_NC} file found, but no project root found.\n"
-				log_msg+="\tReview your directory hierarchy leading to ${C_BOLD}'${PWD}'${C_NC}."
-				bme_log "${log_msg}" error
-				return -1
-			fi
+	# Time to process 'bme_env' file, if proper conditions met
+		if [[ -n ${BME_PROJECT_NAME+x} ]] \
+		   && [[ -n ${BME_PROJECT_DIR+x} ]] \
+		   && [ "${PWD:0:${#BME_PROJECT_DIR}}" = "${BME_PROJECT_DIR}" ] \
+		   && [ -r "${BME_FILE}" ]; then
+		   # project name properly defined
+		   # project dir properly defined too
+		   # extrictly within the project hierarchy (__bme_load_project() already takes care of the root env file)
+		   # and there's an env file we can source
+				__bme_debug && echo "${FUNCNAME[0]}: '${PWD}' within '${BME_PROJECT_DIR}'"
+				__bme_debug && echo "${FUNCNAME[0]}: LOADING '${BME_FILE}'"
+				source "${BME_FILE}" ||
+				{
+					local rc_value=$?
+					bme_log "enviro file at '${BME_PROJECT_DIR}/${BME_FILE}' failed at load: (${C_RED}${rc_value}${C_NC})" error
+					return ${rc_value}
+				}
+				__bme_debug && echo "${FUNCNAME[0]}: '${BME_FILE}' LOADED"
 		fi
 	fi
 }
@@ -177,7 +184,7 @@ bme_check_version() {
 export -f bme_check_version
 
 
-# Loads a project's configuration
+# Loads a project's configuration and the root's env_file if any
 # 1st param: 'project_dir': the directory to look for a project file
 __bme_load_project() {
 local project_dir="${1}"
@@ -197,7 +204,7 @@ local project_dir="${1}"
 	
 # Check if really there's a project file where requested
 	if [ ! -r "${project_dir}/${BME_PROJECT_FILE}" ]; then
-		bme_log "${FUNCNAME[0]}: No ${C_BOLD}'${BME_PROJECT_FILE}'${C_NC} found at ${C_BOLD}''${C_NC}." fatal
+		bme_log "${FUNCNAME[0]}: No valid ${C_BOLD}'${BME_PROJECT_FILE}'${C_NC} found at ${C_BOLD}'${project_dir}'${C_NC}." fatal
 		return -1
 	fi
 	
@@ -271,6 +278,25 @@ local project_dir="${1}"
 	[[ "${BME_ACTIVE_MODULES[@]}" =~ 'check-version' ]] && check-version
 	
 	bme_log "Project ${C_BOLD}'${BME_PROJECT_NAME}'${C_NC} loaded.\n" info
+	
+# Finally, load project root's $BME_FILE file, if any
+	if [ -r "${BME_PROJECT_DIR}/${BME_FILE}" ]; then
+		__bme_debug && echo "${FUNCNAME[0]}: FOUND BME_ENV FILE AT '${BME_PROJECT_DIR}/${BME_FILE}'"
+	# we move to the project's root in case we reached here from a subdirectory within
+		local current_dir="${PWD}"
+		cd "${BME_PROJECT_DIR}"
+		source "${BME_PROJECT_DIR}/${BME_FILE}" ||
+		{
+			local rc_value=$?
+			bme_log "enviro file at '${BME_PROJECT_DIR}/${BME_FILE}' failed at load: (${C_RED}${rc_value}${C_NC})" error
+			cd "${current_dir}"
+			return ${rc_value}
+		}
+		cd "${current_dir}"
+		__bme_debug && echo "${FUNCNAME[0]}: '${BME_PROJECT_DIR}/${BME_FILE}' LOADED"
+	else
+		__bme_debug && echo "${FUNCNAME[0]}: NOT A VALID '${BME_PROJECT_DIR}/${BME_FILE}' FOUND."
+	fi
 }
 
 

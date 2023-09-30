@@ -7,7 +7,8 @@ Pending actions, general notes, etc. (in no particular order):
 * Find a way for modules to provide their own (formatted) help.
 * Easier/global management of whitelisting and projects' root directories.
 * Auto white/blacklisting of subdirectories (i.e.: to make easy using BME on non-interactive sessions).
-* Possibly directory traversing should load `.bme_env` files found at the project's root current dir, in that order (currently it only loads the one on the current directory).
+* Dynamic load/unload of functions/variables that are only needed within a project environment.
+* Find a suitable testing framework.
 * **[python3-virtualenvs module](./src/bash-magic-enviro_modules/python3-virtualenvs.module):**
   * I think Python3 provides better virtualenv support than Phython2 so, maybe, virtualenvwrapper support is not needed anymore.  Consider this and act accordingly (See [Python3 doc](https://docs.python.org/3/library/venv.html)).
   * Consider making python *virtualenvs* project-restricted instead of user-wide.
