@@ -1,6 +1,5 @@
 # TO-DO: bash-magic-enviro
 Pending actions, general notes, etc. (in no particular order):
-* `make uninstall` should honor last `make install` run.
 * publish docker container so it can be just used.
 * Automatic support for project root's '.bme.d/' directory '.gitignore' inclusion.
 * Easy support for custom, per-project, modules.

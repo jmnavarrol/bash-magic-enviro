@@ -17,6 +17,8 @@ readonly MANDATORY_VARS=(
 	'BUILDDIR'
 	'DESTDIR'
 )
+readonly INSTALL_TRACKER='./.installdir'
+readonly DEV_TRACKER='./.devinstalldir'
 
 
 #---
@@ -42,6 +44,7 @@ make_install() {
 		fi
 	done
 	cp --archive --verbose ${BUILDDIR}/. ${DESTDIR}
+	echo "LAST_INSTALL_DIR=${DESTDIR}" > "${INSTALL_TRACKER}"
 }
 
 
@@ -62,13 +65,45 @@ make_dev() {
 # Templated files need to be taken from build directory
 	if ! [ -L ${DESTDIR}/${VERSION_FILE} ]; then
 		if [ -e ${DESTDIR}/${VERSION_FILE} ]; then
-			echo -e "${C_YELLOW}WARNING:${C_NC} deleting ${C_BOLD}'${DESTDIR}/${VERSION_FILE}${C_NC}'"
+			echo -e "${C_YELLOW}WARNING:${C_NC} deleting ${C_BOLD}'${DESTDIR}/${VERSION_FILE}'${C_NC}"
 			rm -rf "${DESTDIR}/${VERSION_FILE}"
 		fi
 		echo -e "${C_GREEN}INFO:${C_NC} creating ${C_BOLD}'${DESTDIR}/${VERSION_FILE}'${C_NC} symlink for development"
 		current_pwd="${PWD}"
 		( cd ${DESTDIR} && ln -s ${current_pwd}/${BUILDDIR}/${VERSION_FILE} ${VERSION_FILE} )
 	fi
+	echo "LAST_DEV_DIR=${DESTDIR}" > "${DEV_TRACKER}"
+}
+
+
+# BME uninstall
+make_uninstall() {
+local LAST_INSTALL_DIR="${DESTDIR}"
+local LAST_DEV_DIR="${DESTDIR}"
+local uninstall_dirs=("${DESTDIR}")
+
+# Grabs info about previous install processes
+	for tracker in "${INSTALL_TRACKER}" "${DEV_TRACKER}"; do
+		if [ -r "${tracker}" ]; then
+			echo -e "\t${C_GREEN}INFO:${C_NC} loading setup info from ${C_BOLD}'${tracker}'${C_NC}"
+			source "${tracker}"
+		fi
+	done
+# Prepares a list of directories to uninstall from
+	for directory in "${LAST_INSTALL_DIR}" "${LAST_DEV_DIR}"; do
+	# this adds directory to the uninstall dirs array if not yet included
+		if [[ ! " ${uninstall_dirs[*]} " =~ " ${directory} " ]]; then
+			uninstall_dirs+=("${directory}")
+		fi
+	done
+# The uninstall process itself
+	for directory in "${uninstall_dirs[@]}"; do
+		echo -e "\t${C_GREEN}INFO:${C_NC} Uninstalling from ${C_BOLD}'${directory}'${C_NC}"
+		rm -rf "${directory}/${SCRIPT}"
+		rm -rf "${directory}/${VERSION_FILE}"
+		rm -rf "${directory}/${SCRIPT}_modules"
+	done
+	rm -rf "${INSTALL_TRACKER}" "${DEV_TRACKER}"
 }
 
 
@@ -86,14 +121,13 @@ check_environment
 
 # Operates on the given option
 case "$1" in
-	'install')
-		make_${1}
-	;;
-	'dev')
+	'install' \
+	| 'dev' \
+	| 'uninstall')
 		make_${1}
 	;;
 	*)
-		echo -e "ERROR: Requested operation was '${1}'."
-		echo -e "\tValid operations: 'install', 'dev'"
+		echo -e "${C_RED}ERROR:${C_NC} Requested operation was ${C_BOLD}'${1}'${C_NC}."
+		echo -e "\tValid operations: ${C_BOLD}'install', 'dev', 'uninstall'${C_NC}."
 		exit 1
 esac

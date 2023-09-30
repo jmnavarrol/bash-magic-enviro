@@ -71,7 +71,7 @@ See also the [*'whitelisting'* feature's section](#whitelisting).
 ## Install<a name="install"></a>
 First of all clone [this repository](https://github.com/jmnavarrol/bash-magic-enviro), then follow the steps below.
 
-Optionally, you may checkout a version tag so you can control what to upgrade to:
+Optionally, you may checkout a version tag so you can control what to upgrade to with more finesse:
 ```bash
 ~/REPOS$ git clone --branch v1.4.7 https://github.com/jmnavarrol/bash-magic-enviro.git
 Cloning into 'bash-magic-enviro'...
@@ -101,11 +101,13 @@ Turn off this advice by setting config variable advice.detachedHead to false
 ~/REPOS$ cd bash-magic-enviro
 ~/REPOS/bash-magic-enviro$
 ```
-Then, when you are ready to upgrade, you may checkout a newer tag and reinstall:
+Later, when you are ready to upgrade, you may checkout a newer tag and reinstall:
 ```bash
 ~/REPOS/bash-magic-enviro$ git checkout v1.4.7-1
 Previous HEAD position was 2c9c025 New BME helper container added and documented.
 HEAD is now at 6661389 Version bumped: 1.4.7-1
+```
+```bash
 ~/REPOS/bash-magic-enviro$ make install
 Checking requirements...
 * Bash version OK: 5.2.15(1)-release.
@@ -135,16 +137,17 @@ See also [CHANGELOG](./CHANGELOG.md).
 ### install Bash Magic Enviro<a name="make_install"></a>
 Use [the included Makefile](./Makefile).  See the output of the bare `make` command for available targets.
 * `make check`, as the name implies, runs some tests trying to insure required dependencies are in place.
-* `make install`, installs Bash Magic Enviro into your personal *~/bin/* directory.  This means that *~/bin/* must be in your *$PATH* (see section [*"Update your Bash prompt"*](#prompt) below).
-* `make uninstall` deletes this code from your *~/bin/* dir.
+* `make install`, installs Bash Magic Enviro.  It defaults to your personal *~/bin/* directory.  This means that *~/bin/* must be in your *$PATH* (see section [*"Update your Bash prompt"*](#prompt) below).
+* `make uninstall` deletes this code from your install path.
   
 **NOTES:**
 * `make check` is implicitly run before `make install` so you should honor BME's mandatory requirements before succesfully installing it.  
   Pay attention to make's output for errors and hints on how to correct them.
-* You can also install/uninstall BME globally with the help of the **DESTDIR** variable, i.e.:  
+* You can also install/uninstall BME to a path different to your personal *~/bin/* directory with the help of the **DESTDIR** variable, i.e.:  
   `make DESTDIR=/opt/bme install`  
-  In this case, you also should add *DESTDIR* to the system's global PATH.  
+  In this case, you need write permission to the target directory and you should also add *DESTDIR* to the relevant environment PATH (i.e.: system global).  
   Note that it is **highly discouraged** to install BME globally.  While it might make sense a global setup on some scenarios, like a shared container for demonstration purposes or as a helper development tool, carefully pay attention to the [security considerations](#security) anyway.
+* `make uninstall` will *"remember"* the previous `make install` and `make dev` paths (either their defaults or the ones explicitly set by *DESTDIR*).  You can also add an extra path to uninstall, i.e. `make DESTDIR=/another/path uninstall`.
 
 <sub>[back to contents](#contents).</sub>
 
