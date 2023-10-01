@@ -1,50 +1,78 @@
 # Meant to be sourced by 'Bash Magic Enviro'
 # Adds support for shared client-side githooks
 # Requires git >= 2.9 (checked at install time by `make check`)
+# Depends on environment variable BME_WITHIN_GIT (set by BME's main script
+
+# Manages a clean exit
+githooks_unmet_dependencies() {
+	githooks_unload
+	bme_log "${C_BOLD}'githooks'${C_NC} not loaded. See missed dependencies above." error 1
+	return -1
+}
+
 
 githooks_load() {
 local unmet_dependencies=false
 
 	bme_log "${C_BOLD}'githooks'${C_NC} support..." loading 1
-# Sets new githooks directory
+# Checks if at the root of a git sandbox
+	if ! $BME_WITHIN_GIT; then
+		bme_log "Module ${C_BOLD}'githooks'${C_NC} should only be enabled on projects at the root of a git repository." error 1
+		unmet_dependencies=true
+	else
+		local git_root=`git rev-parse --show-toplevel`
+		if [[ "${git_root}" != "${BME_PROJECT_DIR}" ]]; then
+			local log_msg="Module ${C_BOLD}'githooks'${C_NC} should only be enabled on projects at the root of a git repository.\n"
+			log_msg+="\t\tGit root: ${C_BOLD}'${git_root}'${C_NC}.\n"
+			log_msg+="\t\tProject root: ${C_BOLD}'${BME_PROJECT_DIR}'${C_NC}."
+			bme_log "${log_msg}" error 1
+			unmet_dependencies=true
+		fi
+	fi
+	$unmet_dependencies && {
+		githooks_unmet_dependencies
+		return -1
+	}
+# Sets new githooks directory as needed
 	if ! [ -d "${BME_PROJECT_DIR}/githooks" ]; then
 		bme_log "directory ${C_BOLD}'${BME_PROJECT_DIR}/githooks'${C_NC} does NOT exist." warning 1
 		echo -en "\t\tCreating it... "
 		if `mkdir --parents "${BME_PROJECT_DIR}/githooks"`; then
 			echo -e "${C_GREEN}DONE!${C_NC}"
 		else
-			bme_log "Couldn't create ${C_BOLD}'${BME_PROJECT_DIR}/githooks'${C_NC}" fatal 1
+			bme_log "Couldn't create ${C_BOLD}'${BME_PROJECT_DIR}/githooks'${C_NC}" error 1
 			unmet_dependencies=true
 		fi
 	fi
+	$unmet_dependencies && {
+		githooks_unmet_dependencies
+		return -1
+	}
 # tests git config core.hooksPath value
-	if ! $unmet_dependencies; then
-		local git_config=`git config --get core.hooksPath`
-		if [[ "${git_config}" != "${BME_PROJECT_DIR}/githooks" ]]; then
-			local log_msg="${C_BOLD}'git config --get core.hooksPath':${C_NC} not the expected value.\n"
-			log_msg+="\t\tGot: ${C_BOLD}'${git_config}'${C_NC}.\n"
-			log_msg+="\t\tExpected: ${C_BOLD}'${BME_PROJECT_DIR}/githooks'${C_NC}."
-			bme_log "${log_msg}" warning 1
-			echo -en "\t\tUpdating... "
-			if `git config --local core.hooksPath "${BME_PROJECT_DIR}/githooks"`; then
-				echo -e "${C_GREEN}DONE!${C_NC}"
-			else
-				unmet_dependencies=true
-			fi
+	local git_config=`git config --get core.hooksPath`
+	if [[ "${git_config}" != "${BME_PROJECT_DIR}/githooks" ]]; then
+		local log_msg="${C_BOLD}'git config --get core.hooksPath':${C_NC} not the expected value.\n"
+		log_msg+="\t\tGot: ${C_BOLD}'${git_config}'${C_NC}.\n"
+		log_msg+="\t\tExpected: ${C_BOLD}'${BME_PROJECT_DIR}/githooks'${C_NC}."
+		bme_log "${log_msg}" warning 1
+		echo -en "\t\tUpdating... "
+		if `git config --local core.hooksPath "${BME_PROJECT_DIR}/githooks"`; then
+			echo -e "${C_GREEN}DONE!${C_NC}"
+		else
+			unmet_dependencies=true
 		fi
 	fi
-	
-# Final message
-	if ($unmet_dependencies); then
-		githooks_unload
-		bme_log "${C_BOLD}'githooks'${C_NC} not loaded. See missed dependencies above." error 1
+	$unmet_dependencies && {
+		githooks_unmet_dependencies
 		return -1
-	else
-		echo -e "\t${C_BOLD}'githooks'${C_NC} support: ${C_GREEN}LOADED!${C_ND}"
-	fi
+	}
+	
+# Final message: if we reached here, everything went OK
+	echo -e "\t${C_BOLD}'githooks'${C_NC} support: ${C_GREEN}LOADED!${C_ND}"
 }
 
 
 githooks_unload() {
+	unset -f githooks_unmet_dependencies
 	bme_log "${C_BOLD}'githooks'${C_NC} support unloaded." cleaning 1
 }

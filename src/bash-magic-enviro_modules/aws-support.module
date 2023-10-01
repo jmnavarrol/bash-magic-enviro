@@ -14,7 +14,7 @@ local unmet_dependencies=false
 	if ! which aws > /dev/null; then
 		if ! [[ "${BME_ACTIVE_MODULES[@]}" =~ 'python3-virtualenvs' ]]; then
 			local log_msg="${C_BOLD}'aws'${C_NC} command not found.\n"
-			log_msg+="\t\tYou should activate the ${C_BOLD}'python3-virtualenvs'${C_NC}  ${C_BOLD}BEFORE${C_NC} this one,\n"
+			log_msg+="\t\tYou should activate ${C_BOLD}'python3-virtualenvs'${C_NC} ${C_BOLD}BEFORE${C_NC} this one,\n"
 			log_msg+="\t\tand load a suitable python virtualenv before calling ${C_BOLD}'load_aws_credentials'${C_NC}."
 			bme_log "${log_msg}" error 1
 			unmet_dependencies=true

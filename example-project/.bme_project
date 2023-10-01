@@ -11,7 +11,7 @@ BME_PROJECT_NAME='bme_example_project'
 # Modules' activation (modules are disabled by default, so uncomment those you want to enable
 BME_MODULES=(
 	aws-support          # helps development for AWS environment
-	bindir               # adds project's bin/ dir to $PATH
+# 	bindir               # adds project's bin/ dir to $PATH (implicitly loaded by 'terraform-support')
 # 	githooks             # adds support for shared git hooks
 	python3-virtualenvs  # manages Python 3 virtualenvs
 	terraform-support    # sets terraform-related features
