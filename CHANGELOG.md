@@ -1,6 +1,7 @@
 # CHANGELOG
 
-## Next Release
+## v1.6.0 (2023-OCT-01)
+* differences from [previous tag](/../../compare/v1.5.0…v1.6.0).
 * New module: [githooks](./src/bash-magin-enviro_modules/githooks.module)
 
 ## v1.5.0 (2023-SEP-30)
