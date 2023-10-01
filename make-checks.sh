@@ -45,10 +45,10 @@ check_git_version() {
 		fi
 		
 		if ($bad_git_version); then
-			local log_msg="${C_RED}ERROR:${C_NC} Detected git version ${C_BOLD}'${git_version}'${C_NC} is lower than required: ${C_BOLD}'2.9'${C_NC}.\n"
+			local log_msg="${C_YELLOW}WARNING:${C_NC} Detected git version ${C_BOLD}'${git_version}'${C_NC} is lower than required: ${C_BOLD}'2.9'${C_NC}.\n"
 			log_msg+="\tPlease upgrade."
 			echo -e "${log_msg}"
-			error_dependencies=true
+			warning_dependencies=true
 		fi
 	fi
 

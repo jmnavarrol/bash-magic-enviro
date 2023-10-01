@@ -1,65 +1,37 @@
 # Meant to be sourced by 'Bash Magic Enviro'
-# Adds support for shared githooks
+# Adds support for shared client-side githooks
+# Requires git >= 2.9 (checked at install time by `make check`)
 
 githooks_load() {
 local unmet_dependencies=false
 
 	bme_log "${C_BOLD}'githooks'${C_NC} support..." loading 1
-	
-# tests git availability
-	if ! git version > /dev/null 2>&1; then
-		bme_log "${C_BOLD}'git'${C_NC} couldn't be found. You should install it." fatal 1
-		unmet_dependencies=true
-	else
-		local git_version=(`git version`)
-		      git_version="${git_version[2]}"
-		local git_major="${git_version%%\.*}"
-		local git_minor="${git_version#*\.}"
-		      git_minor="${git_minor%%\.*}"
-		      
-		local bad_git_version=true
-		if [ "${git_major}" -ge 2 ]; then
-			if [ "${git_minor}" -ge 9 ]; then
-				bad_git_version=false
-			fi
-		fi
-		
-		if ($bad_git_version); then	
-			local log_msg="Detected git version ${C_BOLD}'${git_version}'${C_NC} is lower than required: ${C_BOLD}'2.9'${C_NC}.\n"
-			log_msg+="\t\tPlease upgrade."
-			bme_log "${log_msg}" fatal 1
-			unmet_dependencies=true
-		fi
-	fi
-	
+# Sets new githooks directory
 	if ! [ -d "${BME_PROJECT_DIR}/githooks" ]; then
-		local log_msg="directory ${C_BOLD}'${BME_PROJECT_DIR}/githooks'{C_NC} does NOT exist.\n"
-		log_msg+="\t\tCreating it..."
-		bme_log "directory ${C_BOLD}'${BME_PROJECT_DIR}/githooks'{C_NC} does NOT exist." warning 1
+		bme_log "directory ${C_BOLD}'${BME_PROJECT_DIR}/githooks'${C_NC} does NOT exist." warning 1
 		echo -en "\t\tCreating it... "
-		mkdir --parents "${BME_PROJECT_DIR}/githooks" \
-		|| {
-			local rc=$?
+		if `mkdir --parents "${BME_PROJECT_DIR}/githooks"`; then
+			echo -e "${C_GREEN}DONE!${C_NC}"
+		else
 			bme_log "Couldn't create ${C_BOLD}'${BME_PROJECT_DIR}/githooks'${C_NC}" fatal 1
 			unmet_dependencies=true
-		}
-		echo -e "${C_GREEN}DONE!${C_NC}"
+		fi
 	fi
 # tests git config core.hooksPath value
-	if [[ `git config --get core.hooksPath` ]]; then
+	if ! $unmet_dependencies; then
 		local git_config=`git config --get core.hooksPath`
 		if [[ "${git_config}" != "${BME_PROJECT_DIR}/githooks" ]]; then
-			local log_msg="${C_BOLD}'git config --get core.hooksPath'${C_NC} set, but wrong value:\n"
-			log_msg+="\t\tcurrent value: ${C_BOLD}'${git_config}'${C_NC}.\n"
-			log_msg+="\t\trequested value: ${C_BOLD}'${BME_PROJECT_DIR}/githooks'${C_NC}."
+			local log_msg="${C_BOLD}'git config --get core.hooksPath':${C_NC} not the expected value.\n"
+			log_msg+="\t\tGot: ${C_BOLD}'${git_config}'${C_NC}.\n"
+			log_msg+="\t\tExpected: ${C_BOLD}'${BME_PROJECT_DIR}/githooks'${C_NC}."
 			bme_log "${log_msg}" warning 1
 			echo -en "\t\tUpdating... "
-			git config --local core.hooksPath "${BME_PROJECT_DIR}/githooks"
-			echo -e "${C_GREEN}DONE!${C_NC}"
+			if `git config --local core.hooksPath "${BME_PROJECT_DIR}/githooks"`; then
+				echo -e "${C_GREEN}DONE!${C_NC}"
+			else
+				unmet_dependencies=true
+			fi
 		fi
-	else
-		bme_log "No ${C_BOLD}'core.hooksPath'${C_NC} found.  Activating it." info 1
-		git config --local core.hooksPath "${BME_PROJECT_DIR}/githooks"
 	fi
 	
 # Final message
