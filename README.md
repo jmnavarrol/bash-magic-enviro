@@ -37,6 +37,7 @@ Once you *"cd out"* from the project's hierarchy all these customizations will b
    * [load project's bin dir](#bindir)
    * [load Python3 *virtualenvs*](#virtualenvs)
    * [AWS support](#aws)
+   * [git client-side hooks support](#githooks)
    * [Terraform support](#terraform)
 1. [Development](#development)
    * [modules' development](#dev-modules)
@@ -360,6 +361,20 @@ As of now, it works on the expectation that you own a *"personal AWS account"*, 
 **Functions:**
 * **load_aws_credentials:** it contacts, with the help of AWS CLI, AWS's API endpoint to grab an *aws session token* using your *default profile's* credentials.  
 Upon loading, it will ask for a single use password from your MFA device, which means this can be only used in interactive sessions.  In the end, it's a wrapper around a command invocation: `aws sts get-session-token --serial-number [your MFA device] --token-code [single use password]`.  It then exports AWS_* session variables to your console, so you don't have to re-authenticate again (up to your session's expiration time).  See [an example usage](./example-project/aws-example/.bme_env).
+
+<sub>[back to module list](#module_list).</sub>
+
+### git client-side hooks support<a name="githooks">
+**[githooks module](./src/bash-magic-enviro_modules/githooks.module):** Enables the alternate **githooks/** directory for client-side git hooks so they can be automatically shared among all repository users.
+
+For this to happen, git's **core.hooksPath** property is set to point to the **"${BME_PROJECT_DIR}/githooks"** directory within a repository with this module activated.
+
+**Requirements:**
+* git >= 2.9
+* BME's project root directory should be the root of a git sandbox (this is to make it easier to manage without worrying about relative paths, etc.)
+* Internet connectivity
+
+**NOTE:** the [bme-githooks](https://github.com/jmnavarrol/bme-githooks) helper repository has been created to showcase this module's features.
 
 <sub>[back to module list](#module_list).</sub>
 
