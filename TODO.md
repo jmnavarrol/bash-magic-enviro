@@ -1,6 +1,5 @@
 # TO-DO: bash-magic-enviro
 Pending actions, general notes, etc. (in no particular order):
-* __bme_load_project() should run in the directory it gets as param.
 * publish docker container so it can be just used.
 * Automatic support for project root's '.bme.d/' directory '.gitignore' inclusion.
 * Easy support for custom, per-project, modules.
@@ -26,3 +25,4 @@ Pending actions, general notes, etc. (in no particular order):
   * Review [terraform-config-inspect](https://github.com/hashicorp/terraform-config-inspect), which allows to extract configurations from terraform.
 
 ## IN PROGRESS
+* __bme_load_project() should run in the directory it gets as param.

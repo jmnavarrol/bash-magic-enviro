@@ -242,9 +242,18 @@ local project_dir="${1}"
 	fi
 	
 # Load already validated project
-	source "${project_dir}/${BME_PROJECT_FILE}" || return $?
-	bme_log "project ${C_BOLD}'${BME_PROJECT_NAME}'${C_NC} environment..." loading
+	# we move to the project's root in case we reached here from a subdirectory within
+	local current_dir="${PWD}"
+	cd "${project_dir}"
+	source "${BME_PROJECT_FILE}" ||
+	{
+		local rc_value=$?
+		bme_log "enviro file at '${project_dir}/${BME_PROJECT_FILE}' failed while loading: (${C_RED}${rc_value}${C_NC})" error
+		cd "${current_dir}"
+		return ${rc_value}
+	}
 	
+	bme_log "project ${C_BOLD}'${BME_PROJECT_NAME}'${C_NC} environment..." loading
 	export BME_PROJECT_DIR="${project_dir}"
 	BME_ORIG_PATH=$PATH
 	
@@ -280,11 +289,9 @@ local project_dir="${1}"
 	bme_log "Project ${C_BOLD}'${BME_PROJECT_NAME}'${C_NC} loaded.\n" info
 	
 # Finally, load project root's $BME_FILE file, if any
-	if [ -r "${BME_PROJECT_DIR}/${BME_FILE}" ]; then
+	if [ -r "${BME_FILE}" ]; then
 		__bme_debug && echo "${FUNCNAME[0]}: FOUND BME_ENV FILE AT '${BME_PROJECT_DIR}/${BME_FILE}'"
-	# we move to the project's root in case we reached here from a subdirectory within
-		local current_dir="${PWD}"
-		cd "${BME_PROJECT_DIR}"
+		
 		source "${BME_PROJECT_DIR}/${BME_FILE}" ||
 		{
 			local rc_value=$?
