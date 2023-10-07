@@ -1,11 +1,12 @@
 # CHANGELOG
 
-## Next Release
-* __bme_load_project() now runs in the directory it gets as param.
+## v1.6.1 (2023-OCT-07)
+* differences from [previous tag](/../../compare/v1.6.0…v1.6.1).
+* __bme_load_project() now runs in the directory it gets as param so it can properly load root's .bme_env file.
 
 ## v1.6.0 (2023-OCT-01)
 * differences from [previous tag](/../../compare/v1.5.0…v1.6.0).
-* New module: [githooks](./src/bash-magin-enviro_modules/githooks.module)
+* New module: [githooks](./src/bash-magin-enviro_modules/githooks.module).
 
 ## v1.5.0 (2023-SEP-30)
 * differences from [previous tag](/../../compare/v1.4.7-1…v1.5.0).
