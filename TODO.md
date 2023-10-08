@@ -2,7 +2,6 @@
 Pending actions, general notes, etc. (in no particular order):
 * publish docker container so it can be just used.
 * Automatic support for project root's '.bme.d/' directory '.gitignore' inclusion.
-* Easy support for custom, per-project, modules.
 * Find a way for modules to provide their own (formatted) help.
 * Easier/global management of whitelisting and projects' root directories.
 * Auto white/blacklisting of subdirectories (i.e.: to make easy using BME on non-interactive sessions).
@@ -25,3 +24,4 @@ Pending actions, general notes, etc. (in no particular order):
   * Review [terraform-config-inspect](https://github.com/hashicorp/terraform-config-inspect), which allows to extract configurations from terraform.
 
 ## IN PROGRESS
+* Easy support for custom, per-project, modules.

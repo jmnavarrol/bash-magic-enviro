@@ -1,7 +1,7 @@
 # Main project's Makefile
 SHELL := /bin/bash
 
-export VERSION := v1.6.1
+export VERSION := v1.7.0-dev1
 export DESTDIR := ${HOME}/bin
 export SRCDIR := src
 export BUILDDIR := build

@@ -11,3 +11,6 @@ which multigit > /dev/null && multigit --run || \
 	bme_log "${NC_BOLD}'multigit'${C_NC} couldn't be loaded." error 1
 	return $rc
 }
+
+# Checks the project-level sample module has been properly loaded
+samplemodule-test || return $?

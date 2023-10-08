@@ -447,12 +447,30 @@ local module=$1
 	for module in "${module_list[@]}"; do
 		if [[ ! " ${BME_ACTIVE_MODULES[*]} " =~ " ${module} " ]]; then
 			__bme_debug && echo "${FUNCNAME[0]}: ABOUT TO LOAD MODULE '${module}'"
-			if [ -r "${BASH_SOURCE}_modules/${module}.module" ]; then
+		# First let's try project-level modules
+			if [ -r "${BME_PROJECT_DIR}/bme-modules/${module}.module" ]; then
+				__bme_debug && echo "${FUNCNAME[0]}: PROJECT-LEVEL '${module}' FOUND. LOADING IT"
+				source "${BME_PROJECT_DIR}/bme-modules/${module}.module" ||
+				{
+					bme_log "${C_BOLD}${FUNCNAME[0]}:${C_NC} Couldn't load ${C_BOLD}project-level '${module}'${C_NC} module." error
+				# this module failed; let's go with the next one
+					continue
+				}
+				if ( ${module}_load ); then
+					BME_ACTIVE_MODULES+=("${module}")
+				else
+					bme_log "${C_BOLD}${FUNCNAME[0]}:${C_NC} Couldn't load ${C_BOLD}project-level '${module}_load'${C_NC} function." error
+				# this module failed; let's go with the next one
+					continue
+				fi
+		# No project-level module found by that name.  Let's try a global one
+			elif [ -r "${BASH_SOURCE}_modules/${module}.module" ]; then
+			# Global modules shouldn't fail at load since they are tested before shipping a new version
 				source "${BASH_SOURCE}_modules/${module}.module"
 				${module}_load && BME_ACTIVE_MODULES+=("${module}")
 			else
 				local log_msg="Couldn't load ${C_BOLD}'${module}'${C_NC} module.\n"
-					log_msg+="\t\tFile ${C_BOLD}'${BASH_SOURCE}_modules/${module}.module'${C_NC} couldn't be found."
+				log_msg+="\t\tFile ${C_BOLD}'${BASH_SOURCE}_modules/${module}.module'${C_NC} couldn't be found."
 				bme_log "${log_msg}" warning 1
 			fi
 		else

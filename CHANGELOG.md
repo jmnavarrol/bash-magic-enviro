@@ -1,5 +1,8 @@
 # CHANGELOG
 
+## Next Release
+* added support for per-project modules.
+
 ## v1.6.1 (2023-OCT-07)
 * differences from [previous tag](/../../compare/v1.6.0…v1.6.1).
 * __bme_load_project() now runs in the directory it gets as param so it can properly load root's .bme_env file.

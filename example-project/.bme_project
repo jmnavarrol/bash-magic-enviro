@@ -14,6 +14,7 @@ BME_MODULES=(
 # 	bindir               # adds project's bin/ dir to $PATH (implicitly loaded by 'terraform-support')
 # 	githooks             # adds support for shared git hooks
 	python3-virtualenvs  # manages Python 3 virtualenvs
+	sample-module        # a project-level module example
 	terraform-support    # sets terraform-related features
 )
 
