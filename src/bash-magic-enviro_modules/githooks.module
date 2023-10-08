@@ -68,7 +68,7 @@ local unmet_dependencies=false
 	}
 	
 # Final message: if we reached here, everything went OK
-	echo -e "\t${C_BOLD}'githooks'${C_NC} support: ${C_GREEN}LOADED!${C_ND}"
+	echo -e "\t${C_BOLD}'githooks'${C_NC} support: ${C_GREEN}LOADED!${C_NC}"
 }
 
 
