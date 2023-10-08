@@ -59,7 +59,7 @@ bme_eval_dir() {
 	# Time to process 'bme_env' file, if proper conditions met
 		if [[ -n ${BME_PROJECT_NAME+x} ]] \
 		   && [[ -n ${BME_PROJECT_DIR+x} ]] \
-		   && [ "${PWD:0:${#BME_PROJECT_DIR}}" = "${BME_PROJECT_DIR}" ] \
+		   && [ "${PWD}" != "${BME_PROJECT_DIR}" ] \
 		   && [ -r "${BME_FILE}" ]; then
 		   # project name properly defined
 		   # project dir properly defined too
