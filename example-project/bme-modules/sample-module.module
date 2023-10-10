@@ -1,17 +1,20 @@
 # Meant to be sourced by 'Bash Magic Enviro'
 # This is a project-level sample module
 
+# All modules must have a [module-name]_load function
 sample-module_load() {
 	bme_log "${C_BOLD}'sample'${C_NC} module..." loading 1
 	bme_log "${C_BOLD}'samplemodule-test'${C_NC} - Outputs message to attest this module has been properly loaded" function 2
 	bme_log "${C_BOLD}'sample'${C_NC} module ${C_GREEN}LOADED!${C_NC}" info 1
 }
 
+# All modules must have a [module-name]_unload function
 sample-module_unload() {
 	unset -f samplemodule-test
 	bme_log "${C_BOLD}'sample'${C_NC} module unloaded." cleaning 1
 }
 
+# Example function provided for this module
 samplemodule-test() {
 	bme_log "${C_BOLD}'sample'${C_NC} project-level module is in fact loaded!" info
 }

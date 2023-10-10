@@ -33,6 +33,7 @@ Once you *"cd out"* from the project's hierarchy all these customizations will b
    * [colored output](#colors)
    * [custom clean function](#custom_clean)
    * [*Bash Magic Enviro* version checking](#check-versions)
+   * [Per-project custom modules](#custom-modules)
 1. [Available modules](#modules)<a name="module_list"></a>
    * [load project's bin dir](#bindir)
    * [load Python3 *virtualenvs*](#virtualenvs)
@@ -299,6 +300,17 @@ As the name implies, helps you noticing if your current *Bash Magic Enviro* vers
 A function named [**bme_check_version()**](https://github.com/jmnavarrol/bash-magic-enviro/blob/e69fb64217aaf3844997edd6ca19e905d2e33401/src/bash-magic-enviro#L155) (no parameters) is exported so you can call it wherever you feel proper (i.e.: *.bme_project* and *.bme_env* files or command prompt).
 
 This function compares your current *Bash Magic Enviro's* version against the highest version available, defined as *git tags* at your *git remote*.  Shows a message about current version status.
+
+<sub>[back to feature list](#feature_list) | [back to contents](#contents).</sub>
+
+### Per-project custom modules<a name="custom-modules"></a>
+If there's a [bme-modules/ directory](./example-project/bme-modules/) within the root of your BME project, it will be honored and you can load modules from files within in exactly the same conditions and **with precedence** to *global* modules of same name.
+
+You may use of this when you want the module features (autoloading, preparing an environment, exporting functions, etc.) for things that doesn't make sense out of the limited scope of your project or if/when you need to *overload* the way a global module works.
+
+The standard conditions for modules are supported (i.e.: [naming](#available-modules), [loading](#available-modules), [development](#dev-modules)...).
+
+You can look for inspiration about what can be done [a *"barebones"* example](./example-project/bme-modules/sample-module.module) as well as the included [global modules' source code](./src/bash-magic-enviro_modules/).
 
 <sub>[back to feature list](#feature_list) | [back to contents](#contents).</sub>
 
