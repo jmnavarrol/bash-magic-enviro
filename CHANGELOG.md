@@ -1,6 +1,9 @@
 # CHANGELOG
 
 ## Next Release
+
+## v1.7.0 (2023-OCT-20)
+* differences from [previous tag](/../../compare/v1.6.1…v1.7.0).
 * Added support for per-project modules.
 * BUG CORRECTED: message erratum on githooks module.
 * BUG CORRECTED: bme_eval_dir() loaded project root's .bme_env file twice.
