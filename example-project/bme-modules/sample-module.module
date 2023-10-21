@@ -3,18 +3,36 @@
 
 # All modules must have a [module-name]_load function
 sample-module_load() {
+local unmet_dependencies=false
+
+# This code only has to run once, so let's check first if needed
+[ "${BME_SAMPLE_MODULE}" == true ] && return 0
+
 	bme_log "${C_BOLD}'sample'${C_NC} module..." loading 1
-	bme_log "${C_BOLD}'samplemodule-test'${C_NC} - Outputs message to attest this module has been properly loaded" function 2
-	bme_log "${C_BOLD}'sample'${C_NC} module ${C_GREEN}LOADED!${C_NC}" info 1
+	# an export to attest the module has been properly loaded
+	export BME_SAMPLE_MODULE=true
+	bme_log "${C_BOLD}'samplemodule-test'${C_NC} - Output message to attest this module has been properly loaded" function 2
+	
+	if ($unmet_dependencies); then
+		bme_log "${C_BOLD}'sample-module'${C_NC} not loaded. See missed dependencies above." error 1
+	else
+		bme_log "${C_BOLD}'sample-module'${C_NC} ${C_GREEN}LOADED!${C_NC}" info 1
+	fi
 }
 
 # All modules must have a [module-name]_unload function
 sample-module_unload() {
+	unset BME_SAMPLE_MODULE
 	unset -f samplemodule-test
 	bme_log "${C_BOLD}'sample'${C_NC} module unloaded." cleaning 1
 }
 
 # Example function provided for this module
 samplemodule-test() {
-	bme_log "${C_BOLD}'sample'${C_NC} project-level module is in fact loaded!" info
+	if [ "${BME_SAMPLE_MODULE}" == true ]; then
+	bme_log "${C_BOLD}'sample-module'${C_NC} project-level module is in fact loaded!" info
+	else
+		bme_log "${C_BOLD}'sample-module'${C_NC} project-level module is not ready." error
+		return -1
+	fi
 }
