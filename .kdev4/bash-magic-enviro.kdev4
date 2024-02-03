@@ -2,7 +2,7 @@
 BuildItems=@Variant(\x00\x00\x00\t\x00\x00\x00\x00\x00)
 
 [Filters]
-size=36
+size=37
 
 [Filters][0]
 inclusive=0
@@ -152,6 +152,11 @@ targets=1
 [Filters][35]
 inclusive=1
 pattern=.bashrc
+targets=1
+
+[Filters][36]
+inclusive=1
+pattern=.editorconfig
 targets=1
 
 [Filters][4]
