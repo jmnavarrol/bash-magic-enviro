@@ -14,12 +14,14 @@ Pending actions, general notes, etc. (in no particular order):
   * https://github.com/deadc0de6/dotdrop
 * **[python3-virtualenvs module](./src/bash-magic-enviro_modules/python3-virtualenvs.module):**
   * I think Python3 provides better virtualenv support than Phython2 so, maybe, virtualenvwrapper support is not needed anymore.  Consider this and act accordingly (See [Python3 doc](https://docs.python.org/3/library/venv.html)).
-  * Consider making python *virtualenvs* project-restricted instead of user-wide.
+  * Consider making python *virtualenvs* project-restricted instead of user-wide so there's no virtualenv name collisions among projects.
+  * Consider *load_virtualenv()* accepting a second param that points to a requirements file to be loaded.  This way .bme_env file can be included within a repository without knowledge of the BME project that will load it and still do the proper thing.
 * **[aws-support module](./src/bash-magic-enviro_modules/aws-support.module):**
   * Make the module not to require the *$AWS_MFA* environment variable, as it can be read from the proper AWS profile, or even not requested at all by means of *"bypassing"* its request right to aws-cli.
   * Add flexibility to authentication methods, so MFA is not mandatory.
   * Add flexibility to which the requested AWS profile should be used within a project.
 * **[terraform-support module](./src/bash-magic-enviro_modules/terraform-support.module):**
+  * Consider making tfenv install to be global instead of per-project (why installing it more than once per user?).
   * self-management of *.gitignore* entries for ~/bin/[terraform,tfvenv] symlinks.
   * Review [terraform-config-inspect](https://github.com/hashicorp/terraform-config-inspect), which allows to extract configurations from terraform.
 
