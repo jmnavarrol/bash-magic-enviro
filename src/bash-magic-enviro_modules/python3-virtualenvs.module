@@ -26,7 +26,7 @@ local unmet_dependencies=false
 		bme_log "${C_BOLD}'flock'${C_NC} not found.  Please install ${C_BOLD}'util-linux'${C_NC} package." error 1
 		unmet_dependencies=true
 	fi
-	
+
 # Checks Python3 availability
 	# for some reason, Python sends --version output to STDERR instead of STDOUT
 	if which python3 > /dev/null; then
@@ -42,7 +42,7 @@ local unmet_dependencies=false
 		bme_log "No valid Python executable found." error 1
 		unmet_dependencies=true
 	fi
-	
+
 # Checks virtualenvwrapper availability and other requirements
 	if hash workon 2>/dev/null; then
 		# makes sure virtualenvs' directory for requirements files is in place
@@ -59,7 +59,7 @@ local unmet_dependencies=false
 		bme_log "${C_BOLD}virtualenvwrapper tool undetected${C_NC}.  You should install it for virtualenvs support." error 1
 		unmet_dependencies=true
 	fi
-	
+
 # Final message
 	if ($unmet_dependencies); then
 		python3-virtualenvs_unload
@@ -90,6 +90,12 @@ python3-virtualenvs_unload() {
 load_virtualenv() {
 local requested_virtualenv="${1}"
 
+# Check params
+	if [ -z "${requested_virtualenv}" ]; then
+		bme_log "${C_BOLD}${FUNCNAME}:${C_NC} mandatory param ${C_BOLD}'venv_name'${C_NC} not set." error
+		return -1
+	fi
+
 # Checks the requirements file's md5sum
 	# running in a subshell so I can securely change directories
 	# the idea is to populate ${venv_outdated} **only** if the virtualenv needs to be regenerated.
@@ -99,20 +105,20 @@ local requested_virtualenv="${1}"
 			bme_log "Virtualenv ${C_BOLD}'${requested_virtualenv}'${C_NC} outdated." warning
 		fi
 	)
-	
+
 # if $venv_outdated is empty, the main virtualenv is up to date.
 # but it can point to includes that we should consider
 	if [ -z "${venv_outdated}" ]; then
 		venv_outdated=$(__check_requirements_includes "${requested_virtualenv}")
 	fi
-	
+
 # if $venv_outdated holds output, it's because stored md5sum for the associated requirements file doesn't match
 	if [ -n "${venv_outdated}" ]; then
 		echo -e "${venv_outdated}"
 		[ "$VIRTUAL_ENV" ] && deactivate  # deactivates virtualenv (if any active and just in case)
 		rmvirtualenv "${requested_virtualenv}"
 	fi
-	
+
 # if requested virtualenv still exists, activate it, unless already so
 	if lsvirtualenv -b | grep -q ^${requested_virtualenv}$; then
 		if [[ `basename "${VIRTUAL_ENV}"` != "${requested_virtualenv}" ]]; then
@@ -136,7 +142,7 @@ local requested_virtualenv="${1}"
 		bme_log "Function ${C_BOLD}'${FUNCNAME[0]}()'${C_NC} is ${C_BOLD}private${C_NC}.  You shouldn't invoke it!" error
 		return -1
 	fi
-	
+
 # tries to acquire a lock
 	(
 		if flock -n 100; then
@@ -145,7 +151,7 @@ local requested_virtualenv="${1}"
 				bme_log "Requirements file for virtualenv ${C_BOLD}'${virtualenvs_requirements}/${requested_virtualenv}.requirements'${C_NC} doesn't exist. Creating empty virtualenv." warning 1
 				touch "${virtualenvs_requirements}/${requested_virtualenv}.requirements"
 			fi
-			
+
 			# virtualenv creation
 			local virtualenv_error=false
 			# requirements file format can be picky about pip version.
@@ -172,7 +178,7 @@ local requested_virtualenv="${1}"
 			# no custom pip version: "standard" virtualenv creation
 				mkvirtualenv --python=${SYSTEM_PYTHON} ${requested_virtualenv} -r "${virtualenvs_requirements}/${requested_virtualenv}.requirements" || virtualenv_error=true
 			fi
-			
+
 			if ($virtualenv_error); then
 				bme_log "${C_BOLD}'${requested_virtualenv}'${C_NC} creation FAILED (see above)." error
 			else
@@ -218,12 +224,12 @@ local allowed_callers=(
 		bme_log "${log_msg}" error
 		return -1
 	fi
-	
+
 # running in a subshell so I securely can change directories
 # the function will implicitly return the subshell's output
 	(
 		cd "${virtualenvs_requirements}"
-		
+
 	# matches lines like:
 	# -rpath
 	# -r path

@@ -18,18 +18,6 @@ fi
 }
 
 # Checks if module properly manages environment variables
-# stripped_output=''
-# for line in "$(python3-virtualenvs_load)"; do
-# 	strip_escape_codes "${line}" line_stripped
-# 	stripped_output+="${line_stripped}"
-# done
-# 
-# if [[ "${stripped_output}" =~ .*"ERROR: Environment variable 'BME_PROJECT_DIR' no set.".* ]]; then
-# 	echo -e "\tCheck 'BME_PROJECT_DIR': OK"
-# else
-# 	echo -e "\tCheck 'BME_PROJECT_DIR': FAIL\n"
-# 	echo -e "${stripped_output}"
-# fi
 
 # Other tests
 mkdir -p "${SCRATCH_DIR}/test-project"
@@ -38,10 +26,30 @@ export BME_PROJECT_DIR="${SCRATCH_DIR}/test-project"
 
 # Loads the module
 source "${VIRTUALENVS_MODULE}" || exit $?
-python3-virtualenvs_load || exit $?
+python3-virtualenvs_load > /dev/null || exit $?
 
+#--
 # Virtualenv creation
-load_virtualenv 'test-virtualenv' || exit $?
+#--
+# virtualenv without param
+stripped_output=''
+for line in "$(load_virtualenv)"; do
+	strip_escape_codes "${line}" line_stripped
+	stripped_output+="${line_stripped}"
+done
+
+if [[ "${stripped_output}" =~ .*"mandatory param 'venv_name' not set".* ]]; then
+	echo -e "Check 'virtualenv without param': OK"
+else
+	echo "Check 'virtualenv without param': FAIL"
+	echo "OUTPUT:"
+	echo -e "${stripped_output}"
+	echo "END OF OUTPUT"
+	exit 1
+fi
+
+# virtualenv OK
+load_virtualenv 'test-virtualenv' > /dev/null || exit $?
 # Check results
 for file in \
 	"${BME_CONFIG_DIR}/python-virtualenvs.lockfile" \
