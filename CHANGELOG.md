@@ -5,6 +5,7 @@
 * Version comes now from [VERSION file](./VERSION).
 * Added a minimal unit testing framework.
 * Added .editorconfig file.
+* python3-virtualenvs module: load_virtualenv() now accepts an optional param to use a requirements file to build a virtualenv.
 
 ## v1.7.0 (2023-OCT-20)
 * differences from [previous tag](/../../compare/v1.6.1…v1.7.0).

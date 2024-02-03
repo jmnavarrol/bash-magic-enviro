@@ -1,15 +1,16 @@
 #!/usr/bin/env bash
-#
+
 # Meant to be run from maketests.sh.  See its exported variables
 readonly VIRTUALENVS_MODULE="${MODULES_DIR}/python3-virtualenvs.module"
 
+# Checks environment
 if [ -z "${VIRTUALENVWRAPPER_SCRIPT}" ]; then
 	err_msg="ERROR: I can't find the '' environment variable.\n"
 	err_msg+="\tIs virtualenvwrapper installed and configured?"
 	echo -e "${err_msg}"
 	exit 1
 else
-	source "${VIRTUALENVWRAPPER_SCRIPT}"
+	source "${VIRTUALENVWRAPPER_SCRIPT}" || exit $?
 fi
 
 [ -r "${VIRTUALENVS_MODULE}" ] || {
@@ -17,16 +18,15 @@ fi
 	exit 1
 }
 
-# Checks if module properly manages environment variables
-
-# Other tests
+# Sets environment
 mkdir -p "${SCRATCH_DIR}/test-project"
 export BME_CONFIG_DIR="${SCRATCH_DIR}"
 export BME_PROJECT_DIR="${SCRATCH_DIR}/test-project"
+cd "${BME_PROJECT_DIR}"
 
 # Loads the module
-source "${VIRTUALENVS_MODULE}" || exit $?
-python3-virtualenvs_load > /dev/null || exit $?
+source "${VIRTUALENVS_MODULE}"
+python3-virtualenvs_load || exit $?
 
 #--
 # Virtualenv creation
@@ -48,8 +48,9 @@ else
 	exit 1
 fi
 
-# virtualenv OK
-load_virtualenv 'test-virtualenv' > /dev/null || exit $?
+# simple virtualenv OK
+echo "Check simple virtualenv creation"
+load_virtualenv 'test-virtualenv' || exit $?
 # Check results
 for file in \
 	"${BME_CONFIG_DIR}/python-virtualenvs.lockfile" \
@@ -60,3 +61,28 @@ do
 			exit 1
 		fi
 done
+deactivate
+rmvirtualenv 'test-virtualenv' || exit $?
+
+# virtualenv with requestfile extra param
+echo "Check virtualenv with optional requirements file"
+mkdir --parents "${BME_PROJECT_DIR}/requirements_subdir"
+echo -e 'hello-hello' > "${BME_PROJECT_DIR}/requirements_subdir/requirements.txt"
+load_virtualenv 'test-virtualenv' 'requirements_subdir/requirements.txt' || exit $?
+
+# Load it again without changes
+echo "Check virtualenv loading with no changes"
+deactivate
+load_virtualenv 'test-virtualenv' 'requirements_subdir/requirements.txt' || exit $?
+
+# Load once again, this time with a change
+deactivate
+echo "Check upgrading virtualenv with changes"
+echo -e 'wheel' >> "${BME_PROJECT_DIR}/requirements_subdir/requirements.txt"
+load_virtualenv 'test-virtualenv' 'requirements_subdir/requirements.txt' || exit $?
+
+#--
+# CLEAN
+#--
+python3-virtualenvs_unload || exit $?
+rmvirtualenv 'test-virtualenv'
