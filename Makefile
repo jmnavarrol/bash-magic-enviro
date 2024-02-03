@@ -1,7 +1,7 @@
 # Main project's Makefile
 SHELL := /bin/bash
 
-export VERSION := v1.7.0
+export VERSION := $(shell cat ./VERSION)
 export DESTDIR := ${HOME}/bin
 export SRCDIR := src
 export BUILDDIR := build
@@ -53,7 +53,7 @@ $(BUILDDIR)/$(SCRIPT)_modules: $(wildcard $(SRCDIR)/$(SCRIPT)_modules/*.module)
 	@echo -e "$${C_BOLD}Building BME modules:$${C_NC} $${C_GREEN}DONE!$${C_NC}"
 	
 # Puts templated files in place
-$(BUILDDIR)/$(VERSION_FILE): Makefile $(SRCDIR)/$(VERSION_FILE).tpl make-templating.sh
+$(BUILDDIR)/$(VERSION_FILE): Makefile VERSION $(SRCDIR)/$(VERSION_FILE).tpl make-templating.sh
 	@echo -e "$${C_BOLD}Expanding templated values...$${C_NC}"
 	@./make-templating.sh
 	@echo -e "$${C_BOLD}Expanding templated values:$${C_NC} $${C_GREEN}DONE!$${C_NC}"

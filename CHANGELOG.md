@@ -1,6 +1,8 @@
 # CHANGELOG
 
 ## Next Release
+* differences from [previous tag](/../../compare/v1.7.0…main).
+* Version comes now from [VERSION file](./VERSION).
 
 ## v1.7.0 (2023-OCT-20)
 * differences from [previous tag](/../../compare/v1.6.1…v1.7.0).
