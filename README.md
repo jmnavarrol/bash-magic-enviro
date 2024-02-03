@@ -345,15 +345,18 @@ See also [the included example](./example-project/virtualenv-example/.bme_env).
 * flock (it comes from package **util-linux** in the case of Debian systems).
 
 **Functions:**
-* **load_virtualenv [virtualenv]:** loads, with the help of *virtualenvwrapper*, the requested virtualenv *[virtualenv]* if it exists (it's equivalent to virtualenvwrapper's `workon [virtualenv]` command).
-  1. If the function can't find the requested virtualenv *[virtualenv]*, it will look for its requirements file at *"${BME_PROJECT_DIR}/python-virtualenvs/[virtualenv].requirements"* and it will create the requested *virtualenv* using it.
-  1. If the requirements file can't be found, it will create an *"empty"* virtualenv *[virtualenv]*, along with an empty *requirements* file, so you can start installing packages on it.
+* **load_virtualenv virtualenv [requirements_file]:** creates, loads or updates, with the help of *virtualenvwrapper*, the requested virtualenv *[virtualenv]*.  Optionally, it accepts a second param with the path to a requirements file to be used to populate the virtualenv (path is relative to the .bme_env file where the function is loaded).
+  1. If the function can't find the requested virtualenv *[virtualenv]*, it will look for its requirements file at *"${BME_PROJECT_DIR}/python-virtualenvs/[virtualenv].requirements"* and it will create the requested *virtualenv* using it.  
+     It will also use the *requirements_file* provided as second param, if provided.
+  1. If the requirements file can't be found, it will create either an *"empty"* virtualenv *[virtualenv]*, along with an empty *requirements* file, so you can start installing packages on it, or the virtualenv *[virtualenv]* populated with pips from the *[requirements_file]* passed as second parameter.
   1. If *pip* is listed in the *requirements* file, and given the requirements' file format is quite sensible about the exact version of *pip* in use, *load_virtualenv* will try to honor your requested pip version before installing the remaining packages into the virtualenv.
   1. This function also stores the requirements file's *md5sum* under the *'~/.bme.d/'* hidden directory, so it can update the virtualenv when changes are detected.
   
-  **NOTE:** Python virtualenv's names are per-user global.  This means that if two projects share the same virtualenv name, whenever you activate one or the other, the virtualenv will be regenerated **unless** the md5sum of their respective requirements files match.  This is on purpose, and you should try to either call them differently of share their requirements file so md5sum matching is guaranteed.
+  **NOTES:**
+  * Python virtualenv's names are per-user global.  This means that if two projects share the same virtualenv name, whenever you activate one or the other, the virtualenv will be regenerated **unless** the md5sum of their respective requirements files match.  This is on purpose, and you should try to either call them differently of share their requirements file so md5sum matching is guaranteed.
+  * For virtualenvs created with the help of a requirements file, it is advised to add their associated *"${BME_PROJECT_DIR}/python-virtualenvs/[virtualenv].requirements"* files to *.gitignore* so you don't have two files to maintain providing the same info.
 
-The expectation is that you will install whatever required pips within your virtualenv and, once satisfied with the results, you'll "dump" its contents to its requirements file, i.e.: `pip freeze > ${BME_PROJECT_DIR}/python-virtualenvs/[virtualenv].requirements`.
+The expectation is that you will install whatever required pips within your virtualenv and, once satisfied with the results, you'll either "dump" its contents to its requirements file, i.e.: `pip freeze > ${BME_PROJECT_DIR}/python-virtualenvs/[virtualenv].requirements`, or you'll maintain them on a different file you pass as requirements file to *load_virtualenv()*.
 
 <sub>[back to module list](#module_list).</sub>
 

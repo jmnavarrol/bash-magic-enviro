@@ -7,3 +7,5 @@ bin/tfenv
 bin/terraform
 # due to multigit
 githooks-example
+# this is created on the fly
+python-virtualenvs/bme-example-virtualenv.requirements

@@ -6,7 +6,6 @@ Pending actions, general notes, etc. (in no particular order):
 * Easier/global management of whitelisting and projects' root directories.
 * Auto white/blacklisting of subdirectories (i.e.: to make easy using BME on non-interactive sessions).
 * Dynamic load/unload of functions/variables that are only needed within a project environment.
-* Find a suitable testing framework.
 * `make install` may offer to tweak your environment for BME autoconfiguration.
 * dotfiles integration?
   * [stow](https://www.jakewiesler.com/blog/managing-dotfiles)
@@ -15,7 +14,6 @@ Pending actions, general notes, etc. (in no particular order):
 * **[python3-virtualenvs module](./src/bash-magic-enviro_modules/python3-virtualenvs.module):**
   * I think Python3 provides better virtualenv support than Phython2 so, maybe, virtualenvwrapper support is not needed anymore.  Consider this and act accordingly (See [Python3 doc](https://docs.python.org/3/library/venv.html)).
   * Consider making python *virtualenvs* project-restricted instead of user-wide so there's no virtualenv name collisions among projects.
-  * Consider *load_virtualenv()* accepting a second param that points to a requirements file to be loaded.  This way .bme_env file can be included within a repository without knowledge of the BME project that will load it and still do the proper thing.
 * **[aws-support module](./src/bash-magic-enviro_modules/aws-support.module):**
   * Make the module not to require the *$AWS_MFA* environment variable, as it can be read from the proper AWS profile, or even not requested at all by means of *"bypassing"* its request right to aws-cli.
   * Add flexibility to authentication methods, so MFA is not mandatory.

@@ -1,7 +1,8 @@
 # subdirectory-level BME enviro file
 # Python virtualenv example config
 
-load_virtualenv 'bme-example-virtualenv' || return $?
+# This creates the 'bme-example-virtualenv' and populates it with 'local-requirements.txt' file from this same directory
+load_virtualenv 'bme-example-virtualenv' 'local-requirements.txt' || return $?
 
 # Just an example of what you can add to your .bme_env files
 bme_log "Packages in current virtualenv:" info
