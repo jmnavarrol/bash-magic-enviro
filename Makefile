@@ -38,7 +38,7 @@ date:
 	@formated_date=`LC_ALL=C date +"%Y-%^b-%d"` \
 	&& echo -e "$${C_BOLD}Changelog date is:$${C_NC} $${C_GREEN}$${formated_date}$${C_NC}"
 
-check:
+check: build
 	@echo -e "$${C_BOLD}Checking requirements...$${C_NC}"
 	@./make-checks.sh
 	@echo -e "$${C_BOLD}Checking requirements:$${C_NC} $${C_GREEN}DONE!$${C_NC}"
@@ -81,12 +81,12 @@ dev: build
 	@./make-control-install.sh dev
 	@echo -e "$${C_BOLD}Development mode:$${C_NC} $${C_GREEN}DONE!$${C_NC}"
 
-test: build
+test: check
 	@echo -e "$${C_BOLD}Running unitary tests...$${C_NC}"
 	@./tests/maketests.sh
 	@echo -e "$${C_BOLD}Unitary tests:$${C_NC} $${C_GREEN}DONE!$${C_NC}"
 
-install: check test $(DESTDIR)
+install: check build $(DESTDIR)
 	@echo -e "$${C_BOLD}Installing BME to '$${DESTDIR}'...$${C_NC}"
 	@./make-control-install.sh install
 	@echo -e "$${C_BOLD}Installing BME:$${C_NC} $${C_GREEN}DONE$${C_NC}"

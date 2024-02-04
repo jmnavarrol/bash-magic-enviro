@@ -5,7 +5,7 @@ readonly VIRTUALENVS_MODULE="${MODULES_DIR}/python3-virtualenvs.module"
 
 # Checks environment
 if [ -z "${VIRTUALENVWRAPPER_SCRIPT}" ]; then
-	err_msg="ERROR: I can't find the '' environment variable.\n"
+	err_msg="ERROR: I can't find the 'VIRTUALENVWRAPPER_SCRIPT' environment variable.\n"
 	err_msg+="\tIs virtualenvwrapper installed and configured?"
 	echo -e "${err_msg}"
 	exit 1
