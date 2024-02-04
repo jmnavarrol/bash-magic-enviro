@@ -6,7 +6,10 @@ Pending actions, general notes, etc. (in no particular order):
 * Easier/global management of whitelisting and projects' root directories.
 * Auto white/blacklisting of subdirectories (i.e.: to make easy using BME on non-interactive sessions).
 * Dynamic load/unload of functions/variables that are only needed within a project environment.
-* `make install` may offer to tweak your environment for BME autoconfiguration.
+* **Makefile:**
+  * `make install` may offer to tweak your environment for BME autoconfiguration.
+  * Consider new target for checks prior to close a version, i.e.: VERSION, CHANGELOG, Dockerfile, tests... are properly updated, etc.
+  * Consider new target to close version, i.e.: `git tag -a [version from VERSION file] -m...`
 * dotfiles integration?
   * [stow](https://www.jakewiesler.com/blog/managing-dotfiles)
   * [bare git](https://www.atlassian.com/git/tutorials/dotfiles)
