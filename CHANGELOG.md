@@ -1,7 +1,10 @@
 # CHANGELOG
 
 ## Next Release
-* differences from [previous tag](/../../compare/v1.7.0…main).
+* differences from [previous tag](/../../compare/v1.7.1…main).
+
+## v1.7.1 (2024-FEB-04)
+* differences from [previous tag](/../../compare/v1.7.0…v1.7.1).
 * Version comes now from [VERSION file](./VERSION).
 * Added a minimal unit testing framework.
 * Added .editorconfig file.
