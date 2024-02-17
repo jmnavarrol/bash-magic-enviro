@@ -6,7 +6,6 @@ Pending actions, general notes, etc. (in no particular order):
 * Easier/global management of whitelisting and projects' root directories.
 * Auto white/blacklisting of subdirectories (i.e.: to make easy using BME on non-interactive sessions).
 * Dynamic load/unload of functions/variables that are only needed within a project environment.
-* Better version comparation
 * Per-directory clean function (on top of or instead of the global one?)
 * **Makefile:**
   * `make install` may offer to tweak your environment for BME autoconfiguration.
@@ -29,3 +28,4 @@ Pending actions, general notes, etc. (in no particular order):
   * Review [terraform-config-inspect](https://github.com/hashicorp/terraform-config-inspect), which allows to extract configurations from terraform.
 
 ## IN PROGRESS
+* Better version comparation

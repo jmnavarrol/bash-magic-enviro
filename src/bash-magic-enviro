@@ -54,7 +54,7 @@ bme_eval_dir() {
 			__bme_clean_project
 			return 0
 		fi
-		
+
 	# Reaching this point, a project should already be loaded, if any available.
 	# Time to process 'bme_env' file, if proper conditions met
 		if [[ -n ${BME_PROJECT_NAME+x} ]] \
@@ -119,7 +119,7 @@ local full_message=''
 		bme_log "${log_msg}" ${FUNCNAME[0]}
 		return 0
 	fi
-	
+
 	# standard log message processing
 	if [ -z "$log_message" ]; then
 		echo -e "${C_RED}FATAL:${C_NC} ${C_BOLD}'${FUNCNAME[0]}'${C_NC} called in code from ${C_BOLD}'${FUNCNAME[1]}'${C_NC} with no message."
@@ -151,7 +151,7 @@ local full_message=''
 	esac
 # Finally, the message itself
 	full_message+="${log_message}"
-	
+
 	echo -e "${full_message}"
 }
 export -f bme_log
@@ -161,9 +161,10 @@ export -f bme_log
 bme_check_version() {
 # Gets the sorted list of remote tags
 	local remote_tags=(`git --git-dir "${BME_SRC_DIR}/.git" ls-remote --refs --tags --sort -version:refname ${BME_REMOTE_GIT} | cut --delimiter='/' --fields=3`)
+	__bme_debug && echo "${FUNCNAME[0]}: REMOTE TAGS: '${remote_tags[@]}'"
 # then, get the last one (which should be the highest by "version name").
 	local highest_tag="${remote_tags[0]}"
-	
+
 # Shows version comparation results
 	if [ "${BME_VERSION}" == "${highest_tag}" ]; then
 		bme_log "${C_BOLD}'Bash Magic Enviro'${C_NC} is up to date: ${C_BOLD}'${BME_VERSION}'${C_NC}." info 0
@@ -201,13 +202,13 @@ local project_dir="${1}"
 		bme_log "Function ${C_BOLD}'${FUNCNAME[0]}()'${C_NC} is ${C_BOLD}private${C_NC}.  You shouldn't invoke it!" error
 		return -1
 	fi
-	
+
 # Check if really there's a project file where requested
 	if [ ! -r "${project_dir}/${BME_PROJECT_FILE}" ]; then
 		bme_log "${FUNCNAME[0]}: No valid ${C_BOLD}'${BME_PROJECT_FILE}'${C_NC} found at ${C_BOLD}'${project_dir}'${C_NC}." fatal
 		return -1
 	fi
-	
+
 # if $BME_PROJECT_NAME is defined, we are already within a "BME session"
 	if [[ -n ${BME_PROJECT_NAME+x} ]]; then
 		__bme_debug && echo "${FUNCNAME[0]}: ALREADY WITHIN A PROJECT ENVIRONMENT"
@@ -216,7 +217,7 @@ local project_dir="${1}"
 			bme_log "You didn't set ${C_BOLD}'BME_PROJECT_NAME=[your_project_name]'${C_NC} in your ${C_BOLD}'${BME_PROJECT_FILE}'${C_NC} file." error
 			return -1
 		fi
-		
+
 		if [ "${new_project}" != "${BME_PROJECT_NAME}" ]; then
 		# New project: clean old one
 			__bme_debug && echo "${FUNCNAME[0]}: DIFFERENT PROJECT - OLD '${BME_PROJECT_NAME}' vs NEW '${new_project}'."
@@ -233,14 +234,14 @@ local project_dir="${1}"
 			return 0
 		fi
 	fi
-	
+
 # If we reached here, it's time to load a new project
 # Check project's whitelisting status
 	if ! __bme_whitelist "${project_dir}"; then
 		bme_log "${C_BOLD}'${BME_PROJECT_FILE}'${C_NC} file found at ${C_BOLD}'${project_dir}'${C_NC}, but load was rejected." fail
 		return -1
 	fi
-	
+
 # Load already validated project
 	# we move to the project's root in case we reached here from a subdirectory within
 	local current_dir="${PWD}"
@@ -252,11 +253,11 @@ local project_dir="${1}"
 		cd "${current_dir}"
 		return ${rc_value}
 	}
-	
+
 	bme_log "project ${C_BOLD}'${BME_PROJECT_NAME}'${C_NC} environment..." loading
 	export BME_PROJECT_DIR="${project_dir}"
 	BME_ORIG_PATH=$PATH
-	
+
 	# Checks if current dir is within a git sandbox
 	if git rev-parse --git-dir > /dev/null 2>&1; then
 		BME_WITHIN_GIT=true
@@ -273,25 +274,25 @@ local project_dir="${1}"
 		BME_WITHIN_GIT=false
 		bme_log "Directory ${C_BOLD}'${PWD}'${C_NC} is not within a git sandbox." info 1
 	fi
-	
+
 	# Activates requested modules (if any)
 	__bme_modules_load
-	
+
 	# Checks for a valid custom clean function
 	local custom_clean=`type -t bme_custom_clean`
 	if [ -n "${custom_clean}" ] && [ "${custom_clean}" != 'function' ]; then
 		bme_log "Custom clean object found, but it's not of type function: ${C_BOLD}'type -t bme_custom_clean: ${custom_clean}'${C_NC}." error 1
 	fi
-	
+
 	# Show notice if 'check-version' module was requested
 	[[ "${BME_ACTIVE_MODULES[@]}" =~ 'check-version' ]] && check-version
-	
+
 	bme_log "Project ${C_BOLD}'${BME_PROJECT_NAME}'${C_NC} loaded.\n" info
-	
+
 # Finally, load project root's $BME_FILE file, if any
 	if [ -r "${BME_FILE}" ]; then
 		__bme_debug && echo "${FUNCNAME[0]}: FOUND BME_ENV FILE AT '${BME_PROJECT_DIR}/${BME_FILE}'"
-		
+
 		source "${BME_PROJECT_DIR}/${BME_FILE}" ||
 		{
 			local rc_value=$?
@@ -318,10 +319,10 @@ local allowed_callers=('__bme_load_project' 'bme_eval_dir')
 		bme_log "${log_msg}" error
 		return -1
 	fi
-	
+
 	bme_log "Cleaning ${C_BOLD}'${BME_PROJECT_NAME}'${C_NC}..." cleaning
 	local project_name="${BME_PROJECT_NAME}"
-	
+
 # Custom clean (if any)
 	local custom_clean=`type -t bme_custom_clean`
 	if [ -n "${custom_clean}" ]; then
@@ -329,7 +330,7 @@ local allowed_callers=('__bme_load_project' 'bme_eval_dir')
 			bme_custom_clean \
 			&& bme_log "Custom clean function ended successfully" info 1 \
 			|| bme_log "Custom clean function failed" error 1
-			
+
 			unset -f bme_custom_clean
 		else
 			bme_log "Custom clean object found, but it's not of type function: ${C_BOLD}'type -t bme_custom_clean: ${custom_clean}'${C_NC}." error 1
@@ -362,7 +363,7 @@ local allowed_callers=('__bme_load_project')
 		bme_log "${log_msg}" error
 		return -1
 	fi
-	
+
 # Safe check: is this really a "project directory"?
 	if ! [ -f "${test_path}/${BME_PROJECT_FILE}" ]; then
 		local log_msg="${C_BOLD}'${FUNCNAME[0]}()'${C_NC} called from ${C_BOLD}'${FUNCNAME[1]}()'${C_NC}:\n"
@@ -370,14 +371,14 @@ local allowed_callers=('__bme_load_project')
 		bme_log "${log_msg}" fatal
 		return -1
 	fi
-	
+
 # Loops to find if it's an already known project directory
 	if [[ -v BME_WHITELISTED_PATHS["${test_path}"] ]]; then
 		__bme_debug && echo "${FUNCNAME[0]} called from ${FUNCNAME[1]}: exact match found:"
 		__bme_debug && echo -e "\t'${test_path}' whitelist status is '${BME_WHITELISTED_PATHS[$test_path]}'."
 		return ${!BME_WHITELISTED_PATHS[$test_path]}
 	fi
-	
+
 # If we reached here, it's a new project directory
 	bme_log "${C_BOLD}'${BME_PROJECT_FILE}'${C_NC} file found at ${C_BOLD}'${test_path}'${C_NC}." info
 	# First, check if its name is valid
@@ -388,7 +389,7 @@ local allowed_callers=('__bme_load_project')
 	fi
 	__bme_debug && echo "${FUNCNAME[0]}: New project name is '${new_project}'"
 	__bme_check_project_name "${new_project}" || return $?
-	
+
 	echo -en '\tDo you want to whitelist this directory? [y/N]: '
 	while true; do
 		read -r REPLY
@@ -411,15 +412,15 @@ local allowed_callers=('__bme_load_project')
 			;;
 		esac
 	done
-	
+
 	# finally, dump the new associative array to file and return the result
 	echo "declare -gA BME_WHITELISTED_PATHS=(" > "${BME_WHITELISTED_FILE}"
 		local dir
 		for dir in "${!BME_WHITELISTED_PATHS[@]}"; do
 			echo -e "\t[${dir}]=${BME_WHITELISTED_PATHS[$dir]}" >> "${BME_WHITELISTED_FILE}"
-		done 
+		done
 	echo ")" >> "${BME_WHITELISTED_FILE}"
-	
+
 	[ "$REPLY" == 'Y' ] && return $true || return $false
 }
 
@@ -442,7 +443,7 @@ local module=$1
 			return 0
 		fi
 	fi
-	
+
 	__bme_debug && echo "${FUNCNAME[0]}: CURRENT LOAD MODULE LIST: '${module_list[@]}'"
 	for module in "${module_list[@]}"; do
 		if [[ ! " ${BME_ACTIVE_MODULES[*]} " =~ " ${module} " ]]; then
@@ -522,7 +523,7 @@ local allowed_callers=('__bme_whitelist')
 		bme_log "${log_msg}" error
 		return -1
 	fi
-	
+
 # Check for params
 	if [[ -z "${project_name}" ]]; then
 		local caller_data=`caller 0`
@@ -531,7 +532,7 @@ local allowed_callers=('__bme_whitelist')
 		bme_log "${log_msg}" fatal
 		return -1
 	fi
-	
+
 # There's a project name.  Now: is it valid?
 # As per https://unix.stackexchange.com/questions/23659/can-shell-variable-name-include-a-hyphen-or-dash/23714
 # A single "token" with only ASCII letters, numbers and underscore, and it can't start with a number
@@ -547,7 +548,7 @@ local allowed_callers=('__bme_whitelist')
 		bme_log "${C_BOLD}'${project_name}'${C_NC} shouldn't start with a number." fatal
 		bad_name=true
 	fi
-	
+
 # exit on error
 	if ($bad_name); then
 		bme_log "${C_BOLD}'BME_PROJECT_NAME'${C_NC} should be a valid name (see above)." fatal

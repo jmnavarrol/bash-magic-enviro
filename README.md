@@ -301,6 +301,8 @@ A function named [**bme_check_version()**](https://github.com/jmnavarrol/bash-ma
 
 This function compares your current *Bash Magic Enviro's* version against the highest version available, defined as *git tags* at your *git remote*.  Shows a message about current version status.
 
+**NOTE:** BME follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html) with an exception: since this is pure scripted software with version identifiers published as git tags, version is always preceeded with the *'v'* character, i.e.: *v1.2.3* instead of semver fully compatible *1.2.3*.
+
 <sub>[back to feature list](#feature_list) | [back to contents](#contents).</sub>
 
 ### Per-project custom modules<a name="custom-modules"></a>
