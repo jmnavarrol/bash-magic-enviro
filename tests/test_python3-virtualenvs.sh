@@ -9,16 +9,16 @@ readonly VIRTUALENVS_MODULE="${MODULES_DIR}/python3-virtualenvs.module"
 #--
 # Checks environment
 if [ -z "${VIRTUALENVWRAPPER_SCRIPT}" ]; then
-	err_msg="ERROR: I can't find the 'VIRTUALENVWRAPPER_SCRIPT' environment variable.\n"
+	err_msg="I can't find the ${C_BOLD}'VIRTUALENVWRAPPER_SCRIPT'${C_NC} environment variable.\n"
 	err_msg+="\tIs virtualenvwrapper installed and configured?"
-	echo -e "${err_msg}"
+	btest_log "${err_msg}" error
 	exit 1
 else
 	source "${VIRTUALENVWRAPPER_SCRIPT}" || exit $?
 fi
 
 [ -r "${VIRTUALENVS_MODULE}" ] || {
-	echo "ERROR: Couldn't find BME module '${VIRTUALENVS_MODULE}'"
+	btest_log "Couldn't find BME module ${C_BOLD}'${VIRTUALENVS_MODULE}'${C_NC}." error
 	exit 1
 }
 
@@ -32,12 +32,14 @@ cd "${BME_PROJECT_DIR}"
 source "${VIRTUALENVS_MODULE}"
 function_output=$(python3-virtualenvs_load) || rc=$?
 if [[ -n $rc ]] then
-	echo "Check 'module loading': FAIL"
-	echo -e "${function_output}"
+	btest_log "Check ${C_BOLD}'module loading'${C_NC}: ${C_RED}FAIL${C_NC}"
+	btest_log "${C_BOLD}OUTPUT${C_NC}"
+	btest_log "${function_output}" '' 1
+	btest_log "${C_BOLD}END OF OUTPUT${C_NC}"
 	exit $rc
 else
 	unset rc
-	echo -e "Check 'python3-virtualenvs module loading': OK"
+	echo -e "Check ${C_BOLD}'module loading'${C_NC}: ${C_GREEN}OK${C_NC}"
 fi
 
 #--
@@ -50,22 +52,22 @@ function_output=$(load_virtualenv 2>&1)
 stripped_output=$(strip_escape_codes "${function_output}")
 
 if [[ "${stripped_output}" =~ .*"mandatory param 'venv_name' not set".* ]]; then
-	echo -e "Check 'virtualenv without param': OK"
+	btest_log "Check ${C_BOLD}'virtualenv without param'${C_NC}: ${C_GREEN}OK${C_NC}"
 else
-	echo "Check 'virtualenv without param': FAIL"
-	echo "OUTPUT:"
-	echo -e "${function_output}"
-	echo "END OF OUTPUT"
-	exit 1
+	btest_log "Check ${C_BOLD}'virtualenv without param'${C_NC}: ${C_RED}FAIL${C_NC}"
+	btest_log "${C_BOLD}OUTPUT${C_NC}"
+	btest_log "${function_output}" '' 1
+	btest_log "${C_BOLD}END OF OUTPUT${C_NC}"
+	exit $rc
 fi
 
 # simple virtualenv OK
 function_output=$(load_virtualenv 'test-virtualenv' 2>&1) || rc=$?
 if [[ -n $rc ]] then
-	echo "Check 'empty virtualenv creation': FAIL"
-	echo "OUTPUT:"
-	echo -e "${function_output}"
-	echo "END OF OUTPUT"
+	btest_log "Check ${C_BOLD}'empty virtualenv creation'${C_NC}: ${C_RED}FAIL${C_NC}"
+	btest_log "${C_BOLD}OUTPUT${C_NC}"
+	btest_log "${function_output}" '' 1
+	btest_log "${C_BOLD}END OF OUTPUT${C_NC}"
 	exit $rc
 else
 	unset rc
@@ -77,12 +79,14 @@ for file in \
 	"${BME_CONFIG_DIR}/python-virtualenvs.md5"
 do
 		if ! [ -r "${file}" ]; then
-			echo "TEST ERROR: expected file '${file}' not there"
+			err_msg="Check ${C_BOLD}'empty virtualenv creation'${C_NC}: ${C_RED}FAIL${C_NC}\n"
+			err_msg+="\tExpected file ${C_BOLD}'${file}'${C_NC} not found."
+			btest_log "${err_msg}"
 			exit 1
 		fi
 done
 rmvirtualenv 'test-virtualenv' > /dev/null || exit $?
-echo "Check 'simple virtualenv creation': OK"
+btest_log "Check ${C_BOLD}'empty virtualenv creation'${C_NC}: ${C_GREEN}OK${C_NC}"
 
 # virtualenv with requestfile extra param
 mkdir --parents "${BME_PROJECT_DIR}/requirements_subdir"
@@ -90,41 +94,41 @@ echo -e 'hello-hello' > "${BME_PROJECT_DIR}/requirements_subdir/requirements.txt
 
 function_output=$(load_virtualenv 'test-virtualenv' 'requirements_subdir/requirements.txt' 2>&1) || rc=$?
 if [[ -n $rc ]] then
-	echo "Check 'parameterized virtualenv creation': FAIL"
-	echo "OUTPUT:"
-	echo -e "${function_output}"
-	echo "END OF OUTPUT"
+	btest_log "Check ${C_BOLD}'parameterized virtualenv creation'${C_NC}: ${C_RED}FAIL${C_NC}"
+	btest_log "${C_BOLD}OUTPUT${C_NC}"
+	btest_log "${function_output}" '' 1
+	btest_log "${C_BOLD}END OF OUTPUT${C_NC}"
 	exit $rc
 else
 	unset rc
-	echo -e "Check 'parameterized virtualenv creation': OK"
+	echo -e "Check ${C_BOLD}'parameterized virtualenv creation'${C_NC}: ${C_GREEN}OK${C_NC}"
 fi
 
 # Load it again without changes
 function_output=$(load_virtualenv 'test-virtualenv' 'requirements_subdir/requirements.txt' 2>&1) || rc=$?
 if [[ -n $rc ]] then
-	echo "Check 'parameterized virtualenv reactivation': FAIL"
-	echo "OUTPUT:"
-	echo -e "${function_output}"
-	echo "END OF OUTPUT"
+	btest_log "Check ${C_BOLD}'parameterized virtualenv reactivation'${C_NC}: ${C_RED}FAIL${C_NC}"
+	btest_log "${C_BOLD}OUTPUT${C_NC}"
+	btest_log "${function_output}" '' 1
+	btest_log "${C_BOLD}END OF OUTPUT${C_NC}"
 	exit $rc
 else
 	unset rc
-	echo -e "Check 'parameterized virtualenv reactivation': OK"
+	btest_log "Check ${C_BOLD}'parameterized virtualenv reactivation'${C_NC}: ${C_GREEN}OK${C_NC}"
 fi
 
 # Load once again, this time with a change
 echo -e 'wheel' >> "${BME_PROJECT_DIR}/requirements_subdir/requirements.txt"
 function_output=$(load_virtualenv 'test-virtualenv' 'requirements_subdir/requirements.txt' 2>&1) || rc=$?
 if [[ -n $rc ]] then
-	echo "Check 'parameterized virtualenv update': FAIL"
-	echo "OUTPUT:"
-	echo -e "${function_output}"
-	echo "END OF OUTPUT"
+	btest_log "Check ${C_BOLD}'parameterized virtualenv update'${C_NC}: ${C_RED}FAIL${C_NC}"
+	btest_log "${C_BOLD}OUTPUT${C_NC}"
+	btest_log "${function_output}" '' 1
+	btest_log "${C_BOLD}END OF OUTPUT${C_NC}"
 	exit $rc
 else
 	unset rc
-	echo -e "Check 'parameterized virtualenv update': OK"
+	btest_log "Check ${C_BOLD}'parameterized virtualenv update'${C_NC}: ${C_GREEN}OK${C_NC}"
 fi
 
 #--

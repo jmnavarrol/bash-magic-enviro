@@ -2,7 +2,9 @@
 
 ## Next Release
 * differences from [previous tag](/../../compare/v1.7.1…main).
-* Added [version-related unit tests](./tests/test_bme_version.sh).
+* Tests:
+  * Added [version-related unit tests](./tests/test_bme_version.sh).
+  * Output [support functions](./tests/maketests.sh).
 
 ## v1.7.1 (2024-FEB-04)
 * differences from [previous tag](/../../compare/v1.7.0…v1.7.1).

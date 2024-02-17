@@ -12,7 +12,7 @@
 # See: https://semver.org/
 source "${BUILD_DIR}/${SCRIPT}.version"
 if ! [[ -n ${BME_VERSION} ]]; then
-	echo "ERROR: 'BME_VERSION' undefined!"
+	btest_log "${C_BOLD}'BME_VERSION'${C_NC} undefined!" error
 	exit 1
 fi
 
@@ -28,40 +28,39 @@ if [[ ${BME_VERSION} =~ ^(v[[:digit:]]+)\.([[:digit:]]+)\.([[:digit:]]+)(.*)?$ ]
 	version_components['patch']=${BASH_REMATCH[3]}
 	version_components['optional']=${BASH_REMATCH[4]}
 else
-	echo "ERROR: BME VERSION '${BME_VERSION}' DOESN'T MATCH EXPECTED PATTERN 'vNN.NN.NN[optional]'."
-	echo -e "\tGOT '${BME_VERSION}'."
+	btest_log "BME version ${C_BOLD}'${BME_VERSION}'${C_NC} doesn't match expected pattern ${C_BOLD}'vNN.NN.NN[optional]'${C_NC}." fail
+	exit 1
 fi
 
 # As per Semantic version standard, "patch" level (defined as an integer), may be followed by a pre-release (-[something]) or build metadata (+[something]) suffix
 if [[ -n ${version_components['optional']} ]]; then
 	if ! [[ ${version_components['optional']} =~ ^[-\+]([[:alnum:]]|\.|\-)+$ ]]; then
-		echo "ERROR: optional patch extension doesn't meet expected pattern."
-		echo -e "\tGOT '${version_components['optional']}'"
-		echo -e "\tFULL VERSION: '${BME_VERSION}'"
+		err_msg="Optional patch extension ${C_BOLD}'${version_components['optional']}'${C_NC} doesn't match expected pattern.\n"
+		err_msg+="\tFull version: ${C_BOLD}'${BME_VERSION}'${C_NC}."
+		btest_log "${err_msg}" fail
 		exit 1
 	fi
 fi
 
-echo -e "Check 'BME version formatting': OK"
+btest_log "Check ${C_BOLD}'BME version formatting'${C_NC}: ${C_GREEN}OK${C_NC}"
 
 #--
 # EVALUATES bme_check_version()
 #--
 source "${BUILD_DIR}/${SCRIPT}"
-export DEBUG=$true
 # Testing equality
 export BME_VERSION=${VERSION}
 function_output=$(bme_check_version)
 stripped_output=$(strip_escape_codes "${function_output}")
 
 if [[ "${stripped_output}" =~ .*"is up to date".* ]]; then
-	echo -e "Check 'BME version equality': OK"
+	btest_log "Check ${C_BOLD}'BME version equality'${C_NC}: ${C_GREEN}OK${C_NC}"
 	unset function_output
 else
-	echo "Check 'BME version equality': FAIL"
-	echo "OUTPUT:"
-	echo -e "${function_output}"
-	echo "END OF OUTPUT"
+	btest_log "Check ${C_BOLD}'BME version equality'${C_NC}: ${C_RED}FAIL${C_NC}"
+	btest_log "${C_BOLD}OUTPUT${C_NC}"
+	btest_log "${function_output}" '' 1
+	btest_log "${C_BOLD}END OF OUTPUT${C_NC}"
 	exit 1
 fi
 
@@ -71,13 +70,13 @@ function_output=$(bme_check_version)
 stripped_output=$(strip_escape_codes "${function_output}")
 
 if [[ "${stripped_output}" =~ .*"consider upgrading".* ]]; then
-	echo -e "Check 'BME older version': OK"
+	btest_log "Check ${C_BOLD}'BME older version'${C_NC}: ${C_GREEN}OK${C_NC}"
 	unset function_output
 else
-	echo "Check 'BME older version': FAIL"
-	echo "OUTPUT:"
-	echo -e "${function_output}"
-	echo "END OF OUTPUT"
+	btest_log "Check ${C_BOLD}'BME older version'${C_NC}: ${C_RED}FAIL${C_NC}"
+	btest_log "${C_BOLD}OUTPUT${C_NC}"
+	btest_log "${function_output}" '' 1
+	btest_log "${C_BOLD}END OF OUTPUT${C_NC}"
 	exit 1
 fi
 
@@ -87,11 +86,11 @@ function_output=$(bme_check_version)
 stripped_output=$(strip_escape_codes "${function_output}")
 
 if [[ "${stripped_output}" =~ .*"version couldn't be found at your remote".* ]]; then
-	echo -e "Check 'BME unknown version': OK"
+	btest_log "Check ${C_BOLD}'BME unknown version'${C_NC}: ${C_GREEN}OK${C_NC}"
 else
-	echo "Check 'BME unknown version': FAIL"
-	echo "OUTPUT:"
-	echo -e "${function_output}"
-	echo "END OF OUTPUT"
+	btest_log "Check ${C_BOLD}'BME older version'${C_NC}: ${C_RED}FAIL${C_NC}"
+	btest_log "${C_BOLD}OUTPUT${C_NC}"
+	btest_log "${function_output}" '' 1
+	btest_log "${C_BOLD}END OF OUTPUT${C_NC}"
 	exit 1
 fi
