@@ -51,54 +51,47 @@ source "${BUILD_DIR}/${SCRIPT}"
 export DEBUG=$true
 # Testing equality
 export BME_VERSION=${VERSION}
-stripped_output=''
-for line in "$(bme_check_version)"; do
-	strip_escape_codes "${line}" line_stripped
-	stripped_output+="${line_stripped}"
-done
+function_output=$(bme_check_version)
+stripped_output=$(strip_escape_codes "${function_output}")
 
 if [[ "${stripped_output}" =~ .*"is up to date".* ]]; then
 	echo -e "Check 'BME version equality': OK"
+	unset function_output
 else
 	echo "Check 'BME version equality': FAIL"
 	echo "OUTPUT:"
-	echo -e "${stripped_output}"
+	echo -e "${function_output}"
 	echo "END OF OUTPUT"
 	exit 1
 fi
 
 # Testing old version
 export BME_VERSION='v0.0.1'
-stripped_output=''
-for line in "$(bme_check_version)"; do
-	strip_escape_codes "${line}" line_stripped
-	stripped_output+="${line_stripped}"
-done
+function_output=$(bme_check_version)
+stripped_output=$(strip_escape_codes "${function_output}")
 
 if [[ "${stripped_output}" =~ .*"consider upgrading".* ]]; then
 	echo -e "Check 'BME older version': OK"
+	unset function_output
 else
 	echo "Check 'BME older version': FAIL"
 	echo "OUTPUT:"
-	echo -e "${stripped_output}"
+	echo -e "${function_output}"
 	echo "END OF OUTPUT"
 	exit 1
 fi
 
 # Testing unknown version
 export BME_VERSION='vasdf'
-stripped_output=''
-for line in "$(bme_check_version)"; do
-	strip_escape_codes "${line}" line_stripped
-	stripped_output+="${line_stripped}"
-done
+function_output=$(bme_check_version)
+stripped_output=$(strip_escape_codes "${function_output}")
 
 if [[ "${stripped_output}" =~ .*"version couldn't be found at your remote".* ]]; then
 	echo -e "Check 'BME unknown version': OK"
 else
 	echo "Check 'BME unknown version': FAIL"
 	echo "OUTPUT:"
-	echo -e "${stripped_output}"
+	echo -e "${function_output}"
 	echo "END OF OUTPUT"
 	exit 1
 fi

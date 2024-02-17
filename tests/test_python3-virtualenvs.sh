@@ -3,6 +3,10 @@
 # Meant to be run from maketests.sh.  See its exported variables
 readonly VIRTUALENVS_MODULE="${MODULES_DIR}/python3-virtualenvs.module"
 
+
+#--
+# MAIN
+#--
 # Checks environment
 if [ -z "${VIRTUALENVWRAPPER_SCRIPT}" ]; then
 	err_msg="ERROR: I can't find the 'VIRTUALENVWRAPPER_SCRIPT' environment variable.\n"
@@ -28,39 +32,29 @@ cd "${BME_PROJECT_DIR}"
 source "${VIRTUALENVS_MODULE}"
 function_output=$(python3-virtualenvs_load) || rc=$?
 if [[ -n $rc ]] then
-	stripped_output=''
-	for line in "${function_output}"; do
-		strip_escape_codes "${line}" line_stripped
-		stripped_output+="${line_stripped}"
-	done
 	echo "Check 'module loading': FAIL"
-	echo "OUTPUT:"
-	echo -e "${stripped_output}"
-	echo "END OF OUTPUT"
+	echo -e "${function_output}"
 	exit $rc
 else
 	unset rc
 	echo -e "Check 'python3-virtualenvs module loading': OK"
 fi
-unset rc
 
 #--
 # Virtualenv creation
 #--
 # virtualenv without param
 python3-virtualenvs_load > /dev/null
-stripped_output=''
-for line in "$(load_virtualenv)"; do
-	strip_escape_codes "${line}" line_stripped
-	stripped_output+="${line_stripped}"
-done
+
+function_output=$(load_virtualenv 2>&1)
+stripped_output=$(strip_escape_codes "${function_output}")
 
 if [[ "${stripped_output}" =~ .*"mandatory param 'venv_name' not set".* ]]; then
 	echo -e "Check 'virtualenv without param': OK"
 else
 	echo "Check 'virtualenv without param': FAIL"
 	echo "OUTPUT:"
-	echo -e "${stripped_output}"
+	echo -e "${function_output}"
 	echo "END OF OUTPUT"
 	exit 1
 fi
@@ -68,14 +62,9 @@ fi
 # simple virtualenv OK
 function_output=$(load_virtualenv 'test-virtualenv' 2>&1) || rc=$?
 if [[ -n $rc ]] then
-	stripped_output=''
-	for line in "${function_output}"; do
-		strip_escape_codes "${line}" line_stripped
-		stripped_output+="${line_stripped}"
-	done
-	echo "Check 'simple virtualenv creation': FAIL"
+	echo "Check 'empty virtualenv creation': FAIL"
 	echo "OUTPUT:"
-	echo -e "${stripped_output}"
+	echo -e "${function_output}"
 	echo "END OF OUTPUT"
 	exit $rc
 else
@@ -96,20 +85,14 @@ rmvirtualenv 'test-virtualenv' > /dev/null || exit $?
 echo "Check 'simple virtualenv creation': OK"
 
 # virtualenv with requestfile extra param
-# echo "Check virtualenv with optional requirements file"
 mkdir --parents "${BME_PROJECT_DIR}/requirements_subdir"
 echo -e 'hello-hello' > "${BME_PROJECT_DIR}/requirements_subdir/requirements.txt"
 
 function_output=$(load_virtualenv 'test-virtualenv' 'requirements_subdir/requirements.txt' 2>&1) || rc=$?
 if [[ -n $rc ]] then
-	stripped_output=''
-	for line in "${function_output}"; do
-		strip_escape_codes "${line}" line_stripped
-		stripped_output+="${line_stripped}"
-	done
 	echo "Check 'parameterized virtualenv creation': FAIL"
 	echo "OUTPUT:"
-	echo -e "${stripped_output}"
+	echo -e "${function_output}"
 	echo "END OF OUTPUT"
 	exit $rc
 else
@@ -120,14 +103,9 @@ fi
 # Load it again without changes
 function_output=$(load_virtualenv 'test-virtualenv' 'requirements_subdir/requirements.txt' 2>&1) || rc=$?
 if [[ -n $rc ]] then
-	stripped_output=''
-	for line in "${function_output}"; do
-		strip_escape_codes "${line}" line_stripped
-		stripped_output+="${line_stripped}"
-	done
 	echo "Check 'parameterized virtualenv reactivation': FAIL"
 	echo "OUTPUT:"
-	echo -e "${stripped_output}"
+	echo -e "${function_output}"
 	echo "END OF OUTPUT"
 	exit $rc
 else
@@ -136,18 +114,12 @@ else
 fi
 
 # Load once again, this time with a change
-# echo "Check upgrading virtualenv with changes"
 echo -e 'wheel' >> "${BME_PROJECT_DIR}/requirements_subdir/requirements.txt"
 function_output=$(load_virtualenv 'test-virtualenv' 'requirements_subdir/requirements.txt' 2>&1) || rc=$?
 if [[ -n $rc ]] then
-	stripped_output=''
-	for line in "${function_output}"; do
-		strip_escape_codes "${line}" line_stripped
-		stripped_output+="${line_stripped}"
-	done
 	echo "Check 'parameterized virtualenv update': FAIL"
 	echo "OUTPUT:"
-	echo -e "${stripped_output}"
+	echo -e "${function_output}"
 	echo "END OF OUTPUT"
 	exit $rc
 else
