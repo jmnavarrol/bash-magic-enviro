@@ -50,8 +50,16 @@ export -f strip_escape_codes
 	exit 1
 }
 
+[ -n "${VERSION}" ] || {
+	err_msg="ERROR: no environment variable 'VERSION' found!\n"
+	err_msg+="\tDid you forget running 'make build'?"
+	echo -e "${err_msg}"
+	exit 1
+}
+
 echo "BUILD DIR: '${BUILD_DIR}'" && export BUILD_DIR
 echo "MODULES DIR: '${MODULES_DIR}'" && export MODULES_DIR
+echo "CURRENT VERSION IS: '${VERSION}'" && export VERSION
 echo -e "RUNNING TESTS ON '${TESTS_DIR}/'\n" && export TESTS_DIR
 
 # Run tests
