@@ -26,12 +26,29 @@ cd "${BME_PROJECT_DIR}"
 
 # Loads the module
 source "${VIRTUALENVS_MODULE}"
-python3-virtualenvs_load || exit $?
+function_output=$(python3-virtualenvs_load) || rc=$?
+if [[ -n $rc ]] then
+	stripped_output=''
+	for line in "${function_output}"; do
+		strip_escape_codes "${line}" line_stripped
+		stripped_output+="${line_stripped}"
+	done
+	echo "Check 'module loading': FAIL"
+	echo "OUTPUT:"
+	echo -e "${stripped_output}"
+	echo "END OF OUTPUT"
+	exit $rc
+else
+	unset rc
+	echo -e "Check 'python3-virtualenvs module loading': OK"
+fi
+unset rc
 
 #--
 # Virtualenv creation
 #--
 # virtualenv without param
+python3-virtualenvs_load > /dev/null
 stripped_output=''
 for line in "$(load_virtualenv)"; do
 	strip_escape_codes "${line}" line_stripped
@@ -49,8 +66,22 @@ else
 fi
 
 # simple virtualenv OK
-echo "Check simple virtualenv creation"
-load_virtualenv 'test-virtualenv' || exit $?
+function_output=$(load_virtualenv 'test-virtualenv' 2>&1) || rc=$?
+if [[ -n $rc ]] then
+	stripped_output=''
+	for line in "${function_output}"; do
+		strip_escape_codes "${line}" line_stripped
+		stripped_output+="${line_stripped}"
+	done
+	echo "Check 'simple virtualenv creation': FAIL"
+	echo "OUTPUT:"
+	echo -e "${stripped_output}"
+	echo "END OF OUTPUT"
+	exit $rc
+else
+	unset rc
+fi
+
 # Check results
 for file in \
 	"${BME_CONFIG_DIR}/python-virtualenvs.lockfile" \
@@ -61,28 +92,71 @@ do
 			exit 1
 		fi
 done
-deactivate
-rmvirtualenv 'test-virtualenv' || exit $?
+rmvirtualenv 'test-virtualenv' > /dev/null || exit $?
+echo "Check 'simple virtualenv creation': OK"
 
 # virtualenv with requestfile extra param
-echo "Check virtualenv with optional requirements file"
+# echo "Check virtualenv with optional requirements file"
 mkdir --parents "${BME_PROJECT_DIR}/requirements_subdir"
 echo -e 'hello-hello' > "${BME_PROJECT_DIR}/requirements_subdir/requirements.txt"
-load_virtualenv 'test-virtualenv' 'requirements_subdir/requirements.txt' || exit $?
+
+function_output=$(load_virtualenv 'test-virtualenv' 'requirements_subdir/requirements.txt' 2>&1) || rc=$?
+if [[ -n $rc ]] then
+	stripped_output=''
+	for line in "${function_output}"; do
+		strip_escape_codes "${line}" line_stripped
+		stripped_output+="${line_stripped}"
+	done
+	echo "Check 'parameterized virtualenv creation': FAIL"
+	echo "OUTPUT:"
+	echo -e "${stripped_output}"
+	echo "END OF OUTPUT"
+	exit $rc
+else
+	unset rc
+	echo -e "Check 'parameterized virtualenv creation': OK"
+fi
 
 # Load it again without changes
-echo "Check virtualenv loading with no changes"
-deactivate
-load_virtualenv 'test-virtualenv' 'requirements_subdir/requirements.txt' || exit $?
+function_output=$(load_virtualenv 'test-virtualenv' 'requirements_subdir/requirements.txt' 2>&1) || rc=$?
+if [[ -n $rc ]] then
+	stripped_output=''
+	for line in "${function_output}"; do
+		strip_escape_codes "${line}" line_stripped
+		stripped_output+="${line_stripped}"
+	done
+	echo "Check 'parameterized virtualenv reactivation': FAIL"
+	echo "OUTPUT:"
+	echo -e "${stripped_output}"
+	echo "END OF OUTPUT"
+	exit $rc
+else
+	unset rc
+	echo -e "Check 'parameterized virtualenv reactivation': OK"
+fi
 
 # Load once again, this time with a change
-deactivate
-echo "Check upgrading virtualenv with changes"
+# echo "Check upgrading virtualenv with changes"
 echo -e 'wheel' >> "${BME_PROJECT_DIR}/requirements_subdir/requirements.txt"
-load_virtualenv 'test-virtualenv' 'requirements_subdir/requirements.txt' || exit $?
+function_output=$(load_virtualenv 'test-virtualenv' 'requirements_subdir/requirements.txt' 2>&1) || rc=$?
+if [[ -n $rc ]] then
+	stripped_output=''
+	for line in "${function_output}"; do
+		strip_escape_codes "${line}" line_stripped
+		stripped_output+="${line_stripped}"
+	done
+	echo "Check 'parameterized virtualenv update': FAIL"
+	echo "OUTPUT:"
+	echo -e "${stripped_output}"
+	echo "END OF OUTPUT"
+	exit $rc
+else
+	unset rc
+	echo -e "Check 'parameterized virtualenv update': OK"
+fi
 
 #--
 # CLEAN
 #--
 python3-virtualenvs_unload || exit $?
-rmvirtualenv 'test-virtualenv'
+rmvirtualenv 'test-virtualenv' > /dev/null || exit $?
