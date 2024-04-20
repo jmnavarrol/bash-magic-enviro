@@ -331,12 +331,14 @@ On top of this README, you can also check your **'~/bin/bash-magic-enviro_module
 <sub>[back to module list](#module_list).</sub>
 
 ### load Python3 *virtualenvs*<a name="virtualenvs"></a>
-**[python3-virtualenvs module](./src/bash-magic-enviro_modules/python3-virtualenvs.module):** Manages *Python3 virtualenvs* using your systems' Python version.
-
-This module looks first for `python3 --version` output; if it doesn't find it, it also tries `python --version`, in case it defaults to >=3.
+**[python3-virtualenvs module](./src/bash-magic-enviro_modules/python3-virtualenvs.module):** Manages *Python3 virtualenvs*.
 
 It requires [virtualenvwrapper](https://virtualenvwrapper.readthedocs.io/) to be installed (i.e.: `sudo apt install virtualenvwrapper`).  
 Remember that, in order to *"activate"* virtualenvwrapper, you need to source its *virtualenvwrapper.sh* Bash control script within your environment.  An example has been added to [the bash_includes example](./docs/bash_includes.example). Make sure you set the script's path accordingly to your system.
+
+By default, this module looks first for `python3 --version` output; if it doesn't find it, it also tries `python --version`, in case it defaults to >=3.
+
+You can also set the environment variable **BME_PYTHON_VERSION**, either on the `.bme_project` or a `.bme_env` file, to a valid Python executable path, i.e.: `export BME_PYTHON_VERSION='python3.11'` or `export BME_PYTHON_VERSION='/usr/local/bin/python3.11'` and this module will use it to build virtual environments.
 
 See also [the included example](./example-project/virtualenv-example/.bme_env).
 
