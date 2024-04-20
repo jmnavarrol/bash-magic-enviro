@@ -1,7 +1,7 @@
 # CHANGELOG
 
 ## Next Release
-* differences from [previous tag](/../../compare/v1.7.1…main).
+* differences from [previous tag](/../../compare/v1.7.2…main).
 
 ## v1.7.2 (2024-APR-20)
 * differences from [previous tag](/../../compare/v1.7.1…v1.7.2).
