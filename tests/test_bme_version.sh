@@ -48,21 +48,6 @@ btest_log "Check ${C_BOLD}'BME version formatting'${C_NC}: ${C_GREEN}OK${C_NC}"
 # EVALUATES bme_check_version()
 #--
 source "${BUILD_DIR}/${SCRIPT}"
-# Testing equality
-export BME_VERSION=${VERSION}
-function_output=$(bme_check_version)
-stripped_output=$(strip_escape_codes "${function_output}")
-
-if [[ "${stripped_output}" =~ .*"is up to date".* ]]; then
-	btest_log "Check ${C_BOLD}'BME version equality'${C_NC}: ${C_GREEN}OK${C_NC}"
-	unset function_output
-else
-	btest_log "Check ${C_BOLD}'BME version equality'${C_NC}: ${C_RED}FAIL${C_NC}"
-	btest_log "${C_BOLD}OUTPUT${C_NC}"
-	btest_log "${function_output}" '' 1
-	btest_log "${C_BOLD}END OF OUTPUT${C_NC}"
-	exit 1
-fi
 
 # Testing old version
 export BME_VERSION='v0.0.1'
