@@ -13,7 +13,6 @@ virtualenvs_md5sums="${BME_CONFIG_DIR}/python-virtualenvs.md5"
 virtualenvs_lockfile="${BME_CONFIG_DIR}/python-virtualenvs.lockfile"
 
 python3-virtualenvs_load() {
-local python_version=''
 local unmet_dependencies=false
 
 # Checks md5sum availability
@@ -28,19 +27,35 @@ local unmet_dependencies=false
 	fi
 
 # Checks Python3 availability
-	# for some reason, Python sends --version output to STDERR instead of STDOUT
-	if which python3 > /dev/null; then
-		SYSTEM_PYTHON=`which python3`
-	elif which python > /dev/null; then
-		if [[ $(python --version 2>&1) =~ 'Python 3' ]]; then
-			SYSTEM_PYTHON=`which python`
+	# check if an explicit Python runtime has been requested
+	if [[ -n "${BME_PYTHON_VERSION}" ]]; then
+	# explicit Python requested: check its version
+		local explicit_python_msg="Explicit Python version requested: ${C_BOLD}'${BME_PYTHON_VERSION}'${C_NC}... "
+		if [[ $(${BME_PYTHON_VERSION} --version 2>&1) =~ 'Python 3' ]]; then
+			explicit_python_msg+="${C_GREEN}OK${C_NC}"
+			local explicit_python_msg_level='INFO'
 		else
-			bme_log "No valid Python3 executable found." error 1
+			explicit_python_msg+="${C_RED}KO${C_NC}"
+			local explicit_python_msg_level='ERROR'
 			unmet_dependencies=true
 		fi
+		bme_log "${explicit_python_msg}" "${explicit_python_msg_level}" 1
 	else
-		bme_log "No valid Python executable found." error 1
-		unmet_dependencies=true
+	# no explicit version requested; trying to find a suitable one
+		# for some reason, Python sends --version output to STDERR instead of STDOUT
+		if which python3 > /dev/null; then
+			export BME_PYTHON_VERSION=`which python3`
+		elif which python > /dev/null; then
+			if [[ $(python --version 2>&1) =~ 'Python 3' ]]; then
+				export BME_PYTHON_VERSION=`which python`
+			else
+				bme_log "No valid Python3 executable found." error 1
+				unmet_dependencies=true
+			fi
+		else
+			bme_log "No valid Python executable found." error 1
+			unmet_dependencies=true
+		fi
 	fi
 
 # Checks virtualenvwrapper availability and other requirements
@@ -67,7 +82,7 @@ local unmet_dependencies=false
 		return -1
 	else
 		local log_msg="${C_BOLD}'python3-virtualenvs'${C_NC} "
-		log_msg+="(${C_BOLD}$(${SYSTEM_PYTHON} --version 2>&1)${C_NC}) "
+		log_msg+="(${C_BOLD}$(${BME_PYTHON_VERSION} --version 2>&1)${C_NC}) "
 		log_msg+="loaded."
 		bme_log "${log_msg}" info 1
 		bme_log "${C_BOLD}load_virtualenv 'venv_name'${C_NC} - Loads the Python virtualenv by name ${C_BOLD}'venv_name'${C_NC}." function 2
@@ -78,7 +93,7 @@ local unmet_dependencies=false
 python3-virtualenvs_unload() {
 	[ "$VIRTUAL_ENV" ] && deactivate  # deactivates virtualenv (if any active)
 	unset -f load_virtualenv
-	unset SYSTEM_PYTHON
+	unset BME_PYTHON_VERSION
 	unset virtualenvs_requirements
 	unset virtualenvs_md5sums
 	unset virtualenvs_lockfile
@@ -180,14 +195,14 @@ local requested_virtualenv="${1}"
 			# custom pip found in the requirements file
 				bme_log "Custom pip version requested." info 1
 				# 1. "empty" virtualenv (it also activates it)
-				mkvirtualenv --python=${SYSTEM_PYTHON} ${requested_virtualenv} || virtualenv_error=true
+				mkvirtualenv --python=${BME_PYTHON_VERSION} ${requested_virtualenv} || virtualenv_error=true
 				# 2. install pip
 				pip install "${pip_found}" || virtualenv_error=true
 				# 3. install the full requirements file
 				pip install -r "${virtualenvs_requirements}/${requested_virtualenv}.requirements" || virtualenv_error=true
 			else
 			# no custom pip version: "standard" virtualenv creation
-				mkvirtualenv --python=${SYSTEM_PYTHON} ${requested_virtualenv} -r "${virtualenvs_requirements}/${requested_virtualenv}.requirements" || virtualenv_error=true
+				mkvirtualenv --python=${BME_PYTHON_VERSION} ${requested_virtualenv} -r "${virtualenvs_requirements}/${requested_virtualenv}.requirements" || virtualenv_error=true
 			fi
 
 			if ($virtualenv_error); then
