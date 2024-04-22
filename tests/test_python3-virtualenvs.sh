@@ -31,7 +31,7 @@ cd "${BME_PROJECT_DIR}"
 # Loads the module
 source "${VIRTUALENVS_MODULE}"
 function_output=$(python3-virtualenvs_load) || rc=$?
-if [[ -n $rc ]] then
+if [[ -n $rc ]]; then
 	btest_log "Check ${C_BOLD}'module loading'${C_NC}: ${C_RED}FAIL${C_NC}"
 	btest_log "${C_BOLD}OUTPUT${C_NC}"
 	btest_log "${function_output}" '' 1
@@ -63,7 +63,7 @@ fi
 
 # simple virtualenv OK
 function_output=$(load_virtualenv 'test-virtualenv' 2>&1) || rc=$?
-if [[ -n $rc ]] then
+if [[ -n $rc ]]; then
 	btest_log "Check ${C_BOLD}'empty virtualenv creation'${C_NC}: ${C_RED}FAIL${C_NC}"
 	btest_log "${C_BOLD}OUTPUT${C_NC}"
 	btest_log "${function_output}" '' 1
@@ -93,7 +93,7 @@ mkdir --parents "${BME_PROJECT_DIR}/requirements_subdir"
 echo -e 'hello-hello' > "${BME_PROJECT_DIR}/requirements_subdir/requirements.txt"
 
 function_output=$(load_virtualenv 'test-virtualenv' 'requirements_subdir/requirements.txt' 2>&1) || rc=$?
-if [[ -n $rc ]] then
+if [[ -n $rc ]]; then
 	btest_log "Check ${C_BOLD}'parameterized virtualenv creation'${C_NC}: ${C_RED}FAIL${C_NC}"
 	btest_log "${C_BOLD}OUTPUT${C_NC}"
 	btest_log "${function_output}" '' 1
@@ -106,7 +106,7 @@ fi
 
 # Load it again without changes
 function_output=$(load_virtualenv 'test-virtualenv' 'requirements_subdir/requirements.txt' 2>&1) || rc=$?
-if [[ -n $rc ]] then
+if [[ -n $rc ]]; then
 	btest_log "Check ${C_BOLD}'parameterized virtualenv reactivation'${C_NC}: ${C_RED}FAIL${C_NC}"
 	btest_log "${C_BOLD}OUTPUT${C_NC}"
 	btest_log "${function_output}" '' 1
@@ -120,7 +120,7 @@ fi
 # Load once again, this time with a change
 echo -e 'wheel' >> "${BME_PROJECT_DIR}/requirements_subdir/requirements.txt"
 function_output=$(load_virtualenv 'test-virtualenv' 'requirements_subdir/requirements.txt' 2>&1) || rc=$?
-if [[ -n $rc ]] then
+if [[ -n $rc ]]; then
 	btest_log "Check ${C_BOLD}'parameterized virtualenv update'${C_NC}: ${C_RED}FAIL${C_NC}"
 	btest_log "${C_BOLD}OUTPUT${C_NC}"
 	btest_log "${function_output}" '' 1
