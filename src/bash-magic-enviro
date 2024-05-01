@@ -27,7 +27,7 @@ false=${BOOL[1]}
 #--
 # FUNCTIONS
 #--
-# Main BME loader (it runs each time we change directory as per PROMPT_COMMAND)
+# Main BME loader (it runs each time we traverse directories as per PROMPT_COMMAND)
 bme_eval_dir() {
 	if [ "$PWD" != "$MYOLDPWD" ]; then
 		MYOLDPWD="$PWD"

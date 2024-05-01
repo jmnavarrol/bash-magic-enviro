@@ -400,7 +400,7 @@ For this to happen, git's **core.hooksPath** property is set to point to the **"
 ### Terraform support<a name="terraform"></a>
 **[terraform-support module](./src/bash-magic-enviro_modules/terraform-support.module):** Adds support for [Terraform](https://www.terraform.io/intro/index.html) development.  It peruses [the tfenv project](https://github.com/tfutils/tfenv/tree/v2.2.3) to allow using different per-project Terraform versions, suited to your hardware.
 
-For this to happen, *Bash Magic Enviro* clones [the tfenv repository](https://github.com/tfutils/tfenv) to the *'.bme.d/tfenv/'* subdirectory relative to your project's root and configures it for usage within your project scope, so make sure you add *'.bme.d/'* to your ['.gitignore' file](./example-project/.gitignore) (an error will be thrown otherwise).
+For this to happen, *Bash Magic Enviro* clones [the tfenv repository](https://github.com/tfutils/tfenv) to *"${BME_CONFIG_DIR}/tfenv"* (defaults to *'~/.bme.d/tfenv/'*) and configures it for usage within your project scope, so make sure you add *'${BME_PROJECT_DIR}/bin/[terraform|tfenv]'* to your ['.gitignore' file](./example-project/.gitignore) (an error will be thrown otherwise).
 
 Once *tfenv* is (automatically) configured for your project, you can normally use any suitable terraform or [tfenv command](https://github.com/tfutils/tfenv/tree/v2.2.0#usage).
 
@@ -412,7 +412,7 @@ terraform {
 ```
 This way, this module will set for you the environment variable `TFENV_TERRAFORM_VERSION=min-required` with which a suitable terraform version will be installed upon your first terraform command invocation.  See [a .bme_env example](./example-project/terraform-example/.bme_env).  This *TFENV_TERRAFORM_VERSION* variable is unset when you go outside the project's directory tree along *Bash Magic Enviro*'s cleaning process.
 
-This module also sets the **'TF_PLUGIN_CACHE_DIR'** environment variable pointing to the *.bme.d/.terraform.d/plugin-cache/* directory relative to your project's root, so plugins can be reused within different Terraform plans in your project (also unset at project exit).
+This module also sets the **'TF_PLUGIN_CACHE_DIR'** environment variable pointing to the *"${BME_CONFIG_DIR}/.terraform.d/plugin-cache/"* directory so plugins can be reused within different Terraform plans even by different BME projects (also unset at project exit).
 
 **NOTE:** when a given terraform version is requested, *symlinks* will be created under the project's *'bin/'* directory for both *tfenv* and *terraform*.  You should include them in your *'.gitignore'* file (see [example](./example-project/.gitignore)).
 

@@ -7,6 +7,7 @@ Pending actions, general notes, etc. (in no particular order):
 * Auto white/blacklisting of subdirectories (i.e.: to make easy using BME on non-interactive sessions).
 * Dynamic load/unload of functions/variables that are only needed within a project environment.
 * Per-directory clean function (on top of or instead of the global one?)
+* Review the [bashlog project](https://github.com/Zordrak/bashlog).  Authored by the same person than tfenv, seems quite powerful.
 * **Makefile:**
   * `make install` may offer to tweak your environment for BME autoconfiguration.
   * Consider new target for checks prior to close a version, i.e.: VERSION, CHANGELOG, Dockerfile, tests... are properly updated, etc.
@@ -23,7 +24,6 @@ Pending actions, general notes, etc. (in no particular order):
   * Add flexibility to authentication methods, so MFA is not mandatory.
   * Add flexibility to which the requested AWS profile should be used within a project.
 * **[terraform-support module](./src/bash-magic-enviro_modules/terraform-support.module):**
-  * Consider making tfenv install to be global instead of per-project (why installing it more than once per user?).
   * self-management of *.gitignore* entries for ~/bin/[terraform,tfvenv] symlinks.
   * Review [terraform-config-inspect](https://github.com/hashicorp/terraform-config-inspect), which allows to extract configurations from terraform.
 
