@@ -1,7 +1,10 @@
 # CHANGELOG
 
 ## Next Release
-* differences from [previous tag](/../../compare/v1.7.2…main).
+* differences from [previous tag](/../../compare/v1.8.0…main).
+
+## v1.8.0 (2024-MAY-02)
+* differences from [previous tag](/../../compare/v1.7.2…v1.8.0).
 * **terraform-support** module:
   * Both tfenv repository and *'TF_PLUGIN_CACHE_DIR'* environment variable are now per-user global instead of project-bound.
 * **python3-virtualenvs** module:
