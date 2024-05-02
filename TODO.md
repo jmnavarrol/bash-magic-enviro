@@ -28,3 +28,5 @@ Pending actions, general notes, etc. (in no particular order):
   * Review [terraform-config-inspect](https://github.com/hashicorp/terraform-config-inspect), which allows to extract configurations from terraform.
 
 ## IN PROGRESS
+* **[python3-virtualenvs module](./src/bash-magic-enviro_modules/python3-virtualenvs.module):**
+  * Consider making python *virtualenvs* project-restricted instead of user-wide so there's no virtualenv name collisions among projects.

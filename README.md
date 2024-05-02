@@ -357,7 +357,6 @@ See also [the included example](./example-project/virtualenv-example/.bme_env).
   1. This function also stores the requirements file's *md5sum* under the *'~/.bme.d/'* hidden directory, so it can update the virtualenv when changes are detected.
   
   **NOTES:**
-  * Python virtualenv's names are per-user global.  This means that if two projects share the same virtualenv name, whenever you activate one or the other, the virtualenv will be regenerated **unless** the md5sum of their respective requirements files match.  This is on purpose, and you should try to either call them differently of share their requirements file so md5sum matching is guaranteed.
   * For virtualenvs created with the help of a requirements file, it is advised to add their associated *"${BME_PROJECT_DIR}/python-virtualenvs/[virtualenv].requirements"* files to *.gitignore* so you don't have two files to maintain providing the same info.
 
 The expectation is that you will install whatever required pips within your virtualenv and, once satisfied with the results, you'll either "dump" its contents to its requirements file, i.e.: `pip freeze > ${BME_PROJECT_DIR}/python-virtualenvs/[virtualenv].requirements`, or you'll maintain them on a different file you pass as requirements file to *load_virtualenv()*.

@@ -75,23 +75,36 @@ local unmet_dependencies=false
 		unmet_dependencies=true
 	fi
 
-# Final message
+# Error message: unmet dependencies
 	if ($unmet_dependencies); then
 		python3-virtualenvs_unload
 		bme_log "${C_BOLD}'python3-virtualenvs'${C_NC} not loaded. See missed dependencies above." error 1
 		return -1
-	else
-		local log_msg="${C_BOLD}'python3-virtualenvs'${C_NC} "
-		log_msg+="(${C_BOLD}$(${BME_PYTHON_VERSION} --version 2>&1)${C_NC}) "
-		log_msg+="loaded."
-		bme_log "${log_msg}" info 1
-		bme_log "${C_BOLD}load_virtualenv 'venv_name'${C_NC} - Loads the Python virtualenv by name ${C_BOLD}'venv_name'${C_NC}." function 2
 	fi
+
+# If reached here, everything is ready
+	# retain original WORKON_HOME if set and re-set it within project's root
+	if [ -n "${WORKON_HOME}" ]; then
+		export BME_ORIG_WORKON_HOME="${WORKON_HOME}"
+	fi
+	export WORKON_HOME="${BME_PROJECT_DIR}/${BME_HIDDEN_DIR}/.virtualenvs"
+
+	local log_msg="${C_BOLD}'python3-virtualenvs'${C_NC} "
+	log_msg+="(${C_BOLD}$(${BME_PYTHON_VERSION} --version 2>&1)${C_NC}) "
+	log_msg+="loaded."
+	bme_log "${log_msg}" info 1
+	bme_log "${C_BOLD}load_virtualenv 'venv_name'${C_NC} - Loads the Python virtualenv by name ${C_BOLD}'venv_name'${C_NC}." function 2
 }
 
 
 python3-virtualenvs_unload() {
 	[ "$VIRTUAL_ENV" ] && deactivate  # deactivates virtualenv (if any active)
+	if [ -n "${BME_ORIG_WORKON_HOME}" ]; then
+		export WORKON_HOME="${BME_ORIG_WORKON_HOME}"
+		unset BME_ORIG_WORKON_HOME
+	else
+		unset WORKON_HOME
+	fi
 	unset -f load_virtualenv
 	unset BME_PYTHON_VERSION
 	unset virtualenvs_requirements
