@@ -9,7 +9,7 @@ LABEL org.label-schema.url         = "https://github.com/jmnavarrol/bash-magic-e
 
 # Define variables
 ARG BME_REPO='https://github.com/jmnavarrol/bash-magic-enviro.git'
-ARG BME_VERSION='v1.4.7'
+ARG BME_VERSION='v1.8.0'
 
 # Copy data from local repository
 COPY --chown=root:root etc /etc
@@ -24,7 +24,7 @@ RUN echo "Installing utilities..." \
     # development utilities
     git make jq virtualenvwrapper \
     # other utilities
-    nano tree \
+    nano tree libffi-dev \
     # final clean
     && apt-get clean
 
