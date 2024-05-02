@@ -70,7 +70,7 @@ bme_eval_dir() {
 				source "${BME_FILE}" ||
 				{
 					local rc_value=$?
-					bme_log "enviro file at '${BME_PROJECT_DIR}/${BME_FILE}' failed at load: (${C_RED}${rc_value}${C_NC})" error
+					bme_log "enviro file at '${BME_PROJECT_DIR}/${BME_FILE}' failed to load: (${C_RED}${rc_value}${C_NC})" error
 					return ${rc_value}
 				}
 				__bme_debug && echo "${FUNCNAME[0]}: '${BME_FILE}' LOADED"
@@ -296,7 +296,7 @@ local project_dir="${1}"
 		source "${BME_PROJECT_DIR}/${BME_FILE}" ||
 		{
 			local rc_value=$?
-			bme_log "enviro file at '${BME_PROJECT_DIR}/${BME_FILE}' failed at load: (${C_RED}${rc_value}${C_NC})" error
+			bme_log "enviro file at '${BME_PROJECT_DIR}/${BME_FILE}' failed to load: (${C_RED}${rc_value}${C_NC})" error
 			cd "${current_dir}"
 			return ${rc_value}
 		}

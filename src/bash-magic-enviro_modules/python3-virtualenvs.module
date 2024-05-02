@@ -6,11 +6,10 @@
 # It also stores the requirements file's md5sum in a user-global fashion,
 # so it can regenerate the virtualenv when the md5sum doesn't match.
 
-
 virtualenvs_requirements="${BME_PROJECT_DIR}/python-virtualenvs"
-# Since virtualenv names are "global" per user account, so it will be locking and md5sums storage.
-virtualenvs_md5sums="${BME_CONFIG_DIR}/python-virtualenvs.md5"
-virtualenvs_lockfile="${BME_CONFIG_DIR}/python-virtualenvs.lockfile"
+# Project-restricted locking and md5sums storage.
+virtualenvs_md5sums="${BME_PROJECT_DIR}/${BME_HIDDEN_DIR}/python-virtualenvs.md5"
+virtualenvs_lockfile="${BME_PROJECT_DIR}/${BME_HIDDEN_DIR}/python-virtualenvs.lockfile"
 
 python3-virtualenvs_load() {
 local unmet_dependencies=false
@@ -70,30 +69,33 @@ local unmet_dependencies=false
 			touch "${virtualenvs_md5sums}"
 			bme_log "File ${C_BOLD}'${virtualenvs_md5sums}'${C_NC} created." info 1
 		fi
+		# Sets project-restricted virtualenvs "home"
+		if [ -n "${WORKON_HOME}" ]; then
+			export BME_ORIG_WORKON_HOME="${WORKON_HOME}"
+			export WORKON_HOME="${BME_PROJECT_DIR}/${BME_HIDDEN_DIR}/.virtualenvs"
+		else
+			local err_msg="virtualenvwrapper's ${C_BOLD}'WORKON_HOME'${C_NC} environment variable undetected.\n"
+			err_msg+="\t\tis virtualenvwrapper properly configured?"
+			bme_log "${err_msg}" error 1
+			unmet_dependencies=true
+		fi
 	else
 		bme_log "${C_BOLD}virtualenvwrapper tool undetected${C_NC}.  You should install it for virtualenvs support." error 1
 		unmet_dependencies=true
 	fi
 
-# Error message: unmet dependencies
+# Final message
 	if ($unmet_dependencies); then
 		python3-virtualenvs_unload
 		bme_log "${C_BOLD}'python3-virtualenvs'${C_NC} not loaded. See missed dependencies above." error 1
 		return -1
+	else
+		local log_msg="${C_BOLD}'python3-virtualenvs'${C_NC} "
+		log_msg+="(${C_BOLD}$(${BME_PYTHON_VERSION} --version 2>&1)${C_NC}) "
+		log_msg+="loaded."
+		bme_log "${log_msg}" info 1
+		bme_log "${C_BOLD}load_virtualenv 'venv_name'${C_NC} - Loads the Python virtualenv by name ${C_BOLD}'venv_name'${C_NC}." function 2
 	fi
-
-# If reached here, everything is ready
-	# retain original WORKON_HOME if set and re-set it within project's root
-	if [ -n "${WORKON_HOME}" ]; then
-		export BME_ORIG_WORKON_HOME="${WORKON_HOME}"
-	fi
-	export WORKON_HOME="${BME_PROJECT_DIR}/${BME_HIDDEN_DIR}/.virtualenvs"
-
-	local log_msg="${C_BOLD}'python3-virtualenvs'${C_NC} "
-	log_msg+="(${C_BOLD}$(${BME_PYTHON_VERSION} --version 2>&1)${C_NC}) "
-	log_msg+="loaded."
-	bme_log "${log_msg}" info 1
-	bme_log "${C_BOLD}load_virtualenv 'venv_name'${C_NC} - Loads the Python virtualenv by name ${C_BOLD}'venv_name'${C_NC}." function 2
 }
 
 
