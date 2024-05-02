@@ -9,6 +9,7 @@ Pending actions, general notes, etc. (in no particular order):
 * Dynamic load/unload of functions/variables that are only needed within a project environment.
 * Per-directory clean function (on top of or instead of the global one?)
 * Review the [bashlog project](https://github.com/Zordrak/bashlog).  Authored by the same person than tfenv, seems quite powerful.
+* Make unittest framework more robust (quite possible the wrapper script should always load main BME script so all their variables are loaded)
 * **Makefile:**
   * `make install` may offer to tweak your environment for BME autoconfiguration.
   * Consider new target for checks prior to close a version, i.e.: VERSION, CHANGELOG, Dockerfile, tests... are properly updated, etc.

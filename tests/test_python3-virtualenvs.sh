@@ -26,6 +26,7 @@ fi
 mkdir -p "${SCRATCH_DIR}/test-project"
 export BME_CONFIG_DIR="${SCRATCH_DIR}"
 export BME_PROJECT_DIR="${SCRATCH_DIR}/test-project"
+export BME_HIDDEN_DIR='.bme.d'
 cd "${BME_PROJECT_DIR}"
 
 # Loads the module
@@ -75,8 +76,8 @@ fi
 
 # Check results
 for file in \
-	"${BME_CONFIG_DIR}/python-virtualenvs.lockfile" \
-	"${BME_CONFIG_DIR}/python-virtualenvs.md5"
+	"${BME_PROJECT_DIR}/${BME_HIDDEN_DIR}/python-virtualenvs.lockfile" \
+	"${BME_PROJECT_DIR}/${BME_HIDDEN_DIR}/python-virtualenvs.md5"
 do
 		if ! [ -r "${file}" ]; then
 			err_msg="Check ${C_BOLD}'empty virtualenv creation'${C_NC}: ${C_RED}FAIL${C_NC}\n"
