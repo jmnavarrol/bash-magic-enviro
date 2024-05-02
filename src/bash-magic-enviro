@@ -59,21 +59,12 @@ bme_eval_dir() {
 	# Time to process 'bme_env' file, if proper conditions met
 		if [[ -n ${BME_PROJECT_NAME+x} ]] \
 		   && [[ -n ${BME_PROJECT_DIR+x} ]] \
-		   && [ "${PWD}" != "${BME_PROJECT_DIR}" ] \
-		   && [ -r "${BME_FILE}" ]; then
+		   && [ "${PWD}" != "${BME_PROJECT_DIR}" ]; then
 		   # project name properly defined
 		   # project dir properly defined too
-		   # extrictly within the project hierarchy (__bme_load_project() already takes care of the root env file)
-		   # and there's an env file we can source
+		   # strictly within the project hierarchy (__bme_load_project() already takes care of the root env file)
 				__bme_debug && echo "${FUNCNAME[0]}: '${PWD}' within '${BME_PROJECT_DIR}'"
-				__bme_debug && echo "${FUNCNAME[0]}: LOADING '${BME_FILE}'"
-				source "${BME_FILE}" ||
-				{
-					local rc_value=$?
-					bme_log "enviro file at '${BME_PROJECT_DIR}/${BME_FILE}' failed to load: (${C_RED}${rc_value}${C_NC})" error
-					return ${rc_value}
-				}
-				__bme_debug && echo "${FUNCNAME[0]}: '${BME_FILE}' LOADED"
+				__bme_load_env_file "${PWD}" || return $?
 		fi
 	fi
 }
@@ -230,7 +221,8 @@ local project_dir="${1}"
 			bme_log "${log_msg}" warning
 			__bme_clean_project || return $?
 		else
-		# Still within same project; do nothing
+		# Still within same project; load its .env file (if any) and return
+			__bme_load_env_file "${project_dir}" || return $?
 			return 0
 		fi
 	fi
@@ -249,7 +241,7 @@ local project_dir="${1}"
 	source "${BME_PROJECT_FILE}" ||
 	{
 		local rc_value=$?
-		bme_log "enviro file at '${project_dir}/${BME_PROJECT_FILE}' failed while loading: (${C_RED}${rc_value}${C_NC})" error
+		bme_log "project file at '${project_dir}/${BME_PROJECT_FILE}' failed while loading: (${C_RED}${rc_value}${C_NC})" error
 		cd "${current_dir}"
 		return ${rc_value}
 	}
@@ -290,20 +282,13 @@ local project_dir="${1}"
 	bme_log "Project ${C_BOLD}'${BME_PROJECT_NAME}'${C_NC} loaded.\n" info
 
 # Finally, load project root's $BME_FILE file, if any
-	if [ -r "${BME_FILE}" ]; then
-		__bme_debug && echo "${FUNCNAME[0]}: FOUND BME_ENV FILE AT '${BME_PROJECT_DIR}/${BME_FILE}'"
+	__bme_load_env_file "${project_dir}" ||
+	{
+		local rc_value=$?
+		cd "${current_dir}"
+		return ${rc_value}
+	}
 
-		source "${BME_PROJECT_DIR}/${BME_FILE}" ||
-		{
-			local rc_value=$?
-			bme_log "enviro file at '${BME_PROJECT_DIR}/${BME_FILE}' failed to load: (${C_RED}${rc_value}${C_NC})" error
-			cd "${current_dir}"
-			return ${rc_value}
-		}
-		__bme_debug && echo "${FUNCNAME[0]}: '${BME_PROJECT_DIR}/${BME_FILE}' LOADED"
-	else
-		__bme_debug && echo "${FUNCNAME[0]}: NOT A VALID '${BME_PROJECT_DIR}/${BME_FILE}' FOUND."
-	fi
 # Finished: back to the original directory
 	cd "${current_dir}"
 }
@@ -500,6 +485,7 @@ __bme_modules_unload() {
 		# See https://stackoverflow.com/a/13360181/12237334 (hopefully this array will NOT have "holes" within)
 		__bme_debug && echo "${FUNCNAME[0]}: CURRENT LIST OF MODULES TO UNLOAD: '${BME_ACTIVE_MODULES[@]}'"
 		for (( module=${#BME_ACTIVE_MODULES[@]}-1; module>=0; module-- )); do
+			__bme_debug && echo "${FUNCNAME[0]}: UNLOADING '${BME_ACTIVE_MODULES[module]}'"
 			${BME_ACTIVE_MODULES[module]}_unload
 			unset -f ${BME_ACTIVE_MODULES[module]}_load
 			unset -f ${BME_ACTIVE_MODULES[module]}_unload
@@ -556,6 +542,40 @@ local allowed_callers=('__bme_whitelist')
 	fi
 }
 
+
+# Sources .bme_env file at requested location (if any)
+# 1st param: base directory to check for env file
+__bme_load_env_file() {
+local base_dir="${1}"
+local env_file="${base_dir}/${BME_FILE}"
+
+	local allowed_callers=('__bme_load_project' 'bme_eval_dir')
+	if [[ ! " ${allowed_callers[*]} " =~ " ${FUNCNAME[1]} " ]]; then
+		local log_msg="Function ${C_BOLD}'${FUNCNAME[0]}()'${C_NC} is ${C_BOLD}private${C_NC}.  You shouldn't invoke it!\n"
+		log_msg+="\tUnexpectedly called from ${C_BOLD}'${FUNCNAME[1]}'${C_NC}."
+		bme_log "${log_msg}" error
+		return -1
+	fi
+
+	__bme_debug && echo "${FUNCNAME[0]}: ENV FILE TO LOOK FOR: '${env_file}'"
+	if [ -r "${env_file}" ]; then
+		local current_dir="${PWD}"
+		cd "${base_dir}"
+		source "${env_file}" ||
+		{
+			local rc_value=$?
+			bme_log "enviro file at '${env_file}' failed to load: (${C_RED}${rc_value}${C_NC})" error
+			cd "${current_dir}"
+			return ${rc_value}
+		}
+		cd "${current_dir}"
+		__bme_debug && echo "${FUNCNAME[0]}: '${env_file}' LOADED"
+	else
+		__bme_debug && echo "${FUNCNAME[0]}: '${env_file}' NOT FOUND."
+	fi
+# Protection against wrong return code from __bme_debug
+	return 0
+}
 
 
 #--

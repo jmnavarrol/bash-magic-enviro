@@ -6,6 +6,8 @@
   * Both tfenv repository and *'TF_PLUGIN_CACHE_DIR'* environment variable are now per-user global instead of project-bound.
 * **python3-virtualenvs** module:
   * *Virtualenvs* are now project-restricted instead of user-wide so there's no virtualenv name collisions among projects.
+* New function __bme_load_env_file() to avoid code duplication.
+* BUG CORRECTED: bme_eval_dir() didn't load project's root .bme_env file when reaching right into a project's subdirectory.
 
 ## v1.7.2 (2024-APR-20)
 * differences from [previous tag](/../../compare/v1.7.1…v1.7.2).

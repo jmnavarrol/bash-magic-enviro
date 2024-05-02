@@ -1,5 +1,6 @@
 # TO-DO: bash-magic-enviro
 Pending actions, general notes, etc. (in no particular order):
+* Usage of __bme_debug() is tricky.  When debug mode is **not** activated, it *"invisibly"* sets $? to 1 (error).  If it happens to be the last command on a function, it looks like it's an error.  Look for a way to activate/deactivate debug mode without this kind of nasty side effects.
 * publish docker container so it can be just used.
 * Automatic support for project root's '.bme.d/' directory '.gitignore' inclusion.
 * Find a way for modules to provide their own (formatted) help.
@@ -18,7 +19,6 @@ Pending actions, general notes, etc. (in no particular order):
   * https://github.com/deadc0de6/dotdrop
 * **[python3-virtualenvs module](./src/bash-magic-enviro_modules/python3-virtualenvs.module):**
   * I think Python3 provides better virtualenv support than Phython2 so, maybe, virtualenvwrapper support is not needed anymore.  Consider this and act accordingly (See [Python3 doc](https://docs.python.org/3/library/venv.html)).
-  * Consider making python *virtualenvs* project-restricted instead of user-wide so there's no virtualenv name collisions among projects.
 * **[aws-support module](./src/bash-magic-enviro_modules/aws-support.module):**
   * Make the module not to require the *$AWS_MFA* environment variable, as it can be read from the proper AWS profile, or even not requested at all by means of *"bypassing"* its request right to aws-cli.
   * Add flexibility to authentication methods, so MFA is not mandatory.
@@ -28,5 +28,3 @@ Pending actions, general notes, etc. (in no particular order):
   * Review [terraform-config-inspect](https://github.com/hashicorp/terraform-config-inspect), which allows to extract configurations from terraform.
 
 ## IN PROGRESS
-* **[python3-virtualenvs module](./src/bash-magic-enviro_modules/python3-virtualenvs.module):**
-  * Consider making python *virtualenvs* project-restricted instead of user-wide so there's no virtualenv name collisions among projects.
