@@ -4,15 +4,15 @@
 #
 # Expected environment variables:
 # SRCDIR: directory holding source code
-# SCRIPT: name of the main BME script (and derivatives)
+# BME_BASENAME: name of the main BME script (and derivatives)
 # VERSION_FILE: the name of templated file (its source will be found at ${SRCDIR}/${VERSION_FILE}.tpl)
-# BUILDDIR: the output directory (output file will be ${BUILDDIR}/${SCRIPT})
+# BUILDDIR: the output directory (output file will be ${BUILDDIR}/${BME_BASENAME})
 # DESTDIR: BME install dir
 
 # GLOBALS
 readonly MANDATORY_VARS=(
 	'SRCDIR'
-	'SCRIPT'
+	'BME_BASENAME'
 	'VERSION_FILE'
 	'BUILDDIR'
 	'DESTDIR'
@@ -37,7 +37,7 @@ check_environment() {
 
 # BME full install
 make_install() {
-	for bme_item in "${SCRIPT}" "${VERSION_FILE}" "${SCRIPT}_modules"; do
+	for bme_item in "${BME_BASENAME}" "${VERSION_FILE}" "${BME_BASENAME}_modules"; do
 		if [ -L ${DESTDIR}/${bme_item} ]; then
 			echo -e "${C_YELLOW}WARNING:${C_NC} deleting ${C_BOLD}'${DESTDIR}/${bme_item}${C_NC}'"
 			rm -rf "${DESTDIR}/${bme_item}"
@@ -51,7 +51,7 @@ make_install() {
 # BME development mode
 make_dev() {
 # Symlinks source files
-	for bme_item in "${SCRIPT}" "${SCRIPT}_modules"; do
+	for bme_item in "${BME_BASENAME}" "${BME_BASENAME}_modules"; do
 		if ! [ -L ${DESTDIR}/${bme_item} ]; then
 			if [ -e ${DESTDIR}/${bme_item} ]; then
 				echo -e "${C_YELLOW}WARNING:${C_NC} deleting ${C_BOLD}'${DESTDIR}/${bme_item}${C_NC}'"
@@ -99,9 +99,9 @@ local uninstall_dirs=("${DESTDIR}")
 # The uninstall process itself
 	for directory in "${uninstall_dirs[@]}"; do
 		echo -e "\t${C_GREEN}INFO:${C_NC} Uninstalling from ${C_BOLD}'${directory}'${C_NC}"
-		rm -rf "${directory}/${SCRIPT}"
+		rm -rf "${directory}/${BME_BASENAME}"
 		rm -rf "${directory}/${VERSION_FILE}"
-		rm -rf "${directory}/${SCRIPT}_modules"
+		rm -rf "${directory}/${BME_BASENAME}_modules"
 	done
 	rm -rf "${INSTALL_TRACKER}" "${DEV_TRACKER}"
 }

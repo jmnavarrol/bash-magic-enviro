@@ -2,6 +2,7 @@
 
 ## Next Release
 * differences from [previous tag](/../../compare/v1.8.0…main).
+* Unit test framework refactored.
 
 ## v1.8.0 (2024-MAY-02)
 * differences from [previous tag](/../../compare/v1.7.2…v1.8.0).

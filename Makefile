@@ -5,8 +5,8 @@ export VERSION := $(shell cat ./VERSION)
 export DESTDIR := ${HOME}/bin
 export SRCDIR := src
 export BUILDDIR := build
-export SCRIPT := bash-magic-enviro
-export VERSION_FILE := ${SCRIPT}.version
+export BME_BASENAME := bash-magic-enviro
+export VERSION_FILE := ${BME_BASENAME}.version
 
 # Style table
 export C_BOLD := \033[1m
@@ -44,12 +44,12 @@ check: build
 	@echo -e "$${C_BOLD}Checking requirements:$${C_NC} $${C_GREEN}DONE!$${C_NC}"
 
 # Builds BME modules
-$(BUILDDIR)/$(SCRIPT)_modules: $(wildcard $(SRCDIR)/$(SCRIPT)_modules/*.module)
+$(BUILDDIR)/$(BME_BASENAME)_modules: $(wildcard $(SRCDIR)/$(BME_BASENAME)_modules/*.module)
 	@echo -e "$${C_BOLD}Building BME modules...$${C_NC}"
-	@mkdir --parents $(BUILDDIR)/$(SCRIPT)_modules
+	@mkdir --parents $(BUILDDIR)/$(BME_BASENAME)_modules
 	@for module in $^; do \
 		echo -e "\tinstalling module $${C_BOLD}'$$module'$${C_NC}"; \
-		install --mode=0644 $$module $(BUILDDIR)/$(SCRIPT)_modules/; \
+		install --mode=0644 $$module $(BUILDDIR)/$(BME_BASENAME)_modules/; \
 	done
 	@echo -e "$${C_BOLD}Building BME modules:$${C_NC} $${C_GREEN}DONE!$${C_NC}"
 
@@ -60,13 +60,13 @@ $(BUILDDIR)/$(VERSION_FILE): Makefile VERSION $(SRCDIR)/$(VERSION_FILE).tpl make
 	@echo -e "$${C_BOLD}Expanding templated values:$${C_NC} $${C_GREEN}DONE!$${C_NC}"
 
 # Builds main script
-$(BUILDDIR)/$(SCRIPT): $(BUILDDIR)/$(VERSION_FILE) $(SRCDIR)/$(SCRIPT)
+$(BUILDDIR)/$(BME_BASENAME): $(BUILDDIR)/$(VERSION_FILE) $(SRCDIR)/$(BME_BASENAME)
 	@echo -e "$${C_BOLD}Building main script...$${C_NC}"
-	install --mode=0644 $(SRCDIR)/$(SCRIPT) $(BUILDDIR)/$(SCRIPT)
+	install --mode=0644 $(SRCDIR)/$(BME_BASENAME) $(BUILDDIR)/$(BME_BASENAME)
 	@echo -e "$${C_BOLD}Building main script:$${C_NC} $${C_GREEN}DONE!$${C_NC}"
 
 # Builds BME
-build: $(BUILDDIR)/$(SCRIPT)_modules $(BUILDDIR)/$(VERSION_FILE) $(BUILDDIR)/$(SCRIPT) date
+build: $(BUILDDIR)/$(BME_BASENAME)_modules $(BUILDDIR)/$(VERSION_FILE) $(BUILDDIR)/$(BME_BASENAME) date
 	@echo -e "$${C_BOLD}Building BME...$${C_NC}"
 	@echo -e "$${C_BOLD}Building BME:$${C_NC} $${C_GREEN}DONE!$${C_NC}"
 
