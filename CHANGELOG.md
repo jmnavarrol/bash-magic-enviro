@@ -2,7 +2,7 @@
 
 ## Next Release
 * differences from [previous tag](/../../compare/v1.8.0…main).
-* Unit test framework refactored.
+* Unit test framework refactored so each test run gets a clean environment.
 * BUG CORRECTED: Another fix for proper .bme_env file loading (only when exact directory match for BME_PROJECT_DIR, or new project loading if dropping on a subdirectory).
 
 ## v1.8.0 (2024-MAY-02)

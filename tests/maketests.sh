@@ -31,29 +31,6 @@ check_environment() {
 	}
 }
 
-run_tests() {
-	export SCRATCH_DIR="${TESTS_DIR}/scratch"
-	export HOME="${SCRATCH_DIR}"
-	export BME_HIDDEN_DIR="${BME_HIDDEN_DIR}"
-	source "${BME_FULL_PATH}"
-
-	cd "${TESTS_DIR}"
-	for test in test_*.sh; do
-		rm --recursive --force "${SCRATCH_DIR}" && mkdir --parents "${SCRATCH_DIR}"
-		(
-			"./${test}" || test_rc=$?
-			if [ -n "${test_rc}" ]; then
-				err_msg="Running ${C_BOLD}'${TESTS_DIR}/${test}'${C_NC}\n"
-				err_msg+="\texit code: ${C_BOLD}'${test_rc}'${C_NC}"
-				bme_log "${err_msg}" error
-				exit $test_rc
-			fi
-		) || exit $?
-	done
-	rm --recursive --force "${SCRATCH_DIR}"
-}
-
-
 # Strips ANSI escape codes/sequences
 # $1 message to sanitize
 function strip_escape_codes() {
@@ -90,16 +67,42 @@ export -f strip_escape_codes
 #--
 if [ -z "${CONTROL_VAR}" ]; then
 # running script "from the outside"
-# first, check conditions
 	check_environment
-# finally, clean environment and re-run
-	bme_log "Running tests on: ${C_BOLD}'${TESTS_DIR}/'${C_NC}" info
-	env --ignore-environment \
-		CONTROL_VAR='set' \
-		VIRTUALENVWRAPPER_SCRIPT="${VIRTUALENVWRAPPER_SCRIPT}" \
-		"${SCRIPT_FULL_PATH}" \
-		BME_HIDDEN_DIR='.bme.d'
+
+# call back the script for each test file in a loop within a clean environment
+	cd "${TESTS_DIR}"
+	for test in test_*.sh; do
+		env --ignore-environment \
+			CONTROL_VAR='set' \
+			VIRTUALENVWRAPPER_SCRIPT="${VIRTUALENVWRAPPER_SCRIPT}" \
+			"${SCRIPT_FULL_PATH}" "${test}" || exit $?
+	done
 else
-# "inner run" on a clean environment: run the "real" payload
-	run_tests
+# "inner run" on a clean environment: run the test script I got as first param
+	test_script="${1}"
+
+	export SCRATCH_DIR="${TESTS_DIR}/scratch"
+	export HOME="${SCRATCH_DIR}"
+	export BME_HIDDEN_DIR="${BME_HIDDEN_DIR}"
+	source "${BME_FULL_PATH}" >/dev/null || exit $?
+
+	if [ -n "${test_script}" ] \
+	&& [ -x "${test_script}" ] ; then
+		bme_log "Running tests on ${C_BOLD}'${TESTS_DIR}/${test_script}'${C_NC}..." info
+		rm --recursive --force "${SCRATCH_DIR}" && mkdir --parents "${SCRATCH_DIR}"
+
+		"./${test_script}" || test_rc=$?
+		if [ -n "${test_rc}" ]; then
+			err_msg="Running ${C_BOLD}'${TESTS_DIR}/${TESTS_DIR}/${test}'${C_NC}\n"
+			err_msg+="\texit code: ${C_BOLD}'${test_rc}'${C_NC}"
+			bme_log "${err_msg}" error
+			exit $test_rc
+		else
+			rm --recursive --force "${SCRATCH_DIR}"
+			bme_log "${C_BOLD}'${TESTS_DIR}/${test_script}'${C_NC}" 'OK'
+		fi
+	else
+		bme_log "couldn't run test script '${test_script}'." error
+		exit 1
+	fi
 fi
