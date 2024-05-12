@@ -29,3 +29,4 @@ Pending actions, general notes, etc. (in no particular order):
 
 ## IN PROGRESS
 * Make unittest framework more robust (quite possible the wrapper script should always load main BME script so all their variables are loaded)
+  * Do not source BME on the main test script: let the tests themselves to do it.

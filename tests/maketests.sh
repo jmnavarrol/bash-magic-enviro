@@ -84,17 +84,20 @@ else
 # "inner run" on a clean environment: run the test script I got as first param
 	test_script="${1}"
 
-	export SCRATCH_DIR="${TESTS_DIR}/scratch"
+	SCRATCH_DIR="${TESTS_DIR}/scratch"
 	export HOME="${SCRATCH_DIR}"
-	export BME_HIDDEN_DIR="${BME_HIDDEN_DIR}"
 	source "${BME_FULL_PATH}" >/dev/null || exit $?
 
-	if [ -n "${test_script}" ] \
-	&& [ -x "${test_script}" ] ; then
+	if [ -n "${test_script}" ]; then
 		bme_log "Running tests on ${C_BOLD}'${TESTS_DIR}/${test_script}'${C_NC}..." info
 		rm --recursive --force "${SCRATCH_DIR}" && mkdir --parents "${SCRATCH_DIR}"
 
-		"./${test_script}" || test_rc=$?
+		if [ -x "${test_script}" ]; then
+			"./${test_script}" || test_rc=$?
+		else
+			source "${test_script}" || test_rc=$?
+		fi
+	# check results
 		if [ -n "${test_rc}" ]; then
 			err_msg="Running ${C_BOLD}'${TESTS_DIR}/${TESTS_DIR}/${test}'${C_NC}\n"
 			err_msg+="\texit code: ${C_BOLD}'${test_rc}'${C_NC}"
@@ -105,7 +108,7 @@ else
 			bme_log "${C_BOLD}'${TESTS_DIR}/${test_script}'${C_NC}" 'OK'
 		fi
 	else
-		bme_log "couldn't run test script '${test_script}'." error
+		bme_log "this script should be invoked with a script as param.  Got nothing." error
 		exit 1
 	fi
 fi
