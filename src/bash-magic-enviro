@@ -221,8 +221,10 @@ local project_dir="${1}"
 			bme_log "${log_msg}" warning
 			__bme_clean_project || return $?
 		else
-		# Still within same project; load its .env file (if any) and return
-			__bme_load_env_file "${project_dir}" || return $?
+		# Still within same project: load local .bme_env only if current dir
+			if [[ "${PWD}" == "${project_dir}" ]]; then
+				__bme_load_env_file "${project_dir}" || return $?
+			fi
 			return 0
 		fi
 	fi

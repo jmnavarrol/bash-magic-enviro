@@ -34,9 +34,10 @@ check_environment() {
 run_tests() {
 	export SCRATCH_DIR="${TESTS_DIR}/scratch"
 	export HOME="${SCRATCH_DIR}"
+	export BME_HIDDEN_DIR="${BME_HIDDEN_DIR}"
+	source "${BME_FULL_PATH}"
 
 	cd "${TESTS_DIR}"
-	source "${BME_FULL_PATH}"
 	for test in test_*.sh; do
 		rm --recursive --force "${SCRATCH_DIR}" && mkdir --parents "${SCRATCH_DIR}"
 		(
@@ -47,7 +48,7 @@ run_tests() {
 				bme_log "${err_msg}" error
 				exit $test_rc
 			fi
-		)
+		) || exit $?
 	done
 	rm --recursive --force "${SCRATCH_DIR}"
 }
@@ -96,8 +97,9 @@ if [ -z "${CONTROL_VAR}" ]; then
 	env --ignore-environment \
 		CONTROL_VAR='set' \
 		VIRTUALENVWRAPPER_SCRIPT="${VIRTUALENVWRAPPER_SCRIPT}" \
-		"${SCRIPT_FULL_PATH}"
+		"${SCRIPT_FULL_PATH}" \
+		BME_HIDDEN_DIR='.bme.d'
 else
-# "inner run": run the "real" payload
+# "inner run" on a clean environment: run the "real" payload
 	run_tests
 fi
