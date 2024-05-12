@@ -10,6 +10,8 @@ readonly BME_BASENAME="${BME_BASENAME:-bash-magic-enviro}"
 readonly BME_FULL_PATH="${BUILD_DIR}/${BME_BASENAME}"
 export BME_FULL_PATH
 
+typeset -F SECONDS  # See https://unix.stackexchange.com/questions/52313/how-to-get-execution-time-of-a-script-effectively
+
 check_environment() {
 	[ -d "${BUILD_DIR}" ] || {
 		local err_msg+="\tNo build dir ${C_BOLD}'${BUILD_DIR}'${C_NC} found!\n"
@@ -77,6 +79,7 @@ if [ -z "${CONTROL_VAR}" ]; then
 			VIRTUALENVWRAPPER_SCRIPT="${VIRTUALENVWRAPPER_SCRIPT}" \
 			"${SCRIPT_FULL_PATH}" "${test}" || exit $?
 	done
+	bme_log "Tests duration: ${C_BOLD}${SECONDS} seconds${C_NC}."
 else
 # "inner run" on a clean environment: run the test script I got as first param
 	test_script="${1}"
