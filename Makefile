@@ -21,7 +21,7 @@ export C_NC := \033[0m
 targets:
 	@echo -e "$${C_BOLD}Main targets are:$${C_NC}"
 	@echo -e "\t$${C_BOLD}targets:$${C_NC} this one (default)."
-	@echo -e "\t$${C_BOLD}date:$${C_NC} shows date in CHANGELOG format."
+	@echo -e "\t$${C_BOLD}date:$${C_NC} shows current date in CHANGELOG format."
 	@echo -e "\t$${C_BOLD}check:$${C_NC} checks requirements."
 	@echo -e "\t$${C_BOLD}build:$${C_NC} builds code out of sources."
 	@echo -e "\t$${C_BOLD}dev:$${C_NC} creates symlinks for easier development of this tool."
@@ -66,8 +66,7 @@ $(BUILDDIR)/$(BME_BASENAME): $(BUILDDIR)/$(VERSION_FILE) $(SRCDIR)/$(BME_BASENAM
 	@echo -e "$${C_BOLD}Building main script:$${C_NC} $${C_GREEN}DONE!$${C_NC}"
 
 # Builds BME
-build: $(BUILDDIR)/$(BME_BASENAME)_modules $(BUILDDIR)/$(VERSION_FILE) $(BUILDDIR)/$(BME_BASENAME) date
-	@echo -e "$${C_BOLD}Building BME...$${C_NC}"
+build: Makefile $(BUILDDIR)/$(BME_BASENAME)_modules $(BUILDDIR)/$(VERSION_FILE) $(BUILDDIR)/$(BME_BASENAME)
 	@echo -e "$${C_BOLD}Building BME:$${C_NC} $${C_GREEN}DONE!$${C_NC}"
 
 # Makes sure DESTDIR is in place
@@ -81,7 +80,7 @@ dev: build
 	@./make-control-install.sh dev
 	@echo -e "$${C_BOLD}Development mode:$${C_NC} $${C_GREEN}DONE!$${C_NC}"
 
-test: check
+test: build
 	@echo -e "$${C_BOLD}Running unitary tests...$${C_NC}"
 	@./tests/maketests.sh
 	@echo -e "$${C_BOLD}Unitary tests:$${C_NC} $${C_GREEN}DONE!$${C_NC}"
