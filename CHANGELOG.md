@@ -1,12 +1,18 @@
 # CHANGELOG
 
 ## Next Release
-* differences from [previous tag](/../../compare/v1.8.0…main).
+* differences from [previous tag](/../../compare/v1.8.1…main).
+
+## v1.8.1 (2024-MAY-15)
+* differences from [previous tag](/../../compare/v1.8.0…v1.8.1).
 * Unit test framework refactored so each test run gets a clean environment.
 * BUG CORRECTED: Another fix for proper .bme_env file loading (only when exact directory match for BME_PROJECT_DIR, or new project loading if dropping on a subdirectory).
 
 ## v1.8.0 (2024-MAY-02)
 * differences from [previous tag](/../../compare/v1.7.2…v1.8.0).
+* **UPGRADE NOTES:**
+  * Python virtualenvs are now project-scoped instead of user-global.  That means they will be regenerated under "${BME_PROJECT_DIR}/${BME_HIDDEN_DIR}" and you can delete them from under ${BME_CONFIG_DIR} (which defaults to "${HOME}/${BME_HIDDEN_DIR}").
+  * "${TF_PLUGIN_CACHE_DIR}" is now user-global instead of project-scoped.  That means Terraform plugins will be downloaded under ${BME_CONFIG_DIR} and you can delete them from under "${BME_PROJECT_DIR}/${BME_HIDDEN_DIR}".
 * **terraform-support** module:
   * Both tfenv repository and *'TF_PLUGIN_CACHE_DIR'* environment variable are now per-user global instead of project-bound.
 * **python3-virtualenvs** module:
