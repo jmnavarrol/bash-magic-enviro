@@ -22,7 +22,6 @@ false=${BOOL[1]}
 
 # DEBUG=$true
 
-# See the one-off "pseudo-main" code at the end of this script
 
 #--
 # FUNCTIONS
@@ -35,10 +34,10 @@ bme_eval_dir() {
 		local nearest_project_dir="$PWD"
 		local project_found=false
 		while [ "${nearest_project_dir}" ]; do
-			__bme_debug && echo "${FUNCNAME[0]}: Looking for '${BME_PROJECT_FILE}' at '${nearest_project_dir}'."
+			__bme_debug "${FUNCNAME[0]}: Looking for '${BME_PROJECT_FILE}' at '${nearest_project_dir}'."
 			if [ -e "${nearest_project_dir}/${BME_PROJECT_FILE}" ]; then
 			# Found "nearest" project file
-				__bme_debug && echo "${FUNCNAME[0]}: Found project file at '${nearest_project_dir}'."
+				__bme_debug "${FUNCNAME[0]}: Found project file at '${nearest_project_dir}'."
 				__bme_load_project "${nearest_project_dir}" || return $?
 				project_found=true
 				break
@@ -50,7 +49,7 @@ bme_eval_dir() {
 		done
 		if ! $project_found && [[ -n ${BME_PROJECT_NAME+x} ]]; then
 		# Still within a project context, but no project to load found in filesystem hierarchy.
-			__bme_debug && echo "Project loop finished and no project found"
+			__bme_debug "Project loop finished and no project found"
 			__bme_clean_project
 			return 0
 		fi
@@ -63,7 +62,7 @@ bme_eval_dir() {
 		   # project name properly defined
 		   # project dir properly defined too
 		   # strictly within the project hierarchy (__bme_load_project() already takes care of the root env file)
-				__bme_debug && echo "${FUNCNAME[0]}: '${PWD}' within '${BME_PROJECT_DIR}'"
+				__bme_debug "${FUNCNAME[0]}: '${PWD}' within '${BME_PROJECT_DIR}'"
 				__bme_load_env_file "${PWD}" || return $?
 		fi
 	fi
@@ -71,11 +70,21 @@ bme_eval_dir() {
 
 
 # A quick-set for debug messages
+# it is designed not to be in the way on the happy path
+# but if debug is activated, passing a debug message becomes mandatory
+# 1st param 'debug_msg'
 __bme_debug() {
-	if [[ -n ${DEBUG} && $DEBUG == $true ]]; then
-		return ${DEBUG}
-	else
-		return ${false}
+local debug_msg="${1:-}"
+
+	if [ ${DEBUG:-$false} == $true ]; then
+		if [ -n "${debug_msg}" ]; then
+			echo -e "${debug_msg}"
+		else
+			debug_msg="INTERNAL ERROR: ${FUNCNAME[0]}() called from '${FUNCNAME[1]}'.\n"
+			debug_msg+="\tYOU SHOULD SET A DEBUG MESSAGE!"
+			echo -e "${debug_msg}"
+			return $false
+		fi
 	fi
 }
 
@@ -152,7 +161,7 @@ export -f bme_log
 bme_check_version() {
 # Gets the sorted list of remote tags
 	local remote_tags=(`git --git-dir "${BME_SRC_DIR}/.git" ls-remote --refs --tags --sort -version:refname ${BME_REMOTE_GIT} | cut --delimiter='/' --fields=3`)
-	__bme_debug && echo "${FUNCNAME[0]}: REMOTE TAGS: '${remote_tags[@]}'"
+	__bme_debug "${FUNCNAME[0]}: REMOTE TAGS: '${remote_tags[@]}'"
 # then, get the last one (which should be the highest by "version name").
 	local highest_tag="${remote_tags[0]}"
 
@@ -202,7 +211,7 @@ local project_dir="${1}"
 
 # if $BME_PROJECT_NAME is defined, we are already within a "BME session"
 	if [[ -n ${BME_PROJECT_NAME+x} ]]; then
-		__bme_debug && echo "${FUNCNAME[0]}: ALREADY WITHIN A PROJECT ENVIRONMENT"
+		__bme_debug "${FUNCNAME[0]}: ALREADY WITHIN A PROJECT ENVIRONMENT"
 		local new_project=$(source "${project_dir}/${BME_PROJECT_FILE}" > /dev/null && echo "${BME_PROJECT_NAME}")
 		if [[ -z "${new_project}" ]]; then
 			bme_log "You didn't set ${C_BOLD}'BME_PROJECT_NAME=[your_project_name]'${C_NC} in your ${C_BOLD}'${BME_PROJECT_FILE}'${C_NC} file." error
@@ -211,7 +220,7 @@ local project_dir="${1}"
 
 		if [ "${new_project}" != "${BME_PROJECT_NAME}" ]; then
 		# New project: clean old one
-			__bme_debug && echo "${FUNCNAME[0]}: DIFFERENT PROJECT - OLD '${BME_PROJECT_NAME}' vs NEW '${new_project}'."
+			__bme_debug "${FUNCNAME[0]}: DIFFERENT PROJECT - OLD '${BME_PROJECT_NAME}' vs NEW '${new_project}'."
 			__bme_clean_project || return $?
 		elif [ "${project_dir}" != "${BME_PROJECT_DIR}" ]; then
 		# Weird: it seems we found the same project name at two different locations
@@ -361,8 +370,8 @@ local allowed_callers=('__bme_load_project')
 
 # Loops to find if it's an already known project directory
 	if [[ -v BME_WHITELISTED_PATHS["${test_path}"] ]]; then
-		__bme_debug && echo "${FUNCNAME[0]} called from ${FUNCNAME[1]}: exact match found:"
-		__bme_debug && echo -e "\t'${test_path}' whitelist status is '${BME_WHITELISTED_PATHS[$test_path]}'."
+		__bme_debug "${FUNCNAME[0]} called from ${FUNCNAME[1]}: exact match found:"
+		__bme_debug "\t'${test_path}' whitelist status is '${BME_WHITELISTED_PATHS[$test_path]}'."
 		return ${!BME_WHITELISTED_PATHS[$test_path]}
 	fi
 
@@ -374,7 +383,7 @@ local allowed_callers=('__bme_load_project')
 		bme_log "You didn't set ${C_BOLD}'BME_PROJECT_NAME=[your_project_name]'${C_NC} in your ${C_BOLD}'${BME_PROJECT_FILE}'${C_NC} file." fatal
 		return -1
 	fi
-	__bme_debug && echo "${FUNCNAME[0]}: New project name is '${new_project}'"
+	__bme_debug "${FUNCNAME[0]}: New project name is '${new_project}'"
 	__bme_check_project_name "${new_project}" || return $?
 
 	echo -en '\tDo you want to whitelist this directory? [y/N]: '
@@ -418,30 +427,30 @@ __bme_modules_load() {
 local module=$1
 
 	if [[ ${module} ]]; then
-		__bme_debug && echo "${FUNCNAME[0]}: MODULE PARAM PROVIDED: '${module}'"
+		__bme_debug "${FUNCNAME[0]}: MODULE PARAM PROVIDED: '${module}'"
 		local module_list+=("${module}")
 	else
-		__bme_debug && echo "${FUNCNAME[0]}: MODULE PARAM **NOT** PROVIDED"
+		__bme_debug "${FUNCNAME[0]}: MODULE PARAM **NOT** PROVIDED"
 		if [[ -n ${BME_MODULES} ]]; then
-			__bme_debug && echo "${FUNCNAME[0]}: THERE IS A GLOBAL LIST OF MODULES TO LOAD: '${BME_MODULES[@]}'"
+			__bme_debug "${FUNCNAME[0]}: THERE IS A GLOBAL LIST OF MODULES TO LOAD: '${BME_MODULES[@]}'"
 			local module_list=("${BME_MODULES[@]}")
 		else
-			__bme_debug && echo "${FUNCNAME[0]}: THERE IS **NOT** A GLOBAL LIST OF MODULES TO LOAD"
+			__bme_debug "${FUNCNAME[0]}: THERE IS **NOT** A GLOBAL LIST OF MODULES TO LOAD"
 			return 0
 		fi
 	fi
 
-	__bme_debug && echo "${FUNCNAME[0]}: CURRENT LOAD MODULE LIST: '${module_list[@]}'"
+	__bme_debug "${FUNCNAME[0]}: CURRENT LOAD MODULE LIST: '${module_list[@]}'"
 	for module in "${module_list[@]}"; do
 		if [[ ! " ${BME_ACTIVE_MODULES[*]} " =~ " ${module} " ]]; then
-			__bme_debug && echo "${FUNCNAME[0]}: ABOUT TO LOAD MODULE '${module}'"
+			__bme_debug "${FUNCNAME[0]}: ABOUT TO LOAD MODULE '${module}'"
 		# First let's try project-level modules
 			if [ -r "${BME_PROJECT_DIR}/bme-modules/${module}.module" ]; then
-				__bme_debug && echo "${FUNCNAME[0]}: PROJECT-LEVEL '${module}' FOUND."
+				__bme_debug "${FUNCNAME[0]}: PROJECT-LEVEL '${module}' FOUND."
 				local module_path="${BME_PROJECT_DIR}/bme-modules/${module}.module"
 		# No project-level module found by that name.  Let's try a global one
 			elif [ -r "${BASH_SOURCE}_modules/${module}.module" ]; then
-				__bme_debug && echo "${FUNCNAME[0]}: GLOBAL '${module}' FOUND."
+				__bme_debug "${FUNCNAME[0]}: GLOBAL '${module}' FOUND."
 				local module_path="${BASH_SOURCE}_modules/${module}.module"
 		# No module found by that name
 			else
@@ -454,29 +463,29 @@ local module=$1
 			fi
 		# Loading module
 			if [[ -n ${module_path+x} ]]; then
-				__bme_debug && echo "${FUNCNAME[0]}: SOURCING '${module_path}'."
+				__bme_debug "${FUNCNAME[0]}: SOURCING '${module_path}'."
 				source "${module_path}" ||
 				{
 					local log_msg="${C_BOLD}${FUNCNAME[0]}:${C_NC} Couldn't source ${C_BOLD}'${module}'${C_NC}.\n"
 					log_msg+="\t\tat ${C_BOLD}'${module_path}'${C_NC}."
-					__bme_debug && echo "${bme_log}"
+					__bme_debug "${bme_log}"
 					continue
 				}
 				${module}_load && BME_ACTIVE_MODULES+=("${module}") ||
 				{
 					local log_msg="${C_BOLD}${FUNCNAME[0]}:${C_NC} Couldn't load ${C_BOLD}'${module}_load'${C_NC}.\n"
 					log_msg+="\t\tat ${C_BOLD}'${module_path}'${C_NC}."
-					__bme_debug && echo "${bme_log}"
+					__bme_debug "${bme_log}"
 					continue
 				}
 			else
-				__bme_debug && echo "${FUNCNAME[0]}: '${module_path}' NOT SET. NOT LOADING MODULE"
+				__bme_debug "${FUNCNAME[0]}: '${module_path}' NOT SET. NOT LOADING MODULE"
 			fi
 		else
-			__bme_debug && echo "${FUNCNAME[0]}: MODULE '${module}' ALREADY LOADED. SKIPPING"
+			__bme_debug "${FUNCNAME[0]}: MODULE '${module}' ALREADY LOADED. SKIPPING"
 		fi
 	done
-	__bme_debug && echo "${FUNCNAME[0]}: CURRENT LIST OF LOADED MODULES: '${BME_ACTIVE_MODULES[@]}'"
+	__bme_debug "${FUNCNAME[0]}: CURRENT LIST OF LOADED MODULES: '${BME_ACTIVE_MODULES[@]}'"
 }
 
 
@@ -485,9 +494,9 @@ __bme_modules_unload() {
 	if [[ -n ${BME_ACTIVE_MODULES+x} ]]; then
 		# List of active modules is processed in reverse order for deactivation, in case there are sorting dependencies
 		# See https://stackoverflow.com/a/13360181/12237334 (hopefully this array will NOT have "holes" within)
-		__bme_debug && echo "${FUNCNAME[0]}: CURRENT LIST OF MODULES TO UNLOAD: '${BME_ACTIVE_MODULES[@]}'"
+		__bme_debug "${FUNCNAME[0]}: CURRENT LIST OF MODULES TO UNLOAD: '${BME_ACTIVE_MODULES[@]}'"
 		for (( module=${#BME_ACTIVE_MODULES[@]}-1; module>=0; module-- )); do
-			__bme_debug && echo "${FUNCNAME[0]}: UNLOADING '${BME_ACTIVE_MODULES[module]}'"
+			__bme_debug "${FUNCNAME[0]}: UNLOADING '${BME_ACTIVE_MODULES[module]}'"
 			${BME_ACTIVE_MODULES[module]}_unload
 			unset -f ${BME_ACTIVE_MODULES[module]}_load
 			unset -f ${BME_ACTIVE_MODULES[module]}_unload
@@ -559,7 +568,7 @@ local env_file="${base_dir}/${BME_FILE}"
 		return -1
 	fi
 
-	__bme_debug && echo "${FUNCNAME[0]}: ENV FILE TO LOOK FOR: '${env_file}'"
+	__bme_debug "${FUNCNAME[0]}: ENV FILE TO LOOK FOR: '${env_file}'"
 	if [ -r "${env_file}" ]; then
 		local current_dir="${PWD}"
 		cd "${base_dir}"
@@ -571,9 +580,9 @@ local env_file="${base_dir}/${BME_FILE}"
 			return ${rc_value}
 		}
 		cd "${current_dir}"
-		__bme_debug && echo "${FUNCNAME[0]}: '${env_file}' LOADED"
+		__bme_debug "${FUNCNAME[0]}: '${env_file}' LOADED"
 	else
-		__bme_debug && echo "${FUNCNAME[0]}: '${env_file}' NOT FOUND."
+		__bme_debug "${FUNCNAME[0]}: '${env_file}' NOT FOUND."
 	fi
 # Protection against wrong return code from __bme_debug
 	return 0

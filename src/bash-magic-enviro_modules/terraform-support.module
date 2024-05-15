@@ -32,7 +32,7 @@ export TF_PLUGIN_CACHE_DIR="${BME_CONFIG_DIR}/.terraform.d/plugin-cache"
 	fi
 
 	# makes sure tfenv repo is in place
-	__bme_debug && echo "TERRAFORM SUPPORT MODULE: tfenv install path is '${tfenv_install_path}'"
+	__bme_debug "TERRAFORM SUPPORT MODULE: tfenv install path is '${tfenv_install_path}'"
 	if [ -d ${tfenv_install_path} ]; then
 	# Already cloned: check version in case we need to update
 		# this below happens in a subshell
@@ -61,14 +61,14 @@ export TF_PLUGIN_CACHE_DIR="${BME_CONFIG_DIR}/.terraform.d/plugin-cache"
 	# updating/creating tfenv-related symlinks
 	for tfenv_link in 'bin/tfenv' 'bin/terraform'; do
 		if [ -L "${BME_PROJECT_DIR}/${tfenv_link}" ]; then
-			__bme_debug && echo "TERRAFORM SUPPORT MODULE: symlink '${tfenv_link}' exists."
+			__bme_debug "TERRAFORM SUPPORT MODULE: symlink '${tfenv_link}' exists."
 			if ! [ "${BME_PROJECT_DIR}/${tfenv_link}" -ef "${tfenv_install_path}/${tfenv_link}" ]; then
-				__bme_debug && echo "TERRAFORM SUPPORT MODULE: ...but it doesn't point where it should."
+				__bme_debug "TERRAFORM SUPPORT MODULE: ...but it doesn't point where it should."
 				cd "${BME_PROJECT_DIR}" && rm -rf "${tfenv_link}"
 				ln -s "${tfenv_install_path}/${tfenv_link}" "${tfenv_link}"
 			fi
 		else
-			__bme_debug && echo "TERRAFORM SUPPORT MODULE: symlink '${tfenv_link}' does NOT exist."
+			__bme_debug "TERRAFORM SUPPORT MODULE: symlink '${tfenv_link}' does NOT exist."
 			cd "${BME_PROJECT_DIR}" && rm -rf "${tfenv_link}"  # just in case
 			ln -s "${tfenv_install_path}/${tfenv_link}" "${tfenv_link}"
 		fi

@@ -1,6 +1,5 @@
 # TO-DO: bash-magic-enviro
 Pending actions, general notes, etc. (in no particular order):
-* Usage of __bme_debug() is tricky.  When debug mode is **not** activated, it *"invisibly"* sets $? to 1 (error).  If it happens to be the last command on a function, it looks like it's an error.  Look for a way to activate/deactivate debug mode without this kind of nasty side effects.
 * publish docker container so it can be just used.
 * Automatic support for project root's '.bme.d/' directory '.gitignore' inclusion.
 * Find a way for modules to provide their own (formatted) help.
