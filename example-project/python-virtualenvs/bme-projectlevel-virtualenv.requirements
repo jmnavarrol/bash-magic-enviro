@@ -1,6 +1,6 @@
 # loads a subrepos' manager
 # See https://github.com/jmnavarrol/python-multigit
-multigit==0.11.5
+multigit==0.11.8
 
 # Other entries for testing/debugging
 # pip
