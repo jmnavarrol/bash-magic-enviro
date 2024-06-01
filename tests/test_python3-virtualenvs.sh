@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # Meant to be run from maketests.sh.  See its exported variables
-readonly VIRTUALENVS_MODULE="${BME_FULL_PATH}_modules/python3-virtualenvs.module"
+readonly VIRTUALENVS_MODULE="${BUILDDIR}/bash-magic-enviro_modules/python3-virtualenvs.module"
 
 
 #--
@@ -9,7 +9,8 @@ readonly VIRTUALENVS_MODULE="${BME_FULL_PATH}_modules/python3-virtualenvs.module
 #--
 
 # Sets environment
-source "${BME_FULL_PATH}" || exit $?
+export HOME="${SCRATCH_DIR}"
+source "${BUILDDIR}/bash-magic-enviro" || exit $?
 source "${VIRTUALENVWRAPPER_SCRIPT}" || exit $?
 
 mkdir --parents "${SCRATCH_DIR}/test-project"

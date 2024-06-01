@@ -3,6 +3,7 @@
 ## Next Release
 * differences from [previous tag](/../../compare/v1.8.1…main).
 * __bme_debug(): behaviour refactored so it emits the message passed as param instead of a return code.
+* unittest framework offers better isolation for each test script.
 
 ## v1.8.1 (2024-MAY-15)
 * differences from [previous tag](/../../compare/v1.8.0…v1.8.1).

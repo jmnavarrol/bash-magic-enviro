@@ -81,6 +81,7 @@ check_test_version() {
 #--
 # MAIN
 #--
-source "${BME_FULL_PATH}"
+export HOME="${SCRATCH_DIR}"
+source "${BUILDDIR}/bash-magic-enviro"
 check_current_version
 check_test_version
