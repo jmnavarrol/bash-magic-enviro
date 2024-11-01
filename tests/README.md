@@ -16,3 +16,7 @@ Test scripts can be either right under this tests directory or in subdirectories
 Test scripts must have the execute bit set and should start with env Bash shabang *#!/usr/bin/env bash*.  Scripts are **not** sourced, they are run.
 
 Each test script runs on a clean subshell (except for the environment variables described above) and its return code is checked: **0** for success, any other code for failure.
+
+**NOTES:**
+* [version tests](./core/test_010_version.sh) require internet access since it tries to compare local versions with highest published at GitHub.
+* [modules' tests](./modules/): review each module requirements or else their related tests may fail.
