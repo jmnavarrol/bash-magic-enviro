@@ -37,14 +37,17 @@ local test_counter=0
 		env --ignore-environment \
 			BUILDDIR=$(realpath "${BUILDDIR}") \
 			SCRATCH_DIR="${test_scratch_dir}" \
-			"${test}" || {
-				local test_rc=$?
-				echo -e "${C_RED}ERROR${C_NC} (${test_rc}): ${C_BOLD}'${test}'${C_NC}"
-				echo -e "See both the output above and the contents of the test's scratch dir:"
-				echo -e "\t'${test_scratch_dir}'\n"
-				bme_log "${C_BOLD}UNITARY TESTS RUN: ${C_YELLOW}${test_counter}${C_NC}." error
-				exit $test_rc
-			}
+			bash -c "source "${TESTS_DIR}/helper_functions.sh" && ${test}"
+	# Now, check result from command above
+		local test_rc=$?
+		if [ $test_rc -ne 0 ]; then
+			bme_log "${C_BOLD}'${test}'${C_NC} (${test_rc})" error
+			echo -e "See both the output above and the contents of the test's scratch dir:"
+			echo -e "\t'${test_scratch_dir}'\n"
+			bme_log "${C_BOLD}UNITARY TESTS RUN: ${C_YELLOW}${test_counter}${C_NC}." error
+			exit $test_rc
+		fi
+	# Test finished OK; let's clean
 		rm --recursive --force ${test_scratch_dir}
 	done
 	shopt -u nullglob globstar
