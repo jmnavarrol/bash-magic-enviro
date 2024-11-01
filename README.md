@@ -42,6 +42,7 @@ Once you *"cd out"* from the project's hierarchy all these customizations will b
    * [Terraform support](#terraform)
 1. [Development](#development)
    * [modules' development](#dev-modules)
+   * [unit tests](#unit-tests)
 1. [Support](#support)
 1. [License](#license)
 ----
@@ -472,6 +473,11 @@ __bme_modules_load 'second_module'
 This should be made outside of any function, preferred early on your module file, so the *"pre-loading"* is run when the module code is sourced, before your own *[module]_load()* function is run.  This way the dependency order is insured both at module loading and unloading.
 
 See [the terraform module's source code for an example](./src/bash-magic-enviro_modules/terraform-support.module).
+
+<sub>[back to contents](#contents).</sub>
+
+### unit tests<a name="unit-tests"></a>
+A custom framework under [tests/](./tests/) allows for this code's unit testing both for main code and modules.  See [its README](./tests/README.md) for further details.
 
 <sub>[back to contents](#contents).</sub>
 

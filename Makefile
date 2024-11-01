@@ -82,7 +82,7 @@ dev: build
 
 test: build
 	@echo -e "$${C_BOLD}Running unitary tests...$${C_NC}"
-	@./tests/maketests.sh
+	@export BUILD_DIR=$$BUILDDIR; ./tests/maketests.sh
 	@echo -e "$${C_BOLD}Unitary tests:$${C_NC} $${C_GREEN}DONE!$${C_NC}"
 
 install: check build $(DESTDIR)

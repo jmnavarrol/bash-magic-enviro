@@ -1,5 +1,8 @@
 #!/usr/bin/env bash
 
+# Set DEBUG to any value for debugging purposes
+# DEBUG=1
+
 #--
 # CONFIG
 #--
@@ -7,96 +10,63 @@ readonly SCRIPT_FULL_PATH=$(realpath "${BASH_SOURCE[0]}")
 readonly TESTS_DIR=$(dirname ${SCRIPT_FULL_PATH})
 readonly SCRATCH_DIR="${TESTS_DIR}/scratch"
 
+BUILDDIR="${BUILDIR:-${TESTS_DIR}/../build}"  # BME build directory ("compiled" sources)
+
 
 # Main "controller" for BME unit tests
 # The idea is to run each test script within an isolated environment.
-# For this to happen, a control var is checked:
-# if not set, we are running on the "outside" of the control environment;
-# if already set, we are within a clean environment where we can run tests within
 function main() {
-	if [ -z "${TESTS_CONTROL_VAR}" ]; then
-	# still running "on the outside"
-		check_environment || exit $?
+local test_counter=0
 
-		# call back on each test within a clean environment
-		# nullglob avoids 'match on asterisk' if no file is found
-		shopt -s nullglob globstar
-		for test in ${TESTS_DIR}/**/test_*.sh; do
-			mkdir "$SCRATCH_DIR"
-			env --ignore-environment \
-				TESTS_CONTROL_VAR='set' \
-				SCRATCH_DIR="${SCRATCH_DIR}" \
-				BUILDDIR=$(realpath "${BUILDDIR}") \
-				VIRTUALENVWRAPPER_SCRIPT="${VIRTUALENVWRAPPER_SCRIPT}" \
-				"${SCRIPT_FULL_PATH}" "${test}" || test_rc=$?
+	[ ${DEBUG:+1} ] && echo "DEBUGGING IS ACTIVE" # debugging example
+	check_environment || exit $?
 
-		# check test result
-			if [ -n "${test_rc}" ]; then
-				echo "ERROR RUNNING TEST (${test_rc}): '${test}'"
+	source "${BUILDDIR}/bash-magic-enviro"
+	bme_log "${C_BOLD}RUNNING UNITARY TESTS...${C_NC}" info
+	# call back on each test within a clean environment
+	# nullglob avoids 'match on asterisk' if no file is found
+	shopt -s nullglob globstar
+	for test in ${TESTS_DIR}/**/test_*.sh; do
+		[ ${DEBUG:+1} ] && echo -e "\tFOUND TEST FILE '${test}'"
+		bme_log "\n${C_BOLD}$((++test_counter)). '${test}'${C_NC}..."
+
+		local padded_random=$(printf "%03d\n" $((0 + $RANDOM % 999)))
+		local test_scratch_dir="${SCRATCH_DIR}/test_${padded_random}"
+		[ ${DEBUG:+1} ] && echo -e "\tTEST's scratch dir: '${test_scratch_dir}'"
+		mkdir --parents ${test_scratch_dir}
+		env --ignore-environment \
+			BUILDDIR=$(realpath "${BUILDDIR}") \
+			SCRATCH_DIR="${test_scratch_dir}" \
+			"${test}" || {
+				local test_rc=$?
+				echo -e "${C_RED}ERROR${C_NC} (${test_rc}): ${C_BOLD}'${test}'${C_NC}"
+				echo -e "See both the output above and the contents of the test's scratch dir:"
+				echo -e "\t'${test_scratch_dir}'\n"
+				bme_log "${C_BOLD}UNITARY TESTS RUN: ${C_YELLOW}${test_counter}${C_NC}." error
 				exit $test_rc
-			else
-				rm --recursive --force "$SCRATCH_DIR"
-			fi
-		done
-		shopt -u nullglob globstar
-	else
-	# "inner run" within a clean environment
-		local test_script="${1}"
-		echo "RUNNING TEST: '${test_script}'"
-		${test_script} || exit $?
-	fi
+			}
+		rm --recursive --force ${test_scratch_dir}
+	done
+	shopt -u nullglob globstar
+	# Finally, delete the "main" scratch dir
+	rm --recursive --force ${SCRATCH_DIR}
+	echo ''
+	bme_log "${C_BOLD}UNITARY TESTS RUN: ${C_GREEN}${test_counter}${C_NC}." info
 }
 
 
 # Makes sure the environment is ready for testing
 function check_environment() {
-local mandatory_env_vars=(
-	'BUILDDIR'
-	'VIRTUALENVWRAPPER_SCRIPT'
-)
-
-# Checks environment variables
-	for envvar in "${mandatory_env_vars[@]}"; do
-		if [ -z "${!envvar}" ]; then
-			echo "MANDATORY ENVIRONMENT VARIABLE '${envvar}' UNDEFINED!"
-			return 1
-		fi
-	done
+	[ ${DEBUG:+1} ] && echo "BUILDDIR: '${BUILDDIR}'"
+	[ -d ${BUILDDIR} ] || {
+		echo "ERROR: BME code dir '${BUILDDIR}' doesn't exist."
+		echo -e "\tDid you run 'make build'?"
+		return 1
+	}
+	[ ${DEBUG:+1} ] && tree ${BUILDDIR} || return 0
 }
-
-# Strips ANSI escape codes/sequences
-# $1 message to sanitize
-function strip_escape_codes() {
-local raw_input="${1}"
-local stripped_output=''
-# locals for each line
-local _i _char _escape=0
-
-	for line in "${raw_input}"; do
-		local stripped_line=''
-		for (( _i=0; _i < ${#line}; _i++ )); do
-			_char="${line:_i:1}"
-			if (( ${_escape} == 1 )); then
-				if [[ "${_char}" == [a-zA-Z] ]]; then
-					_escape=0
-				fi
-				continue
-			fi
-			if [[ "${_char}" == $'\e' ]]; then
-				_escape=1
-				continue
-			fi
-			stripped_line+="${_char}"
-		done
-		stripped_output+="${stripped_line}"
-	done
-
-	echo -en "${stripped_output}"
-}
-export -f strip_escape_codes
-
 
 #--
 # ENTRY POINT
 #--
-main "$@"
+main "$@"; exit $?

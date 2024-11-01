@@ -1,0 +1,16 @@
+BME: unitary tests
+==================
+
+As BME grows more complex, the need for unit tests arises.  While there are some frameworks for testing bash/shell scripts, I preferred building one customized for this project's needs.
+
+The tests' entrypoint is the [maketests.sh](./maketests.sh) script:
+1. it finds the test files (those with name following the *'test_\*.sh* pattern).
+1. it runs each script on a clean subshell with environment variables:
+   * **BUILD_DIR:** the directory where BME code can be found.
+   * **SCRATCH_DIR:** an empty directory that the tests may use (i.e.: it can mimick a user's home directory under which you can set a test project, etc.).  This scratch dir is deleted after each test unless it fails; in that case it is preserved for diagnosis.
+
+Test scripts can be either right under this tests directory or in subdirectories within for better organization.
+
+Test scripts must have the execute bit set and should start with env Bash shabang *#!/usr/bin/env bash*.  Scripts are **not** sourced, they are run.
+
+Each test script runs on a clean subshell (except for the environment variables described above) and its return code is checked: **0** for success, any other code for failure.
