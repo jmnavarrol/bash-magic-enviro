@@ -4,7 +4,7 @@ BME: unitary tests
 As BME grows more complex, the need for unit tests arises.  While there are some frameworks for testing bash/shell scripts, I preferred building one customized for this project's needs.
 
 The tests' entrypoint is the [maketests.sh](./maketests.sh) script:
-1. it finds the test files (those with name following the *'test_\*.sh* pattern).
+1. it finds the test files (those with name following the *'test_\*.sh* pattern).  Optionally, you can pass a list of full paths to tests and the script will run those instead.
 1. it runs each script on a clean subshell with helper functions and some environment variables:
    * **helper functions:** the [helper functions file](./helper_functions.sh) is sourced into the tests' environment so they can be used by scripts.  Review its contents.
    * **environment variables:** only those needed to launch the test scripts.

@@ -15,8 +15,17 @@ BUILDDIR="${BUILDIR:-${TESTS_DIR}/../build}"  # BME build directory ("compiled" 
 
 # Main "controller" for BME unit tests
 # The idea is to run each test script within an isolated environment.
+#
+# It can get a list of tests to run as parameter
 function main() {
 local test_counter=0
+
+# list of tests to run
+	if (( ${#} > 0 )); then
+		tests_list="${@}"
+	else
+		tests_list=( ${TESTS_DIR}/**/test_*.sh )
+	fi
 
 	[ ${DEBUG:+1} ] && echo "DEBUGGING IS ACTIVE" # debugging example
 	check_environment || exit $?
@@ -26,7 +35,12 @@ local test_counter=0
 	# call back on each test within a clean environment
 	# nullglob avoids 'match on asterisk' if no file is found
 	shopt -s nullglob globstar
-	for test in ${TESTS_DIR}/**/test_*.sh; do
+	for test in "${tests_list[@]}"; do
+		[ -x "${test}" ] || {
+			bme_log "${C_BOLD}'${test}'${C_NC} is not executable.  Stopping here." error
+			exit 1
+		}
+
 		[ ${DEBUG:+1} ] && echo -e "\tFOUND TEST FILE '${test}'"
 		bme_log "\n${C_BOLD}$((++test_counter)). '${test}'${C_NC}..."
 
