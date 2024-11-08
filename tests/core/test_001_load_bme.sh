@@ -4,9 +4,8 @@
 # Loads BME and a "null" project just to attest basic functionality
 
 # User's global environment
-export HOME="${SCRATCH_DIR}"
 # A first load of BME so its features are enabled along this script
-source "${BUILDDIR}/bash-magic-enviro" || exit $?
+source bash-magic-enviro || exit $?
 
 # Project environment
 bme_project_dir="${HOME}/project"
@@ -32,7 +31,7 @@ cat "${HOME}/.bme.d/whitelistedpaths"
 echo "<--- END OF WHITELIST FILE"
 
 # Environment ready: reload BME
-source "${BUILDDIR}/bash-magic-enviro" || exit $?
+source bash-magic-enviro || exit $?
 
 # Loads project's configuration
 original_env=`printenv | grep -vE 'PWD|OLDPWD'`
@@ -42,6 +41,6 @@ unloaded_env=`printenv | grep -vE 'PWD|OLDPWD'`
 
 # there should be no diff between before and after
 diff <(echo "$original_env") <(echo "$unloaded_env") || {
-	echo "ERROR: loading/unloading a BME project polutes environment (see above)"
+	bme_log "loading/unloading a BME project polutes environment (see above)" error
 	exit 1
 }

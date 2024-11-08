@@ -4,8 +4,7 @@
 # Tests BME_VERSION format and value
 
 function main() {
-	export HOME="${SCRATCH_DIR}"
-	source "${BUILDDIR}/bash-magic-enviro"
+	source bash-magic-enviro || exit $?
 	check_version_format || exit $?
 	check_test_version_function || exit $?
 }

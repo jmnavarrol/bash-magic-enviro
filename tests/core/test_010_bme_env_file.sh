@@ -1,10 +1,17 @@
 #!/usr/bin/env bash
 
 # TESTS loading/unloading of .bme_env files
+# Controller (see the end of this file)
+function main() {
+	prepare_environment || exit $?
+	check_root_bme_env || exit $?
+	check_deep_bme_env || exit $?
+	check_back_and_forth || exit $?
+}
+
 
 # Creates a project within SCRATCH_DIR
 prepare_environment() {
-	export HOME="${SCRATCH_DIR}"
 	export CUSTOM_PROJECT_DIR="${HOME}/test_project"
 # custom project
 	mkdir "${CUSTOM_PROJECT_DIR}"
@@ -38,7 +45,7 @@ check_root_bme_env() {
 	EOF
 # within a subshell to avoid environment corruption
 	(
-		source "${BUILDDIR}/bash-magic-enviro"
+		source bash-magic-enviro
 		cd "${CUSTOM_PROJECT_DIR}"
 		local function_output=$(bme_eval_dir)
 		local stripped_output=$(strip_escape_codes "${function_output}")
@@ -62,7 +69,7 @@ check_deep_bme_env() {
 	EOF
 # within a subshell to avoid environment corruption
 	(
-		source "${BUILDDIR}/bash-magic-enviro"
+		source bash-magic-enviro
 		cd "${CUSTOM_PROJECT_DIR}/deeper"
 		local function_output=$(bme_eval_dir)
 		local stripped_output=$(strip_escape_codes "${function_output}")
@@ -95,7 +102,7 @@ check_back_and_forth() {
 	mkdir "${CUSTOM_PROJECT_DIR}/other"
 # within a subshell to avoid environment corruption
 	(
-		source "${BUILDDIR}/bash-magic-enviro"
+		source bash-magic-enviro
 		local function_output=$(
 			cd "${CUSTOM_PROJECT_DIR}/other" && bme_eval_dir
 			cd "${CUSTOM_PROJECT_DIR}/deeper" && bme_eval_dir
@@ -125,10 +132,5 @@ check_back_and_forth() {
 }
 
 
-#--
-# ENTRY POINT
-#--
-prepare_environment || exit $?
-check_root_bme_env || exit $?
-check_deep_bme_env || exit $?
-check_back_and_forth || exit $?
+# ENTRY POINT (redirects to main at the head of this file)
+main; exit $?

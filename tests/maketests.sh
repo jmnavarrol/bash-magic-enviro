@@ -8,7 +8,7 @@
 #--
 readonly SCRIPT_FULL_PATH=$(realpath "${BASH_SOURCE[0]}")
 readonly TESTS_DIR=$(dirname ${SCRIPT_FULL_PATH})
-readonly SCRATCH_DIR="${TESTS_DIR}/scratch"
+readonly SCRATCH_BASE_DIR="${TESTS_DIR}/scratch"
 
 BUILDDIR="${BUILDIR:-${TESTS_DIR}/../build}"  # BME build directory ("compiled" sources)
 
@@ -45,12 +45,12 @@ local test_counter=0
 		bme_log "\n${C_BOLD}$((++test_counter)). '${test}'${C_NC}..."
 
 		local padded_random=$(printf "%03d\n" $((0 + $RANDOM % 999)))
-		local test_scratch_dir="${SCRATCH_DIR}/test_${padded_random}"
+		local test_scratch_dir="${SCRATCH_BASE_DIR}/test_${padded_random}"
 		[ ${DEBUG:+1} ] && echo -e "\tTEST's scratch dir: '${test_scratch_dir}'"
 		mkdir --parents ${test_scratch_dir}
 		env --ignore-environment \
-			BUILDDIR=$(realpath "${BUILDDIR}") \
-			SCRATCH_DIR="${test_scratch_dir}" \
+			PATH="$(realpath "${BUILDDIR}"):/usr/local/sbin:/usr/bin:/usr/sbin:/bin:/sbin" \
+			HOME="${test_scratch_dir}" \
 			bash -c "source "${TESTS_DIR}/helper_functions.sh" && ${test}"
 	# Now, check result from command above
 		local test_rc=$?
@@ -66,7 +66,7 @@ local test_counter=0
 	done
 	shopt -u nullglob globstar
 	# Finally, delete the "main" scratch dir
-	rm --recursive --force ${SCRATCH_DIR}
+	rm --recursive --force ${test_scratch_dir}
 	echo ''
 	bme_log "${C_BOLD}UNITARY TESTS RUN: ${C_GREEN}${test_counter}${C_NC}." info
 }

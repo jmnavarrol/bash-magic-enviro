@@ -3,7 +3,6 @@
 
 # Tests the python3-virtualenvs module
 
-readonly VIRTUALENVS_MODULE="${BUILDDIR}/bash-magic-enviro_modules/python3-virtualenvs.module"
 # WARNING: For these tests you should make sure you have virtualenvwrapper script installed and its path.
 readonly VIRTUALENVWRAPPER_SCRIPT='/usr/share/virtualenvwrapper/virtualenvwrapper.sh'
 
@@ -12,8 +11,7 @@ readonly VIRTUALENVWRAPPER_SCRIPT='/usr/share/virtualenvwrapper/virtualenvwrappe
 # MAIN
 #--
 # Sets environment
-export HOME="${SCRATCH_DIR}"
-source "${BUILDDIR}/bash-magic-enviro" || exit $?
+source bash-magic-enviro || exit $?
 source "${VIRTUALENVWRAPPER_SCRIPT}" || {
 	local_rc=$?
 	err_msg="${C_BOLD}'${VIRTUALENVWRAPPER_SCRIPT}'${C_NC} wasn't found.\n"
@@ -22,13 +20,13 @@ source "${VIRTUALENVWRAPPER_SCRIPT}" || {
 	exit $local_rc
 }
 
-mkdir --parents "${SCRATCH_DIR}/test-project"
-export BME_PROJECT_DIR="${SCRATCH_DIR}/test-project"
+mkdir --parents "${HOME}/test-project"
+export BME_PROJECT_DIR="${HOME}/test-project"
 cd "${BME_PROJECT_DIR}"
 
 # Loads the module
-source "${VIRTUALENVS_MODULE}" || exit $?
-python3-virtualenvs_load || exit $?
+# TODO: we shouldn't be calling a hidden function
+__bme_modules_load python3-virtualenvs || exit $?
 
 #--
 # Virtualenv creation
@@ -120,4 +118,5 @@ fi
 #--
 # CLEAN
 #--
-python3-virtualenvs_unload || exit $?
+# TODO: we shouldn't be calling a hidden function
+__bme_modules_unload || exit $?

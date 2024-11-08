@@ -3,18 +3,18 @@ Bash Magic Enviro
 
 **An opinionated Bash configuration tool for development environments.**
 
-This tool allows to set *"isolated"* per-project Bash environments.
+This tool allows to set isolated and configurable *"Bash environments"* (*"projects"*).
 
-Once installed and configured, this tool will look for a file named **'.bme_project'** each time you change directories for a *"BME project definition"*, and it will *source* them when found.  
-Once within a *"BME project"* context, it will also look for a file named **'.bme_env'** at each directory to customize your environment as per its contents, which will also be sourced.
+Once installed and configured, BME will look for a file named **'.bme_project'** each time you change directories for a *"BME project definition"*, which will be *sourced* when found.  
+Once within a *"BME project"* context, it will also look for a file named **'.bme_env'** at each subdirectory to customize your environment as per its contents, which will also be sourced.
 
-So, in brief, you *"declare"* a project by means of its *'.bme_project'* file at its topmost directory (the expectation, but not a hard requirement, is that a project's entry point is the root of a *git sandbox*).  This topmost file sets the project's name, the [BME modules](#modules) you want to be loaded for this project, etc.
+BME abilities are extended by means of *"BME modules"* either global or project-level.
 
-Aditional *'.bme_env'* files within the project's directory hierarchy may call exported functions, tweak the environment for that given directory, etc. (i.e.: you may load a Python virtualenv, request a custom Terraform version, even run whatever Bash code you may need).
-
-This tool also allows you to add your own project-specific extensions/customizations as needed.
-
-Once you *"cd out"* from the project's hierarchy all these customizations will be automatically cleaned out.
+So, in brief:
+1. You *"declare"* a project by means of its *'.bme_project'* file at its topmost directory (the expectation, but not a hard requirement, is that a project's entry point is the root of a *git sandbox*).  This topmost file sets the project's name, the [BME modules](#modules) you want to be loaded, etc.
+1. Project behaviour is attained by the contents of your *bme files* and the global or local *BME modules* loaded.
+1. Aditional *'.bme_env'* files within the project's directory hierarchy may call exported functions, tweak the environment for that given directory, etc. (i.e.: you may load a Python virtualenv, request a custom Terraform version, even run whatever Bash code you may need).
+1. Once you *"cd out"* from the project's directory hierarchy all these customizations will be automatically cleaned out.
 
 ----
 **Contents:**<a name="contents"></a>
