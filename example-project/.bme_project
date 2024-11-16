@@ -8,6 +8,11 @@
 # Set your project name (must be unique)
 BME_PROJECT_NAME='bme_example_project'
 
+# You can tweak the directory path to store local configurations, i.e.:
+# BME_PROJECT_CONFIG_DIR='.other.d'  # path relative to your project's root directory
+# BME_PROJECT_CONFIG_DIR='/some/absolute/path'
+# anyway, make sure the path above is in your .gitignore list.
+
 # Modules' activation (modules are disabled by default, so uncomment those you want to enable
 BME_MODULES=(
 	aws-support          # helps development for AWS environment

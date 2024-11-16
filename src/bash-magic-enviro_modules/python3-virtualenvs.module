@@ -8,8 +8,8 @@
 
 virtualenvs_requirements="${BME_PROJECT_DIR}/python-virtualenvs"
 # Project-restricted locking and md5sums storage.
-virtualenvs_md5sums="${BME_PROJECT_DIR}/${BME_HIDDEN_DIR}/python-virtualenvs.md5"
-virtualenvs_lockfile="${BME_PROJECT_DIR}/${BME_HIDDEN_DIR}/python-virtualenvs.lockfile"
+virtualenvs_md5sums="${BME_PROJECT_CONFIG_DIR}/python-virtualenvs.md5"
+virtualenvs_lockfile="${BME_PROJECT_CONFIG_DIR}/python-virtualenvs.lockfile"
 
 python3-virtualenvs_load() {
 local unmet_dependencies=false
@@ -61,18 +61,27 @@ local unmet_dependencies=false
 	if hash workon 2>/dev/null; then
 		# makes sure virtualenvs' directory for requirements files is in place
 		if ! [[ -d "${virtualenvs_requirements}" ]]; then
-			mkdir -p "${virtualenvs_requirements}/"
-			bme_log "${C_BOLD}'${virtualenvs_requirements}/'${C_NC} created." info 1
+			if mkdir --parents "${virtualenvs_requirements}/"; then
+				bme_log "${C_BOLD}'${virtualenvs_requirements}/'${C_NC} created." info 1
+			else
+				local mkdir_rc=$?
+				bme_log "Couldn't create ${C_BOLD}'${virtualenvs_requirements}/'${C_NC} (${mkdir_rc})" error 1
+				unmet_dependencies=true
+			fi
 		fi
 		# Makes sure virtualenvs' md5sum file is in place
 		if [ ! -r "${virtualenvs_md5sums}" ]; then
-			touch "${virtualenvs_md5sums}"
-			bme_log "File ${C_BOLD}'${virtualenvs_md5sums}'${C_NC} created." info 1
+			if touch "${virtualenvs_md5sums}"; then
+				bme_log "File ${C_BOLD}'${virtualenvs_md5sums}'${C_NC} created." info 1
+			else
+				bme_log "Couldn't touch ${C_BOLD}'${virtualenvs_md5sums}'${C_NC}" error 1
+				unmet_dependencies=true
+			fi
 		fi
 		# Sets project-restricted virtualenvs "home"
 		if [ -n "${WORKON_HOME}" ]; then
 			export BME_ORIG_WORKON_HOME="${WORKON_HOME}"
-			export WORKON_HOME="${BME_PROJECT_DIR}/${BME_HIDDEN_DIR}/.virtualenvs"
+			export WORKON_HOME="${BME_PROJECT_CONFIG_DIR}/.virtualenvs"
 		else
 			local err_msg="virtualenvwrapper's ${C_BOLD}'WORKON_HOME'${C_NC} environment variable undetected.\n"
 			err_msg+="\t\tis virtualenvwrapper properly configured?"

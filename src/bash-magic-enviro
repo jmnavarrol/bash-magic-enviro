@@ -78,13 +78,16 @@ local debug_msg="${1:-}"
 
 	if [ ${DEBUG:-$false} == $true ]; then
 		if [ -n "${debug_msg}" ]; then
-			echo -e "${debug_msg}"
+			echo -e "${debug_msg}" >&2
 		else
 			debug_msg="INTERNAL ERROR: ${FUNCNAME[0]}() called from '${FUNCNAME[1]}'.\n"
 			debug_msg+="\tYOU SHOULD SET A DEBUG MESSAGE!"
-			echo -e "${debug_msg}"
+			echo -e "${debug_msg}" >&2
 			return $false
 		fi
+	else
+	# insures proper return code when debug is not activated
+		return 0
 	fi
 }
 
@@ -249,8 +252,7 @@ local project_dir="${1}"
 	# we move to the project's root in case we reached here from a subdirectory within
 	local current_dir="${PWD}"
 	cd "${project_dir}"
-	source "${BME_PROJECT_FILE}" ||
-	{
+	source "${BME_PROJECT_FILE}" || {
 		local rc_value=$?
 		bme_log "project file at '${project_dir}/${BME_PROJECT_FILE}' failed while loading: (${C_RED}${rc_value}${C_NC})" error
 		cd "${current_dir}"
@@ -259,23 +261,37 @@ local project_dir="${1}"
 
 	bme_log "project ${C_BOLD}'${BME_PROJECT_NAME}'${C_NC} environment..." loading
 	export BME_PROJECT_DIR="${project_dir}"
+	if [ -z "${BME_PROJECT_CONFIG_DIR}" ]; then
+	# "standard" project config dir
+		export BME_PROJECT_CONFIG_DIR="${BME_PROJECT_DIR}/${BME_HIDDEN_DIR}"
+	else
+	# BME_PROJECT_CONFIG_DIR has been customized
+		if [[ "${BME_PROJECT_CONFIG_DIR}" == /* ]]; then
+		# if BME_PROJECT_CONFIG_DIR, starts with a slash, we'll consider it an absolute path
+			export BME_PROJECT_CONFIG_DIR=$(realpath "${BME_PROJECT_CONFIG_DIR}")
+		else
+		# else, relative to project dir
+			export BME_PROJECT_CONFIG_DIR=$(realpath "${BME_PROJECT_DIR}/${BME_PROJECT_CONFIG_DIR}")
+		fi
+	fi
 	BME_ORIG_PATH=$PATH
 
 	# Checks if current dir is within a git sandbox
 	if git rev-parse --git-dir > /dev/null 2>&1; then
 		BME_WITHIN_GIT=true
 		# Checks .gitignore properties
-		if ! git check-ignore -q "${BME_PROJECT_DIR}/${BME_HIDDEN_DIR}/"; then
-			bme_log "${C_BOLD}'${BME_HIDDEN_DIR}/'${C_NC} is not in your ${C_BOLD}'.gitignore'${C_NC} file.  You should add it." warning 1
-		fi
-		if ! [[ -d ${BME_PROJECT_DIR}/${BME_HIDDEN_DIR} ]]; then
-			bme_log "${C_BOLD}'${BME_PROJECT_DIR}/${BME_HIDDEN_DIR}/'${C_NC} directory requested, but not found." warning 1
-			mkdir ${BME_PROJECT_DIR}/${BME_HIDDEN_DIR}
-			bme_log "${C_BOLD}'${BME_PROJECT_DIR}/${BME_HIDDEN_DIR}/'${C_NC} created." info 1
+		if ! git check-ignore -q "${BME_PROJECT_CONFIG_DIR}/"; then
+			bme_log "${C_BOLD}'${BME_PROJECT_CONFIG_DIR}/'${C_NC} is not in your ${C_BOLD}'.gitignore'${C_NC} file.  You should add it." warning 1
 		fi
 	else
 		BME_WITHIN_GIT=false
 		bme_log "Directory ${C_BOLD}'${PWD}'${C_NC} is not within a git sandbox." info 1
+	fi
+	# one way or the other, let's create the project's config dir
+	if ! [[ -d ${BME_PROJECT_CONFIG_DIR} ]]; then
+		bme_log "${C_BOLD}'${BME_PROJECT_CONFIG_DIR}/'${C_NC} directory requested, but not found." warning 1
+		mkdir --parents ${BME_PROJECT_CONFIG_DIR} || return $?
+		bme_log "${C_BOLD}'${BME_PROJECT_CONFIG_DIR}/'${C_NC} created." info 1
 	fi
 
 	# Activates requested modules (if any)
@@ -341,6 +357,7 @@ local allowed_callers=('__bme_load_project' 'bme_eval_dir')
 	unset BME_WITHIN_GIT
 	unset BME_PROJECT_NAME
 	unset BME_PROJECT_DIR
+	unset BME_PROJECT_CONFIG_DIR
 	unset BME_MODULES
 	bme_log "Project ${C_BOLD}'${project_name}'${C_NC} cleaned." cleaning
 }

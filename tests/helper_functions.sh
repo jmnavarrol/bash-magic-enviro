@@ -27,6 +27,7 @@ local _i _char _escape=0
 		done
 		stripped_output+="${stripped_line}"
 	done
+	unset line
 
 	echo -en "${stripped_output}"
 }

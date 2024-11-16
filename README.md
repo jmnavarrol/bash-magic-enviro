@@ -215,13 +215,29 @@ Once you properly installed and configured your console for *Bash Magic Enviro*,
    ```
    **NOTE:** if you tweaked your project's environment beyond BME's modules support (i.e.: you sourced you own project-level functions, exported some environment variables, etc.), remember cleaning after yourself with the help of [BME's custom clean function](#custom_clean).
 
-*Bash Magic Enviro* can also add project-related configuration on its own (i.e.: local configurations, supporting tools' repositories, etc.).  This tool reserves the **'.bme.d/'** directory under your project's root for those, and it will create it upon entering the project's dir if it doesn't exist, so you should add it to your project's *'.gitignore'* file, i.e.:
+*Bash Magic Enviro* also adds project-related configuration on its own (i.e.: local configurations, supporting tools' repositories, etc.).  This tool reserves by default the **'.bme.d/'** directory under your project's root for those, and it will create it upon entering the project's dir if it doesn't exist, so you should add it to your project's *'.gitignore'* file, i.e.:
 ```shell
 # This is the project's main '.gitignore' file
 
 # Bash Magic Enviro related
 .bme.d/
 ```
+
+**NOTE:** the project-level configuration directory path is stored on the global variable **BME_PROJECT_CONFIG_DIR**.  As it's been stated, its default value is *"${BME_PROJECT_DIR}/${BME_HIDDEN_DIR}"* (that is, *'.bme.d/'* under de project's root).  In case you need it, you can set *BME_PROJECT_CONFIG_DIR* to a different value in your *.bme_project* file.  If the path starts with a slash *'/'* it will be considered absolute; without a slash *'/'*, it will be relative to your project's root dir:
+* absolute path:
+  ```bash
+  # on .bme_project file:
+  # creates the '/some/absolute/path' directory to store this project's config/hidden files
+  BME_PROJECT_CONFIG_DIR='/some/absolute/path'
+  ```
+* relative path:
+  ```bash
+  # on .bme_project file:
+  # creates the '${BME_PROJECT_DIR}/.subpath' directory to store this project's config/hidden files
+  BME_PROJECT_CONFIG_DIR='.subpath'
+  ```
+  
+In case you tweak this *BME_PROJECT_CONFIG_DIR*, make sure your user has permissions to create the directory and write on it.  You also should take care no two different projects use the same *BME_PROJECT_CONFIG_DIR* path.
 
 See also the included [example project](./example-project).
 

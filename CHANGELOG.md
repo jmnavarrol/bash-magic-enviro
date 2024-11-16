@@ -2,6 +2,7 @@
 
 ## Next Release
 * differences from [previous tag](/../../compare/v1.8.1…main).
+* [#8](../../issues/8): new project environment variable **BME_PROJECT_CONFIG_DIR** allows setting per-project *"hidden dir"*.
 * __bme_debug(): behaviour refactored so it emits the message passed as param instead of a return code.
 * unittest framework:
   * offers better isolation for each test script.
