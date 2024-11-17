@@ -12,6 +12,8 @@ function main() {
 
 # Creates a project within SCRATCH_DIR
 prepare_environment() {
+	test_title ''
+
 	export CUSTOM_PROJECT_DIR="${HOME}/test_project"
 # custom project
 	mkdir "${CUSTOM_PROJECT_DIR}"
@@ -19,10 +21,12 @@ prepare_environment() {
 	cat <<- EOF > "${CUSTOM_PROJECT_DIR}/.bme_project"
 	BME_PROJECT_NAME='test_project'
 	EOF
+	file_contents=`cat "${CUSTOM_PROJECT_DIR}/.bme_project"`
 
-	echo "---> BME PROJECT FILE:"
-	cat "${CUSTOM_PROJECT_DIR}/.bme_project"
-	echo "<--- END OF BME PROJECT FILE"
+	test_log "${T_BOLD}---> BME PROJECT FILE START${T_NC}"
+	test_log "${file_contents}"
+	test_log "${T_BOLD}<--- BME PROJECT FILE END${T_NC}"
+
 # project whitelisting
 	mkdir "${HOME}/.bme.d"
 	cat <<- EOF > "${HOME}/.bme.d/whitelistedpaths"
@@ -30,19 +34,30 @@ prepare_environment() {
 		[${CUSTOM_PROJECT_DIR}]=true
 	)
 	EOF
+	file_contents=`cat "${HOME}/.bme.d/whitelistedpaths"`
 
-	echo "---> WHITELIST FILE:"
-	cat "${HOME}/.bme.d/whitelistedpaths"
-	echo "<--- END OF WHITELIST FILE"
+	test_log "${T_BOLD}---> WHITELIST FILE START${T_NC}"
+	test_log "${file_contents}"
+	test_log "${T_BOLD}<--- WHITELIST FILE END${T_NC}"
+
+	unset file_contents
+	test_log "${T_GREEN}OK${T_NC}"
 }
 
 
 # tests single .bme_env file at project dir
 check_root_bme_env() {
+	test_title "asserts that '.bme_env' at project's root loads properly"
+
 # custom root .bme_env
 	cat <<- EOF > "${CUSTOM_PROJECT_DIR}/.bme_env"
 	echo "LOADING ROOT .BME_ENV AT '${CUSTOM_PROJECT_DIR}'."
 	EOF
+	file_contents=`cat "${CUSTOM_PROJECT_DIR}/.bme_env"`
+	test_log "${T_BOLD}---> BME_ENV FILE START${T_NC}"
+	test_log "${file_contents}"
+	test_log "${T_BOLD}<--- BME_ENV FILE END${T_NC}"
+
 # within a subshell to avoid environment corruption
 	(
 		source bash-magic-enviro
@@ -52,21 +67,33 @@ check_root_bme_env() {
 
 	# assert-like
 		if ! [[ "${stripped_output}" =~ .*"LOADING ROOT .BME_ENV AT '${CUSTOM_PROJECT_DIR}'.".* ]]; then
-			echo "${function_output}"
-			echo "ERROR: '${FUNCNAME}') test FAILED."
+			test_log "while running ${T_BOLD}'${FUNCNAME}${T_NC}':" error
+			test_log "${T_BOLD}---> OUTPUT START${T_NC}" '' 2
+			test_log "${function_output}" '' 2
+			test_log "${T_BOLD}<--- OUTPUT END${T_NC}" '' 2
 			return 1
 		fi
 	) || return $?
+
+	unset file_contents
+	test_log "${T_GREEN}OK${T_NC}"
 }
 
 
 # Reaches a deep .bme_env file in a single drop
 check_deep_bme_env() {
+	test_title 'Reaches a deep .bme_env file in a single drop'
+
 # custom deep .bme_env
 	mkdir "${CUSTOM_PROJECT_DIR}/deeper"
 	cat <<- EOF > "${CUSTOM_PROJECT_DIR}/deeper/.bme_env"
 	echo "LOADING DEEPER .BME_ENV AT '${CUSTOM_PROJECT_DIR}/deeper'."
 	EOF
+	file_contents=`cat "${CUSTOM_PROJECT_DIR}/deeper/.bme_env"`
+	test_log "${T_BOLD}---> DEEP BME_ENV FILE START${T_NC}"
+	test_log "${file_contents}"
+	test_log "${T_BOLD}<--- DEEP BME_ENV FILE END${T_NC}"
+
 # within a subshell to avoid environment corruption
 	(
 		source bash-magic-enviro
@@ -79,26 +106,35 @@ check_deep_bme_env() {
 			| grep --extended-regexp --count \
 			.*"LOADING ROOT .BME_ENV AT '${CUSTOM_PROJECT_DIR}'.".*
 		)
+
 	# Root .bme_env file should be loaded exactly once
 		if (( 1 != ${root_match_count} )); then
-			echo "${function_output}"
-			echo "ERROR: '${FUNCNAME}' test FAILED."
-			echo "ROOT .bme_env WASN'T LOADED EXACTLY ONCE (count '${root_match_count}')."
+			local err_msg="while running ${T_BOLD}'${FUNCNAME}${T_NC}':"
+			err_msg+="\n\tROOT .bme_env WASN'T LOADED EXACTLY ONCE (count '${root_match_count}')."
+			test_log "${err_msg}" error
 			return 1
 		fi
 	# Deeper .bme_env file should also be loaded
 		if ! [[ "${stripped_output}" =~ .*"LOADING DEEPER .BME_ENV AT '${CUSTOM_PROJECT_DIR}/deeper'.".* ]]; then
-			echo "${function_output}"
-			echo "ERROR: '${FUNCNAME}' test FAILED."
-			echo "DEEPER .bme_env WASN'T PROPERLY LOADED."
+			local err_msg="while running ${T_BOLD}'${FUNCNAME}${T_NC}':"
+			err_msg+="\n\tDEEPER .bme_env WASN'T PROPERLY LOADED."
+			test_log "${err_msg}" error
+			test_log "${T_BOLD}---> OUTPUT START${T_NC}" '' 2
+			test_log "${function_output}" '' 2
+			test_log "${T_BOLD}<--- OUTPUT END${T_NC}" '' 2
 			return 1
 		fi
 	) || return $?
+
+	unset file_contents
+	test_log "${T_GREEN}OK${T_NC}"
 }
 
 
 # Goes in and out subdirectories
 check_back_and_forth() {
+	test_title "goes in and out subirectories"
+
 	mkdir "${CUSTOM_PROJECT_DIR}/other"
 # within a subshell to avoid environment corruption
 	(
@@ -116,19 +152,24 @@ check_back_and_forth() {
 		)
 
 		if (( 1 != ${root_match_count} )); then
-			echo "${function_output}"
-			echo "ERROR: '${FUNCNAME}' test FAILED."
-			echo "ROOT .bme_env WASN'T LOADED EXACTLY ONCE (count '${root_match_count}')."
+			local err_msg="while running ${T_BOLD}'${FUNCNAME}${T_NC}':"
+			err_msg+="\n\tROOT .bme_env WASN'T LOADED EXACTLY ONCE (count '${root_match_count}')."
+			test_log "${err_msg}" error
 			return 1
 		fi
 
 		if ! [[ "${stripped_output}" =~ .*"LOADING DEEPER .BME_ENV AT '${CUSTOM_PROJECT_DIR}/deeper'.".* ]]; then
-			echo "${function_output}"
-			echo "ERROR: '${FUNCNAME}' test FAILED."
-			echo "DEEPER .bme_env WASN'T PROPERLY LOADED."
+			local err_msg="while running ${T_BOLD}'${FUNCNAME}${T_NC}':"
+			err_msg+="\n\tDEEPER .bme_env WASN'T PROPERLY LOADED."
+			test_log "${err_msg}" error
+			test_log "${T_BOLD}---> OUTPUT START${T_NC}" '' 2
+			test_log "${function_output}" '' 2
+			test_log "${T_BOLD}<--- OUTPUT END${T_NC}" '' 2
 			return 1
 		fi
 	) || return $?
+
+	test_log "${T_GREEN}OK${T_NC}"
 }
 
 

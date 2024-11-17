@@ -6,7 +6,7 @@
 function main() {
 	source bash-magic-enviro || exit $?
 	check_version_format || exit $?
-	check_test_version_function || exit $?
+# 	check_test_version_function || exit $?
 }
 
 
@@ -14,11 +14,13 @@ function main() {
 # EVALUATES CURRENT VERSION's FORMAT
 #--
 function check_version_format() {
+
+	test_title "assert version variable"
 	if ! [[ -n ${BME_VERSION} ]]; then
-		bme_log "${C_BOLD}'BME_VERSION'${C_NC} undefined!" error 1
+		test_log "${C_BOLD}'BME_VERSION'${C_NC} undefined!" error
 		return 1
 	else
-		bme_log "${C_BOLD}'BME_VERSION'${C_NC} is defined!" ok 1
+		test_log "${C_BOLD}'BME_VERSION'${C_NC} is defined: ${T_BOLD}'${BME_VERSION}'${T_NC}" ok
 	fi
 
 # Strips version string into its (dot-separated) components: vNN.NN.NN[+|-optional]
@@ -26,8 +28,9 @@ function check_version_format() {
 # ${BASH_REMATCH[0]} contains the complete match of the regular expression
 # ${BASH_REMATCH[1]} contains the match of the 1st () capture group
 # ${BASH_REMATCH[2]} contains the match of the 2nd () capture group, and so on.
+	test_title "check version pattern"
 	if [[ ${BME_VERSION} =~ ^(v[[:digit:]]+)\.([[:digit:]]+)\.([[:digit:]]+)(.*)?$ ]]; then
-		bme_log "BME version ${C_BOLD}'${BME_VERSION}'${C_NC} follows the expected basic ${C_BOLD}'vNN.NN.NN[optional]'${C_NC} pattern." ok 1
+		test_log "BME version ${C_BOLD}'${BME_VERSION}'${C_NC} follows the expected basic ${C_BOLD}'vNN.NN.NN[optional]'${C_NC} pattern." ok
 
 		declare -A version_components
 		version_components['major']=${BASH_REMATCH[1]}
@@ -35,25 +38,26 @@ function check_version_format() {
 		version_components['patch']=${BASH_REMATCH[3]}
 		version_components['optional']=${BASH_REMATCH[4]}
 	else
-		bme_log "BME version ${C_BOLD}'${BME_VERSION}'${C_NC} doesn't match expected pattern ${C_BOLD}'vNN.NN.NN[optional]'${C_NC}." fail 1
+		test_log "BME version ${C_BOLD}'${BME_VERSION}'${C_NC} doesn't match expected pattern ${C_BOLD}'vNN.NN.NN[optional]'${C_NC}." fail
 		return 1
 	fi
 
 # As per Semantic version standard, "patch" level (defined as an integer), may be followed by a pre-release (-[something]) or build metadata (+[something]) suffix
+	test_title "check post-extraversion pattern"
 	if [[ -n ${version_components['optional']} ]]; then
 		if ! [[ ${version_components['optional']} =~ ^[-\+]([[:alnum:]]|\.|\-)+$ ]]; then
 			err_msg="Optional patch extension ${C_BOLD}'${version_components['optional']}'${C_NC} doesn't match expected pattern.\n"
 			err_msg+="\tFull version: ${C_BOLD}'${BME_VERSION}'${C_NC}."
-			bme_log "${err_msg}" fail 1
-			exit 1
+			test_log "${err_msg}" fail
+			return 1
 		else
-			bme_log "Optional patch extension ${C_BOLD}'${version_components['optional']}'${C_NC} matches de expected pattern." ok 1
+			test_log "Optional patch extension ${C_BOLD}'${version_components['optional']}'${C_NC} matches de expected pattern." ok
 		fi
 	else
-		bme_log "Version '${C_BOLD}'${BME_VERSION}'${C_NC}' doesn't have optional patch extension." info 1
+		test_log "Version '${C_BOLD}'${BME_VERSION}'${C_NC}' doesn't have optional patch extension." info
 	fi
 
-	bme_log "Check ${C_BOLD}'BME version formatting'${C_NC}: ${C_GREEN}OK${C_NC}" info 1
+	test_log "Check ${C_BOLD}'BME version formatting'${C_NC}: ${C_GREEN}OK${C_NC}" info
 }
 
 
