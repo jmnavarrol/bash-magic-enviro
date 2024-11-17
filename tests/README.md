@@ -10,6 +10,7 @@ The tests' entrypoint is the [maketests.sh](./maketests.sh) script:
    * **environment variables:** only those needed to launch the test scripts.
      * **PATH:** PATH is mangled so it includes the directory where BME code can be found.  That means that in order to load BME's entrypoint you just need to `source bash-magic-enviro` (just like it's expected for end-users to do on their Bash environments).
      * **HOME:** an empty directory that the tests may use (i.e.: it can mimick a user's home directory under which you can set a test project, etc.).  This scratch dir is deleted after each test unless it fails; in that case it is preserved for diagnosis.
+     * **CURRENT_TESTFILE_NUMBER:** *"internal"* counter that helps tests' presentation output from the *test_name()* helper function.  Do not modify.
 
 Test scripts can be either right under this tests directory or in subdirectories within for better organization.
 
