@@ -6,10 +6,10 @@
 # Checks Bash >= 4
 check_bash_version() {
 	if [ "${BASH_VERSINFO:-0}" -ge 4 ]; then
-		echo -e "${C_BOLD}*${C_NC} Bash version ${C_GREEN}OK${C_NC}: ${BASH_VERSION}."
+		echo -e "${C_BOLD}* Bash version ${BASH_VERSION}${C_NC}: ${C_GREEN}OK${C_NC}"
 	else
 		echo -e "${C_BOLD}*${C_NC} ${C_RED}ERROR:${C_NC} ${C_BOLD}BASH VERSION ERROR${C_NC}."
-		echo -e "\tYour Bash version should be ${C_BOLD}5 or higher${C_NC}: ${BASH_VERSION}."
+		echo -e "\tYour Bash version should be ${C_BOLD}4 or higher${C_NC}: ${BASH_VERSION}."
 		error_dependencies=true
 	fi
 }
@@ -36,28 +36,22 @@ check_git_version() {
 		local git_major="${git_version%%\.*}"
 		local git_minor="${git_version#*\.}"
 		      git_minor="${git_minor%%\.*}"
-		      
+
 		local bad_git_version=true
 		if [ "${git_major}" -ge 2 ]; then
 			if [ "${git_minor}" -ge 9 ]; then
 				bad_git_version=false
 			fi
 		fi
-		
+
 		if ($bad_git_version); then
 			local log_msg="${C_YELLOW}WARNING:${C_NC} Detected git version ${C_BOLD}'${git_version}'${C_NC} is lower than required: ${C_BOLD}'2.9'${C_NC}.\n"
 			log_msg+="\tPlease upgrade."
 			echo -e "${log_msg}"
 			warning_dependencies=true
+		else
+			echo -e "${C_BOLD}*${C_NC} ${C_BOLD}Git version ${git_version}${C_NC}: ${C_GREEN}OK${C_NC}"
 		fi
-	fi
-
-	if [ "${BASH_VERSINFO:-0}" -ge 4 ]; then
-		echo -e "${C_BOLD}*${C_NC} Bash version ${C_GREEN}OK${C_NC}: ${BASH_VERSION}."
-	else
-		echo -e "${C_BOLD}*${C_NC} ${C_RED}ERROR:${C_NC} ${C_BOLD}BASH VERSION ERROR${C_NC}."
-		echo -e "\tYour Bash version should be ${C_BOLD}5 or higher${C_NC}: ${BASH_VERSION}."
-		error_dependencies=true
 	fi
 }
 
