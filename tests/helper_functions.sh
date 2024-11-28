@@ -61,9 +61,10 @@ local log_level=${3:-1}   # indentation level (with a default of 1)
 	done
 
 # Pad each line
-	for ((i=0; i<${#log_msg[@]}; ++i)); do
-		echo -e "${indented_prefix}${log_msg[$i]}"
+	for line in "${log_msg[@]}"; do
+		echo -e "${indented_prefix}${line}"
 	done
+	unset line
 }
 export -f test_log
 

@@ -80,8 +80,9 @@ local test_counter=0
 function check_environment() {
 	[ ${DEBUG:+1} ] && echo "BUILDDIR: '${BUILDDIR}'"
 	[ -d ${BUILDDIR} ] || {
-		echo "ERROR: BME code dir '${BUILDDIR}' doesn't exist."
-		echo -e "\tDid you run 'make build'?"
+		local err_msg="BME code dir ${T_BOLD}'${BUILDDIR}'${T_NC} doesn't exist."
+		err_msg+="\n\tDid you run ${T_BOLD}'make build'${T_NC}?"
+		test_log "${err_msg}" error 0
 		return 1
 	}
 	[ ${DEBUG:+1} ] && tree ${BUILDDIR} || return 0

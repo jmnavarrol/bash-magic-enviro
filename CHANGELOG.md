@@ -2,6 +2,7 @@
 
 ## Next Release
 * differences from [previous tag](/../../compare/v1.8.2…main).
+* minor updates on unit test framework.
 
 ## v1.8.2 (2024-NOV-22)
 * differences from [previous tag](/../../compare/v1.8.1…v1.8.2).
