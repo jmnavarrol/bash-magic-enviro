@@ -17,8 +17,9 @@ readonly MANDATORY_VARS=(
 	'BUILDDIR'
 	'DESTDIR'
 )
-readonly INSTALL_TRACKER='./.installdir'
-readonly DEV_TRACKER='./.devinstalldir'
+readonly BASE_DIR=$(dirname $(readlink --canonicalize --verbose ${BASH_SOURCE[0]}))
+readonly INSTALL_TRACKER="${BASE_DIR}/.installdir"
+readonly DEV_TRACKER="${BASE_DIR}/.devinstalldir"
 
 
 #---
@@ -87,6 +88,8 @@ local uninstall_dirs=("${DESTDIR}")
 		if [ -r "${tracker}" ]; then
 			echo -e "\t${C_GREEN}INFO:${C_NC} loading setup info from ${C_BOLD}'${tracker}'${C_NC}"
 			source "${tracker}"
+		else
+			echo -e "\t${C_YELLOW}WARNING:${C_NC} setup info ${C_BOLD}'${tracker}'${C_NC} couldn't be found."
 		fi
 	done
 # Prepares a list of directories to uninstall from
@@ -124,7 +127,7 @@ case "$1" in
 	'install' \
 	| 'dev' \
 	| 'uninstall')
-		make_${1}
+		make_${1} || exit $?
 	;;
 	*)
 		echo -e "${C_RED}ERROR:${C_NC} Requested operation was ${C_BOLD}'${1}'${C_NC}."

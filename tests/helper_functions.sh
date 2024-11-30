@@ -27,9 +27,9 @@ export -f test_title
 # 2st param: 'log_type': log prefix, i.e.: ERROR, WARNING, empty string...
 # 3st param: 'log_level': sets the indentation level of the log output, defaults to '1'
 function test_log() {
-local log_msg="${1}"
-local log_type="${2^^}"   # second param (uppercased)
-local log_level=${3:-1}   # indentation level (with a default of 1)
+local log_msg="${1}"     # log message
+local log_type="${2^^}"  # log type (uppercased)
+local log_level=${3:-1}  # indentation level (with a default of 1)
 
 # Adds log type prefix
 	case "$log_type" in
