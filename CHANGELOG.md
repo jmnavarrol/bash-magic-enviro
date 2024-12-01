@@ -2,8 +2,11 @@
 
 ## Next Release
 * differences from [previous tag](/../../compare/v1.8.2…main).
-* [#10](../../issues/10):
+* [#10](../../issues/10): `make uninstall` preserves contents it doesn't manage.
   * install/uninstall process moved to MANIFEST file based one.
+  * Added tests for this new feature.
+* **UPGRADE NOTES:**
+  * `make uninstall` no longer looks for *.installdir* and *.devinstalldir* under sources but **.MANIFEST** and **.MANIFEST.DEV** instead to *"remeber"* where BME was installed.  If you made use of these file contents you should review the new files and format and plan accordingly.
 
 ## v1.8.2 (2024-NOV-22)
 * differences from [previous tag](/../../compare/v1.8.1…v1.8.2).

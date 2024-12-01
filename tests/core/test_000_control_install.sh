@@ -12,6 +12,7 @@ function main() {
 # Set up environment
 	setup || return $?
 # Check script params
+	check_dev || return $?
 	check_install || return $?
 	check_uninstall || return $?
 
@@ -42,8 +43,44 @@ function setup() {
 shopt -u extglob dotglob
 
 
-function check_install() {
+function check_dev() {
+local install_tracker="${REPO_DIR}/.MANIFEST.DEV"
+
 	test_title ''
+
+	install_output=$("${REPO_DIR}/${INSTALL_SCRIPT}" dev) || {
+		local rc=$?
+		local err_msg="(${rc}) ${T_BOLD}error output:${T_NC}\n"
+		err_msg+="${install_output}"
+		test_log "${err_msg}" error
+		return $rc
+	}
+
+# Check that expected outputs are in place
+# 	tree -a "${HOME}"
+	if [ ! -r "${install_tracker}" ]; then
+		local err_msg="${T_BOLD}install${T_NC}:\n"
+		err_msg+="\tCouldn't find ${T_BOLD}'${install_tracker}'${T_NC}.\n"
+		err_msg+="${install_output}"
+		test_log "${err_msg}" error
+		unset install_output
+		return 1
+	else
+		local install_msg="Installed files:\n"
+		install_msg+=$(cat "${install_tracker}")
+		install_msg+="\n${T_BOLD}versus:${T_NC}\n"
+		install_msg+=$(tree -a "${DESTDIR}")
+		test_log "${install_msg}" info
+	fi
+	unset install_output
+	test_log 'install' OK
+}
+
+function check_install() {
+local install_tracker="${REPO_DIR}/.MANIFEST"
+
+	test_title ''
+
 	install_output=$("${REPO_DIR}/${INSTALL_SCRIPT}" install) || {
 		local rc=$?
 		local err_msg="(${rc}) ${T_BOLD}error output:${T_NC}\n"
@@ -53,13 +90,19 @@ function check_install() {
 	}
 # Check that expected outputs are in place
 # 	tree -a "${HOME}"
-	if [ ! -r "${REPO_DIR}/.installdir" ]; then
+	if [ ! -r "${install_tracker}" ]; then
 		local err_msg="${T_BOLD}install${T_NC}:\n"
-		err_msg+="\tCouldn't find ${T_BOLD}'${REPO_DIR}/.installdir'${T_NC}.\n"
+		err_msg+="\tCouldn't find ${T_BOLD}'${install_tracker}'${T_NC}.\n"
 		err_msg+="${install_output}"
 		test_log "${err_msg}" error
 		unset install_output
 		return 1
+	else
+		local install_msg="Installed files:\n"
+		install_msg+=$(cat "${install_tracker}")
+		install_msg+="\n${T_BOLD}versus:${T_NC}\n"
+		install_msg+=$(tree -a "${DESTDIR}")
+		test_log "${install_msg}" info
 	fi
 	unset install_output
 	test_log 'install' OK
@@ -67,6 +110,11 @@ function check_install() {
 
 function check_uninstall() {
 	test_title ''
+
+# Third-party modules should be preserved
+	touch "${DESTDIR}/${BME_BASENAME}_modules/faux.module"
+
+# Run uninstall
 	uninstall_output=$("${REPO_DIR}/${INSTALL_SCRIPT}" uninstall) || {
 		local rc=$?
 		local err_msg="(${rc}) ${T_BOLD}error output:${T_NC}\n"
@@ -74,7 +122,6 @@ function check_uninstall() {
 		test_log "${err_msg}" error
 		return $rc
 	}
-	echo -e "${uninstall_output}"
 # Check results
 	for bme_file in "${DESTDIR}/${BME_BASENAME}" "${DESTDIR}/${VERSION_FILE}"; do
 		if [ -f "${bme_file}" ]; then
@@ -84,6 +131,13 @@ function check_uninstall() {
 			return 1
 		fi
 	done
+
+	if [ ! -f "${DESTDIR}/${BME_BASENAME}_modules/faux.module" ]; then
+		local err_msg="${T_BOLD}uninstall${T_NC}:\n"
+		err_msg+="\t${T_BOLD}'${DESTDIR}/${BME_BASENAME}_modules/faux.module'${T_NC} should be preserved."
+		test_log "${err_msg}" error
+		return 1
+	fi
 
 	unset uninstall_output
 	test_log 'uninstall' OK
