@@ -55,6 +55,65 @@ check_git_version() {
 	fi
 }
 
+# Tests the ability to create a Python virtualenv
+check_virtualenv() {
+# Check for Python3
+	if which python3 > /dev/null; then
+		local PYTHON_CMD=`which python3`
+	elif which python > /dev/null; then
+		if [[ $(python --version 2>&1) =~ 'Python 3' ]]; then
+			local PYTHON_CMD=`which python`
+		fi
+	fi
+
+	if [ -n "${PYTHON_CMD}" ]; then
+		echo -e "* ${C_BOLD}"`${PYTHON_CMD} --version`": ${C_GREEN}OK${C_NC}"
+	else
+		local err_msg="No valid Python3 version found.\n"
+		err_msg+="\tYou won't be able to use Python virtualenv-related features."
+		warning_dependencies=true
+		return 1
+	fi
+
+# Check for virtualenv creation
+	venv_output=$("${PYTHON_CMD}" -m venv .here) || {
+		local rc_venv=$?
+		local err_msg="${C_RED}ERROR${C_NC} (${rc_venv}): "
+		err_msg+="${C_BOLD}Couldn't create a Python virtualenv:${C_NC}\n"
+		err_msg+="\t'${PYTHON_CMD} -m venv .here'"
+		err_msg+="\n${C_BOLD}OUTPUT FOLLOWS:${C_NC}\n"
+		err_msg+="${venv_output}"
+		echo -e "${err_msg}"
+		warning_dependencies=true
+		rm --recursive --force .here
+		return $rc_venv
+	}
+	unset venv_output
+# Activate the virtualenv and add some package (to make sure pip is there)
+	pip_install=$(
+		source .here/bin/activate \
+		&& pip install example-package-name-mc==0.0.1
+	) || {
+		local rc_pip=$?
+		local err_msg="${C_RED}ERROR${C_NC} (${rc_pip}): "
+		err_msg+="${C_BOLD}Couldn't create a Python virtualenv:${C_NC}\n"
+		err_msg+="\t'pip install example-package-name-mc==0.0.1'"
+		err_msg+="\n${C_BOLD}OUTPUT FOLLOWS:${C_NC}\n"
+		err_msg+="${pip_install}"
+		echo -e "${err_msg}"
+		warning_dependencies=true
+		rm --recursive --force .here
+		return $rc_pip
+	}
+	unset pip_install
+	rm --recursive --force .here
+
+# Final message
+	if [ ! true == "${warning_dependencies}" ]; then
+		echo -e "* ${C_BOLD}Python virtualenv management: ${C_GREEN}OK${C_NC}"
+	fi
+}
+
 # Checks if virtualenvwrapper can be found
 # This is not trivial, since "commands" are in fact sourced functions.
 # It means they can't be found neither by `which` nor as commands, hash... in subshells
@@ -113,7 +172,8 @@ check_jq() {
 check_bash_version
 check_destdir_in_path
 check_git_version
-check_virtualenvwrapper
+# check_virtualenvwrapper
+check_virtualenv
 check_md5sum
 check_flock
 check_jq

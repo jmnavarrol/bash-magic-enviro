@@ -94,6 +94,7 @@ install: check build $(DESTDIR)
 clean:
 	rm -rf $(BUILDDIR)
 	rm -rf tests/scratch
+	rm -rf .here
 	@echo -e "$${C_BOLD}'magic enviro'$${C_NC} sources cleaned: $${C_GREEN}OK$${C_NC}"
 
 uninstall: clean

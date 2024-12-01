@@ -53,6 +53,7 @@ local install_tracker="${REPO_DIR}/.MANIFEST.DEV"
 		local err_msg="(${rc}) ${T_BOLD}error output:${T_NC}\n"
 		err_msg+="${install_output}"
 		test_log "${err_msg}" error
+		unset install_output
 		return $rc
 	}
 

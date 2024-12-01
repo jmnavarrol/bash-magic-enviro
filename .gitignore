@@ -6,3 +6,4 @@ tmp/
 build/
 .MANIFEST
 .MANIFEST.DEV
+.here
