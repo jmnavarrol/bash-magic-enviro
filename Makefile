@@ -1,10 +1,11 @@
 # Main project's Makefile
 SHELL := /bin/bash
 
+export MAKEFILEDIR := $(shell dirname $(realpath $(firstword $(MAKEFILE_LIST))))
 export VERSION := $(shell cat ./VERSION)
 export DESTDIR := ${HOME}/bin
 export SRCDIR := src
-export BUILDDIR := build
+export BUILDDIR := ${MAKEFILEDIR}/build
 export BME_BASENAME := bash-magic-enviro
 export VERSION_FILE := ${BME_BASENAME}.version
 

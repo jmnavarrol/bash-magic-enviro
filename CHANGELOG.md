@@ -2,8 +2,8 @@
 
 ## Next Release
 * differences from [previous tag](/../../compare/v1.8.2…main).
-* minor updates on unit test framework.
-* minor updates on `make check`.
+* [#10](../../issues/10):
+  * install/uninstall process moved to MANIFEST file based one.
 
 ## v1.8.2 (2024-NOV-22)
 * differences from [previous tag](/../../compare/v1.8.1…v1.8.2).

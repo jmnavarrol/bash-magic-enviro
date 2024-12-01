@@ -3,23 +3,17 @@
 # Manages BME's install-related processes
 #
 # Expected environment variables:
-# SRCDIR: directory holding source code
-# BME_BASENAME: name of the main BME script (and derivatives)
-# VERSION_FILE: the name of templated file (its source will be found at ${SRCDIR}/${VERSION_FILE}.tpl)
 # BUILDDIR: the output directory (output file will be ${BUILDDIR}/${BME_BASENAME})
 # DESTDIR: BME install dir
 
 # GLOBALS
 readonly MANDATORY_VARS=(
-	'SRCDIR'
-	'BME_BASENAME'
-	'VERSION_FILE'
 	'BUILDDIR'
 	'DESTDIR'
 )
 readonly BASE_DIR=$(dirname $(readlink --canonicalize --verbose ${BASH_SOURCE[0]}))
-readonly INSTALL_TRACKER="${BASE_DIR}/.installdir"
-readonly DEV_TRACKER="${BASE_DIR}/.devinstalldir"
+readonly INSTALL_TRACKER="${BASE_DIR}/.MANIFEST"
+readonly DEV_TRACKER="${BASE_DIR}/.MANIFEST.DEV"
 
 
 #---
@@ -38,75 +32,97 @@ check_environment() {
 
 # BME full install
 make_install() {
-	for bme_item in "${BME_BASENAME}" "${VERSION_FILE}" "${BME_BASENAME}_modules"; do
-		if [ -L ${DESTDIR}/${bme_item} ]; then
-			echo -e "${C_YELLOW}WARNING:${C_NC} deleting ${C_BOLD}'${DESTDIR}/${bme_item}${C_NC}'"
-			rm -rf "${DESTDIR}/${bme_item}"
+# Cleaning previous install (if any)
+	uninstall_output=$(make_uninstall) || {
+		local rc=$?
+		local err_msg="${C_RED}ERROR${C_NC} (${rc}):"
+		err_msg+=" ${C_BOLD}while cleaning previous install${C_NC}.  Output follows:\n"
+		err_msg+="${uninstall_output}"
+		echo -e "${err_msg}"
+		unset uninstall_output
+		return $rc
+	}
+	unset uninstall_output
+
+# Now, the install process itself
+	mkdir --parents "${DESTDIR}/" || return $?
+	find "${BUILDDIR}" -mindepth 1 -printf '%P\n' \
+	| while read install_item; do
+		if [ -d "${BUILDDIR}/${install_item}" ]; then
+			mkdir --parents "${DESTDIR}/${install_item}" || return $?
+		else
+			cp --no-dereference --preserve=all \
+				"${BUILDDIR}/${install_item}" \
+				"${DESTDIR}/${install_item}" \
+				|| return $?
+			echo "${DESTDIR}/${install_item}" >> "${INSTALL_TRACKER}"
 		fi
 	done
-	cp --archive --verbose ${BUILDDIR}/. ${DESTDIR}
-	echo "LAST_INSTALL_DIR=${DESTDIR}" > "${INSTALL_TRACKER}"
 }
 
 
 # BME development mode
 make_dev() {
-# Symlinks source files
-	for bme_item in "${BME_BASENAME}" "${BME_BASENAME}_modules"; do
-		if ! [ -L ${DESTDIR}/${bme_item} ]; then
-			if [ -e ${DESTDIR}/${bme_item} ]; then
-				echo -e "${C_YELLOW}WARNING:${C_NC} deleting ${C_BOLD}'${DESTDIR}/${bme_item}${C_NC}'"
-				rm -rf "${DESTDIR}/${bme_item}"
-			fi
-			echo -e "${C_GREEN}INFO:${C_NC} creating ${C_BOLD}'${DESTDIR}/${bme_item}'${C_NC} symlink for development"
-			current_pwd="${PWD}"
-			( cd ${DESTDIR} && ln -s ${current_pwd}/${SRCDIR}/${bme_item} ${bme_item} )
+# Cleaning previous install (if any)
+	uninstall_output=$(make_uninstall) || {
+		local rc=$?
+		local err_msg="${C_RED}ERROR${C_NC} (${rc}):"
+		err_msg+=" ${C_BOLD}while cleaning previous install${C_NC}.  Output follows:\n"
+		err_msg+="${uninstall_output}"
+		echo -e "${err_msg}"
+		unset uninstall_output
+		return $rc
+	}
+	unset uninstall_output
+
+# Now, the dev install process itself
+	mkdir --parents "${DESTDIR}/" || return $?
+	find "${BUILDDIR}" -mindepth 1 -maxdepth 1 -printf '%P\n' \
+	| while read install_item; do
+		if [ -e "${DESTDIR}/${install_item}" ]; then
+			echo -e "\t${C_YELLOW}WARNING:${C_NC} deleting '${DESTDIR}/${install_item}'"
+			rm --force --recursive "${DESTDIR}/${install_item}"
 		fi
+		ln --symbolic \
+			"${BUILDDIR}/${install_item}" \
+			"${DESTDIR}/${install_item}" \
+			|| return $?
+		echo "${DESTDIR}/${install_item}" >> "${DEV_TRACKER}"
 	done
-# Templated files need to be taken from build directory
-	if ! [ -L ${DESTDIR}/${VERSION_FILE} ]; then
-		if [ -e ${DESTDIR}/${VERSION_FILE} ]; then
-			echo -e "${C_YELLOW}WARNING:${C_NC} deleting ${C_BOLD}'${DESTDIR}/${VERSION_FILE}'${C_NC}"
-			rm -rf "${DESTDIR}/${VERSION_FILE}"
-		fi
-		echo -e "${C_GREEN}INFO:${C_NC} creating ${C_BOLD}'${DESTDIR}/${VERSION_FILE}'${C_NC} symlink for development"
-		current_pwd="${PWD}"
-		( cd ${DESTDIR} && ln -s ${current_pwd}/${BUILDDIR}/${VERSION_FILE} ${VERSION_FILE} )
-	fi
-	echo "LAST_DEV_DIR=${DESTDIR}" > "${DEV_TRACKER}"
+	unset install_item
 }
 
 
 # BME uninstall
 make_uninstall() {
-local LAST_INSTALL_DIR="${DESTDIR}"
-local LAST_DEV_DIR="${DESTDIR}"
-local uninstall_dirs=("${DESTDIR}")
-
 # Grabs info about previous install processes
 	for tracker in "${INSTALL_TRACKER}" "${DEV_TRACKER}"; do
 		if [ -r "${tracker}" ]; then
 			echo -e "\t${C_GREEN}INFO:${C_NC} loading setup info from ${C_BOLD}'${tracker}'${C_NC}"
-			source "${tracker}"
+			while read -r line; do
+				local msg="\t${C_YELLOW}WARNING${C_NC}:"
+				msg+=" deleting '${line}'."
+				echo -e "${msg}"
+				rm --force --recursive "${line}" || return $?
+				local parent_dir=$(dirname "${line}")
+				if [ -d "${parent_dir}" ]; then
+					empty_dir=$(find "${parent_dir}" -maxdepth 0 -empty)
+					if [ -n "${empty_dir}" ]; then
+						local msg="\t${C_YELLOW}WARNING${C_NC}:"
+						msg+=" deleting empty dir '${parent_dir}'."
+						echo -e "${msg}"
+						rmdir "${parent_dir}"
+					fi
+					unset empty_dir
+				fi
+			done < "${tracker}"
+			unset line
+			rm --force "${tracker}"
 		else
-			echo -e "\t${C_YELLOW}WARNING:${C_NC} setup info ${C_BOLD}'${tracker}'${C_NC} couldn't be found."
+			echo -e "\t${C_YELLOW}WARNING:${C_NC} install info file ${C_BOLD}'${tracker}'${C_NC} couldn't be found."
 		fi
 	done
-# Prepares a list of directories to uninstall from
-	for directory in "${LAST_INSTALL_DIR}" "${LAST_DEV_DIR}"; do
-	# this adds directory to the uninstall dirs array if not yet included
-		if [[ ! " ${uninstall_dirs[*]} " =~ " ${directory} " ]]; then
-			uninstall_dirs+=("${directory}")
-		fi
-	done
-# The uninstall process itself
-	for directory in "${uninstall_dirs[@]}"; do
-		echo -e "\t${C_GREEN}INFO:${C_NC} Uninstalling from ${C_BOLD}'${directory}'${C_NC}"
-		rm -rf "${directory}/${BME_BASENAME}"
-		rm -rf "${directory}/${VERSION_FILE}"
-		rm -rf "${directory}/${BME_BASENAME}_modules"
-	done
-	rm -rf "${INSTALL_TRACKER}" "${DEV_TRACKER}"
+	unset tracker
 }
 
 
