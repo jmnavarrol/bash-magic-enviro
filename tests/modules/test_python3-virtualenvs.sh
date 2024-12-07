@@ -18,6 +18,7 @@ main() {
 	create_empty_virtualenv || return $?
 	create_virtualenv_with_extra_param || return $?
 	create_virtualenv_with_custom_pip || return $?
+	create_virtualenv_with_includes || return $?
 }
 
 
@@ -112,6 +113,7 @@ load_module() {
 
 	unset in_output out_output
 
+	cd &&  bme_eval_dir || return $?
 	test_log "${T_GREEN}OK${T_NC}"
 }
 
@@ -135,6 +137,8 @@ function call_virtualenv_without_param() {
 		test_log "${T_BOLD}<--- OUTPUT END${T_NC}"
 		return $rc
 	fi
+
+	cd &&  bme_eval_dir || return $?
 	test_log "${T_GREEN}OK${T_NC}"
 }
 
@@ -167,7 +171,8 @@ function create_empty_virtualenv() {
 			return 1
 		fi
 	done
-# 	rmvirtualenv 'test-virtualenv' || exit $?
+
+	cd &&  bme_eval_dir || return $?
 	test_log "${C_GREEN}OK${C_NC}"
 }
 
@@ -274,7 +279,90 @@ function create_virtualenv_with_custom_pip() {
 		return 1
 	}
 
+	cd &&  bme_eval_dir || return $?
 	test_log "virtualenv with custom pip" ok
+}
+
+
+function create_virtualenv_with_includes() {
+	source bash-magic-enviro || return $?
+	test_title ''
+
+# Creates a suitable requirements file
+	mkdir --parents "${project_dir}/python-virtualenvs" || return $?
+	cat <<- EOF > "${project_dir}/python-virtualenvs/with-includes.requirements"
+	example-package-name-mc==0.0.1
+	-r venv-include
+	EOF
+	local rc_code=$?
+	if (( $rc_code != 0 )); then
+		test_log "WHILE CREATING REQUIREMENTS FILE AT ${T_BOLD}'${project_dir}/python-virtualenvs/with-pip.requirements'${T_NC}." error
+		[ -r "${project_dir}/python-virtualenvs/with-pip.requirements" ] && {
+			file_contents=`cat "${project_dir}/python-virtualenvs/with-pip.requirements"`
+			test_log "${T_BOLD}---> REQUIREMENTS FILE START${T_NC}"
+			test_log "${file_contents}" '' 2
+			test_log "${T_BOLD}<--- REQUIREMENTS FILE END${T_NC}"
+			unset file_contents
+		}
+		return $rc_code
+	fi
+# ...and the included one
+	cat <<- EOF > "${project_dir}/python-virtualenvs/venv-include"
+	wheel==0.45.1
+	EOF
+	local rc_code=$?
+	if (( $rc_code != 0 )); then
+		test_log "WHILE CREATING REQUIREMENTS FILE AT ${T_BOLD}'${project_dir}/python-virtualenvs/venv-include'${T_NC}." error
+		[ -r "${project_dir}/python-virtualenvs/venv-include" ] && {
+			file_contents=`cat "${project_dir}/python-virtualenvs/venv-include"`
+			test_log "${T_BOLD}---> INCLUDED REQUIREMENTS FILE START${T_NC}"
+			test_log "${file_contents}" '' 2
+			test_log "${T_BOLD}<--- INCLUDED REQUIREMENTS FILE END${T_NC}"
+			unset file_contents
+		}
+		return $rc_code
+	fi
+
+# And then, a suitable .bme_env file
+	cat <<- 'EOF' > "${project_dir}/.bme_env"
+	load_virtualenv 'with-includes' || return $?
+	EOF
+	local rc_code=$?
+	if (( $rc_code != 0 )); then
+		test_log "WHILE CREATING .bme_env FILE AT ${T_BOLD}'${project_dir}/.bme_env'${T_NC}." error
+		[ -r "${project_dir}/.bme_env" ] && {
+			file_contents=`cat "${project_dir}/.bme_env"`
+			test_log "${T_BOLD}---> BME_ENV FILE START${T_NC}"
+			test_log "${file_contents}" '' 2
+			test_log "\n${T_BOLD}<--- BME_ENV FILE END${T_NC}"
+			unset file_contents
+		}
+		return $rc_code
+	fi
+
+# Load the environment and check the results
+	cd "${project_dir}" && bme_eval_dir || return $?
+	pip freeze --all | grep --quiet 'example-package-name-mc==0.0.1' || {
+		local err_msg="virtualenv with include doesn't include "
+		err_msg+="${T_BOLD}'example-package-name-mc==0.0.1'${T_NC} as it should.\n"
+		err_msg+="${T_BOLD}---> PIP FREEZE OUTPUT START${T_NC}\n"
+		err_msg+=`pip freeze --all`
+		err_msg+="\n${T_BOLD}<--- PIP FREEZE OUTPUT END${T_NC}"
+		test_log "${err_msg}" error
+		return 1
+	}
+	pip freeze --all | grep --quiet 'wheel==0.45.1' || {
+		local err_msg="virtualenv with include doesn't include "
+		err_msg+="${T_BOLD}'wheel==0.45.1'${T_NC} as it should.\n"
+		err_msg+="${T_BOLD}---> PIP FREEZE OUTPUT START${T_NC}\n"
+		err_msg+=`pip freeze --all`
+		err_msg+="\n${T_BOLD}<--- PIP FREEZE OUTPUT END${T_NC}"
+		test_log "${err_msg}" error
+		return 1
+	}
+
+	cd &&  bme_eval_dir || return $?
+	test_log "virtualenv with includes" ok
 }
 
 main; exit $?
