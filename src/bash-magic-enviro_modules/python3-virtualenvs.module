@@ -158,16 +158,10 @@ local with_requests="${2:-}"
 			|| return $?
 			bme_log "${C_BOLD}'${requested_virtualenv}'${C_NC} virtualenv activated." info
 		fi
-# 	if lsvirtualenv -b | grep -q ^${requested_virtualenv}$; then
-# 		if [[ `basename "${VIRTUAL_ENV}"` != "${requested_virtualenv}" ]]; then
-# 			workon ${requested_virtualenv}
-# 			bme_log "${C_BOLD}'${requested_virtualenv}'${C_NC} virtualenv activated." info
-# 		fi
 	else
 	# ...or create it otherwise
 		bme_log "Virtualenv ${C_BOLD}'${requested_virtualenv}'${C_NC} doesn't exist.  About to create it." info
 		__create_python_virtualenv "${requested_virtualenv}" || return $?
-# 		__create_python_virtualenv "${requested_virtualenv}" && workon "${requested_virtualenv}" || return $?
 	fi
 }
 
@@ -192,7 +186,7 @@ local requirements_file="${virtualenvs_requirements}/${requested_virtualenv}.req
 				touch "${requirements_file}"
 			fi
 
-			# virtualenv creation
+		# virtualenv creation
 			local virtualenv_error=false
 			# requirements file format can be picky about pip version.
 			# when pip is referenced in requirements file, let's create the virtualenv in three steps:
@@ -208,25 +202,19 @@ local requirements_file="${virtualenvs_requirements}/${requested_virtualenv}.req
 			if [ ! -z "${pip_found}" ]; then
 			# custom pip found in the requirements file
 				bme_log "Custom pip version requested." info 1
-				# 1. "empty" virtualenv (it also activates it)
+			# 1. "empty" virtualenv (it also activates it)
 				"${BME_PYTHON3_CMD}" -m venv "${virtualenvs_path}/${requested_virtualenv}" || return $?
 				source "${virtualenvs_path}/${requested_virtualenv}/bin/activate" || return $?
-# 				mkvirtualenv --python=${BME_PYTHON_VERSION} ${requested_virtualenv} || virtualenv_error=true
-
-				# 2. install pip
+			# 2. install pip
 				pip install "${pip_found}" || return $?
-# 				pip install "${pip_found}" || virtualenv_error=true
-				# 3. install the full requirements file
+			# 3. install the full requirements file
 				pip install --requirement "${requirements_file}" || return $?
-# 				pip install -r "${virtualenvs_requirements}/${requested_virtualenv}.requirements" || virtualenv_error=true
 			else
 			# no custom pip version: "standard" virtualenv creation
 				"${BME_PYTHON3_CMD}" -m venv "${virtualenvs_path}/${requested_virtualenv}" || return $?
 
 				source "${virtualenvs_path}/${requested_virtualenv}/bin/activate" || return $?
-
 				pip install --requirement "${requirements_file}" || return $?
-# 				mkvirtualenv --python=${BME_PYTHON_VERSION} ${requested_virtualenv} -r "${virtualenvs_requirements}/${requested_virtualenv}.requirements" || virtualenv_error=true
 			fi
 
 			if ($virtualenv_error); then
