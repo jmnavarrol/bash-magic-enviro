@@ -14,6 +14,9 @@ main() {
 # tests
 	create_project_config || return $?
 	load_module || return $?
+	call_virtualenv_without_param || return $?
+	create_empty_virtualenv || return $?
+	create_virtualenv_with_extra_param || return $?
 }
 
 
@@ -109,6 +112,116 @@ load_module() {
 	unset in_output out_output
 
 	test_log "${T_GREEN}OK${T_NC}"
+}
+
+
+function call_virtualenv_without_param() {
+	source bash-magic-enviro || return $?
+
+	test_title "call 'load_virtualenv' without parameters"
+	cd "${project_dir}" && bme_eval_dir || return $?
+	function_output=$(load_virtualenv 2>&1)
+	stripped_output=$(strip_escape_codes "${function_output}")
+
+	if [[ "${stripped_output}" =~ .*"mandatory param 'venv_name' not set".* ]]; then
+		test_log "Check ${C_BOLD}'virtualenv without param'${C_NC}: ${C_GREEN}OK${C_NC}" info
+	else
+		local rc=$?
+		local err_msg="Check ${C_BOLD}'virtualenv without param'${C_NC}:"
+		err_msg+="\n${T_BOLD}---> OUTPUT START${T_NC}"
+		test_log "${err_msg}" error
+		test_log "${function_output}" '' 2
+		test_log "${T_BOLD}<--- OUTPUT END${T_NC}"
+		return $rc
+	fi
+	test_log "${T_GREEN}OK${T_NC}"
+}
+
+
+function create_empty_virtualenv() {
+	source bash-magic-enviro || return $?
+
+	test_title "create an empty virtualenv"
+	cd "${project_dir}" && bme_eval_dir || return $?
+	function_output=$(load_virtualenv 'test-virtualenv' 2>&1) || rc=$?
+	if [[ -n $rc ]]; then
+		test_log "Check ${C_BOLD}'empty virtualenv creation'${C_NC}:" error
+		test_log "${T_BOLD}---> OUTPUT START${T_NC}"
+		test_log "${function_output}" '' 2
+		test_log "${T_BOLD}<--- OUTPUT END${T_NC}"
+		return $rc
+	fi
+	echo "${function_output}"
+	unset function_output
+
+# Checks the results
+	for file in \
+		"${BME_PROJECT_CONFIG_DIR}/python-virtualenvs.lockfile" \
+		"${BME_PROJECT_CONFIG_DIR}/python-virtualenvs.md5"
+	do
+		if ! [ -r "${file}" ]; then
+			err_msg="Check ${C_BOLD}'empty virtualenv creation'${C_NC}:\n"
+			err_msg+="\tExpected file ${C_BOLD}'${file}'${C_NC} not found."
+			test_log "${err_msg}" fail
+			return 1
+		fi
+	done
+# 	rmvirtualenv 'test-virtualenv' || exit $?
+	test_log "${C_GREEN}OK${C_NC}"
+}
+
+
+function create_virtualenv_with_extra_param() {
+	source bash-magic-enviro || return $?
+
+	test_title "create virtualenv with extra param for requirements:"
+	mkdir --parents "${project_dir}/requirements_subdir" || return $?
+	echo -e 'hello-hello' > "${project_dir}/requirements_subdir/requirements.txt" || return $?
+
+	cd "${project_dir}" && bme_eval_dir || return $?
+
+# Load a virtualenv with parameter
+	function_output=$(load_virtualenv 'test-virtualenv' 'requirements_subdir/requirements.txt' 2>&1) || rc=$?
+	if [[ -n $rc ]]; then
+		test_log "Check ${C_BOLD}'parameterized virtualenv creation'${C_NC}:" fail
+		test_log "${C_BOLD}---> OUTPUT START${C_NC}"
+		test_log "${function_output}" '' 1
+		test_log "${C_BOLD}<--- OUTPUT END${C_NC}"
+		return $rc
+	fi
+	unset function_output
+	bme_log "Check ${C_BOLD}'parameterized virtualenv creation'${C_NC}." ok
+
+# Load it again without changes
+	test_title "parameterized virtualenv reload"
+	function_output=$(load_virtualenv 'test-virtualenv' 'requirements_subdir/requirements.txt' 2>&1) || rc=$?
+	if [[ -n $rc ]]; then
+		test_log "Check ${C_BOLD}'parameterized virtualenv reactivation'${C_NC}:" fail
+		test_log "${C_BOLD}---> OUTPUT START${C_NC}"
+		test_log "${function_output}" '' 1
+		test_log "${C_BOLD}<--- OUTPUT END${C_NC}"
+		return $rc
+	else
+		test_log "Check ${C_BOLD}'parameterized virtualenv reactivation'${C_NC}." ok
+	fi
+
+# Load once again, this time with a change
+	test_title "load it again, with an update"
+	echo -e 'wheel' >> "${project_dir}/requirements_subdir/requirements.txt"
+	function_output=$(load_virtualenv 'test-virtualenv' 'requirements_subdir/requirements.txt' 2>&1) || rc=$?
+	if [[ -n $rc ]]; then
+		test_log "Check ${C_BOLD}'parameterized virtualenv update'${C_NC}:" fail
+		test_log "${C_BOLD}---> OUTPUT START${C_NC}"
+		test_log "${function_output}" '' 1
+		test_log "${C_BOLD}<--- OUTPUT END${C_NC}"
+		return $rc
+	else
+		test_log "Check ${C_BOLD}'parameterized virtualenv update'${C_NC}." ok
+	fi
+
+# Clean
+	cd "${HOME}" && bme_eval_dir || return $?
+	test_log "virtualenv with parameter management" ok
 }
 
 main; exit $?
