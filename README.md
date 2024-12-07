@@ -355,7 +355,7 @@ Remember that, in order to *"activate"* virtualenvwrapper, you need to source it
 
 By default, this module looks first for `python3 --version` output; if it doesn't find it, it also tries `python --version`, in case it defaults to >=3.
 
-You can also set the environment variable **BME_PYTHON_VERSION**, either on the `.bme_project` or a `.bme_env` file, to a valid Python executable path, i.e.: `export BME_PYTHON_VERSION='python3.11'` or `export BME_PYTHON_VERSION='/usr/local/bin/python3.11'` and this module will use it to build virtual environments.
+You can also set the environment variable **BME_PYTHON3_CMD**, either on the `.bme_project` or a `.bme_env` file, to a valid Python executable path, i.e.: `export BME_PYTHON3_CMD='python3.11'` or `export BME_PYTHON3_CMD='/usr/local/bin/python3.11'` and this module will use it to build virtual environments.
 
 See also [the included example](./example-project/virtualenv-example/.bme_env).
 

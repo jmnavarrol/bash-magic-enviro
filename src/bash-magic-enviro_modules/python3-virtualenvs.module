@@ -7,120 +7,57 @@
 # so it can regenerate the virtualenv when the md5sum doesn't match.
 
 virtualenvs_requirements="${BME_PROJECT_DIR}/python-virtualenvs"
-# Project-restricted locking and md5sums storage.
+# Project-restricted locking, md5sums and virtualenvs storage.
 virtualenvs_md5sums="${BME_PROJECT_CONFIG_DIR}/python-virtualenvs.md5"
 virtualenvs_lockfile="${BME_PROJECT_CONFIG_DIR}/python-virtualenvs.lockfile"
+virtualenvs_path="${BME_PROJECT_CONFIG_DIR}/.virtualenvs"
 
 python3-virtualenvs_load() {
 local unmet_dependencies=false
 
-# Checks md5sum availability
-	if ! which md5sum > /dev/null; then
-		bme_log "${C_BOLD}'md5sum'${C_NC} not found.  Please install ${C_BOLD}'coreutils'${C_NC} package." error 1
-		unmet_dependencies=true
-	fi
-# Checks flock availability
-	if ! which flock > /dev/null; then
-		bme_log "${C_BOLD}'flock'${C_NC} not found.  Please install ${C_BOLD}'util-linux'${C_NC} package." error 1
-		unmet_dependencies=true
-	fi
-
 # Checks Python3 availability
-	# check if an explicit Python runtime has been requested
-	if [[ -n "${BME_PYTHON_VERSION}" ]]; then
-	# explicit Python requested: check its version
-		local explicit_python_msg="Explicit Python version requested: ${C_BOLD}'${BME_PYTHON_VERSION}'${C_NC}... "
-		if [[ $(${BME_PYTHON_VERSION} --version 2>&1) =~ 'Python 3' ]]; then
-			explicit_python_msg+="${C_GREEN}OK${C_NC}"
-			local explicit_python_msg_level='INFO'
+	if [ -n "${BME_PYTHON3_CMD}" ]; then
+	# explicit python3 cmd requested.  Check it
+		if python_version=$(${BME_PYTHON3_CMD} --version 2>&1); then
+			bme_log "explicit Python3 cmd requested: ${C_BOLD}'${python_version}'${C_NC}" ok 1
 		else
-			explicit_python_msg+="${C_RED}KO${C_NC}"
-			local explicit_python_msg_level='ERROR'
-			unmet_dependencies=true
-		fi
-		bme_log "${explicit_python_msg}" "${explicit_python_msg_level}" 1
-	else
-	# no explicit version requested; trying to find a suitable one
-		# for some reason, Python sends --version output to STDERR instead of STDOUT
-		if which python3 > /dev/null; then
-			export BME_PYTHON_VERSION=`which python3`
-		elif which python > /dev/null; then
-			if [[ $(python --version 2>&1) =~ 'Python 3' ]]; then
-				export BME_PYTHON_VERSION=`which python`
-			else
-				bme_log "No valid Python3 executable found." error 1
-				unmet_dependencies=true
-			fi
-		else
-			bme_log "No valid Python executable found." error 1
-			unmet_dependencies=true
-		fi
-	fi
-
-# Checks virtualenvwrapper availability and other requirements
-	if hash workon 2>/dev/null; then
-		# makes sure virtualenvs' directory for requirements files is in place
-		if ! [[ -d "${virtualenvs_requirements}" ]]; then
-			if mkdir --parents "${virtualenvs_requirements}/"; then
-				bme_log "${C_BOLD}'${virtualenvs_requirements}/'${C_NC} created." info 1
-			else
-				local mkdir_rc=$?
-				bme_log "Couldn't create ${C_BOLD}'${virtualenvs_requirements}/'${C_NC} (${mkdir_rc})" error 1
-				unmet_dependencies=true
-			fi
-		fi
-		# Makes sure virtualenvs' md5sum file is in place
-		if [ ! -r "${virtualenvs_md5sums}" ]; then
-			if touch "${virtualenvs_md5sums}"; then
-				bme_log "File ${C_BOLD}'${virtualenvs_md5sums}'${C_NC} created." info 1
-			else
-				bme_log "Couldn't touch ${C_BOLD}'${virtualenvs_md5sums}'${C_NC}" error 1
-				unmet_dependencies=true
-			fi
-		fi
-		# Sets project-restricted virtualenvs "home"
-		if [ -n "${WORKON_HOME}" ]; then
-			export BME_ORIG_WORKON_HOME="${WORKON_HOME}"
-			export WORKON_HOME="${BME_PROJECT_CONFIG_DIR}/.virtualenvs"
-		else
-			local err_msg="virtualenvwrapper's ${C_BOLD}'WORKON_HOME'${C_NC} environment variable undetected.\n"
-			err_msg+="\t\tis virtualenvwrapper properly configured?"
-			bme_log "${err_msg}" error 1
+			bme_log "wrong python3 cmd requested: ${C_BOLD}'${BME_PYTHON3_CMD}'${C_NC}" fail 1
 			unmet_dependencies=true
 		fi
 	else
-		bme_log "${C_BOLD}virtualenvwrapper tool undetected${C_NC}.  You should install it for virtualenvs support." error 1
-		unmet_dependencies=true
+	# no explicit python3 cmd requested.  Let's find a suitable one
+		if python_version=$(python3 --version 2>&1); then
+			export BME_PYTHON3_CMD=`which python3`
+		elif python_version=$(python --version 2>&1); then
+			export BME_PYTHON3_CMD=`which python`
+		else
+			bme_log "${C_BOLD}no suitable Python3 found.${C_NC}" fail 1
+			unmet_dependencies=true
+		fi
 	fi
 
 # Final message
 	if ($unmet_dependencies); then
 		python3-virtualenvs_unload
 		bme_log "${C_BOLD}'python3-virtualenvs'${C_NC} not loaded. See missed dependencies above." error 1
-		return -1
+		return 1
 	else
-		local log_msg="${C_BOLD}'python3-virtualenvs'${C_NC} "
-		log_msg+="(${C_BOLD}$(${BME_PYTHON_VERSION} --version 2>&1)${C_NC}) "
-		log_msg+="loaded."
+		local log_msg="${C_BOLD}'python3-virtualenvs'${C_NC} loaded."
+		log_msg+="\n\t\tUsing ${C_BOLD}'${BME_PYTHON3_CMD}' (${python_version})${C_NC}"
 		bme_log "${log_msg}" info 1
 		bme_log "${C_BOLD}load_virtualenv 'venv_name'${C_NC} - Loads the Python virtualenv by name ${C_BOLD}'venv_name'${C_NC}." function 2
 	fi
+	unset python_version
 }
 
 
 python3-virtualenvs_unload() {
-	[ "$VIRTUAL_ENV" ] && deactivate  # deactivates virtualenv (if any active)
-	if [ -n "${BME_ORIG_WORKON_HOME}" ]; then
-		export WORKON_HOME="${BME_ORIG_WORKON_HOME}"
-		unset BME_ORIG_WORKON_HOME
-	else
-		unset WORKON_HOME
-	fi
 	unset -f load_virtualenv
-	unset BME_PYTHON_VERSION
+	unset BME_PYTHON3_CMD
 	unset virtualenvs_requirements
 	unset virtualenvs_md5sums
 	unset virtualenvs_lockfile
+	unset virtualenvs_path
 	unset -f __create_python_virtualenv
 	unset -f __check_requirements_includes
 }
