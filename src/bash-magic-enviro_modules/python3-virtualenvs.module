@@ -57,6 +57,16 @@ local unmet_dependencies=false
 		fi
 	fi
 
+# Let's play nice with virtualenvwrapper, if present
+	if hash workon 2>/dev/null; then
+		bme_log "${C_BOLD}Python virtualenwrapper found${C_BOLD}.  Adding support." info 1
+	# Sets project-restricted virtualenvwrapper's "home"
+		if [ -n "${WORKON_HOME}" ]; then
+			export BME_ORIG_WORKON_HOME="${WORKON_HOME}"
+			export WORKON_HOME="${virtualenvs_path}"
+		fi
+	fi
+
 # Final message
 	if ($unmet_dependencies); then
 		python3-virtualenvs_unload
@@ -74,12 +84,22 @@ local unmet_dependencies=false
 
 python3-virtualenvs_unload() {
 	[ "$VIRTUAL_ENV" ] && deactivate  # deactivates virtualenv (if any active)
-	unset -f load_virtualenv
+
+# Restoring virtualenvwrapper config (if any)
+	if [ -n "${BME_ORIG_WORKON_HOME}" ]; then
+		export WORKON_HOME="${BME_ORIG_WORKON_HOME}"
+		unset BME_ORIG_WORKON_HOME
+	else
+		unset WORKON_HOME
+	fi
+
 	unset BME_PYTHON3_CMD
 	unset virtualenvs_requirements
 	unset virtualenvs_md5sums
 	unset virtualenvs_lockfile
 	unset virtualenvs_path
+
+	unset -f load_virtualenv
 	unset -f __create_python_virtualenv
 	unset -f __check_requirements_includes
 }

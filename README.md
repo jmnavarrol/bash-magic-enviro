@@ -112,24 +112,28 @@ HEAD is now at 6661389 Version bumped: 1.4.7-1
 ```
 ```bash
 ~/REPOS/bash-magic-enviro$ make install
+Building BME modules...
+        installing module 'src/bash-magic-enviro_modules/aws-support.module'
+        installing module 'src/bash-magic-enviro_modules/bindir.module'
+        installing module 'src/bash-magic-enviro_modules/githooks.module'
+        installing module 'src/bash-magic-enviro_modules/python3-virtualenvs.module'
+        installing module 'src/bash-magic-enviro_modules/python3-virtualenvs.old.module'
+        installing module 'src/bash-magic-enviro_modules/terraform-support.module'
+Building BME modules: DONE!
+Building BME: DONE!
 Checking requirements...
-* Bash version OK: 5.2.15(1)-release.
+* Bash version 5.2.15(1)-release: OK
 * '~/bin' is in PATH: OK
-* 'virtualenvwrapper' found: OK
-        Sourced from '/usr/share/virtualenvwrapper/virtualenvwrapper.sh'.
+* Git version 2.39.5: OK
+* Python 3.11.2: OK
+* Python virtualenv management: OK
 * 'md5sum' found: OK
 * 'flock' found: OK
 * 'jq' found: OK
 
 ALL CHECKS: PASSED.
 Checking requirements: DONE!
-Installing BME...
-'build/./bash-magic-enviro_modules/aws-support.module' -> '~/bin/./bash-magic-enviro_modules/aws-support.module'
-'build/./bash-magic-enviro_modules/bindir.module' -> '~/bin/./bash-magic-enviro_modules/bindir.module'
-'build/./bash-magic-enviro_modules/python3-virtualenvs.module' -> '~/bin/./bash-magic-enviro_modules/python3-virtualenvs.module'
-'build/./bash-magic-enviro_modules/terraform-support.module' -> '~/bin/./bash-magic-enviro_modules/terraform-support.module'
-'build/./bash-magic-enviro.version' -> '~/bin/./bash-magic-enviro.version'
-'build/./bash-magic-enviro' -> '~/bin/./bash-magic-enviro'
+Installing BME to '~/bin'...
 Installing BME: DONE
 ~/REPOS/bash-magic-enviro$
 ```
@@ -350,28 +354,26 @@ On top of this README, you can also check your **'~/bin/bash-magic-enviro_module
 ### load Python3 *virtualenvs*<a name="virtualenvs"></a>
 **[python3-virtualenvs module](./src/bash-magic-enviro_modules/python3-virtualenvs.module):** Manages *Python3 virtualenvs*.
 
-It requires [virtualenvwrapper](https://virtualenvwrapper.readthedocs.io/) to be installed (i.e.: `sudo apt install virtualenvwrapper`).  
-Remember that, in order to *"activate"* virtualenvwrapper, you need to source its *virtualenvwrapper.sh* Bash control script within your environment.  An example has been added to [the bash_includes example](./docs/bash_includes.example). Make sure you set the script's path accordingly to your system.
-
 By default, this module looks first for `python3 --version` output; if it doesn't find it, it also tries `python --version`, in case it defaults to >=3.
 
 You can also set the environment variable **BME_PYTHON3_CMD**, either on the `.bme_project` or a `.bme_env` file, to a valid Python executable path, i.e.: `export BME_PYTHON3_CMD='python3.11'` or `export BME_PYTHON3_CMD='/usr/local/bin/python3.11'` and this module will use it to build virtual environments.
+
+If [virtualenvwrapper](https://virtualenvwrapper.readthedocs.io/) configuration is detected, this module will rewrite its **WORKON_HOME** environment variable to point to the project's path.  Its original value will be restored once out of a project environment.
 
 See also [the included example](./example-project/virtualenv-example/.bme_env).
 
 **Requirements:**
 * Python 3.
-* [virtualenvwrapper](https://virtualenvwrapper.readthedocs.io/).
 * md5sum (it comes from package **coreutils** in the case of Debian systems).
 * flock (it comes from package **util-linux** in the case of Debian systems).
 
 **Functions:**
-* **load_virtualenv virtualenv [requirements_file]:** creates, loads or updates, with the help of *virtualenvwrapper*, the requested virtualenv *[virtualenv]*.  Optionally, it accepts a second param with the path to a requirements file to be used to populate the virtualenv (path is relative to the .bme_env file where the function is loaded).
+* **load_virtualenv virtualenv [requirements_file]:** creates, loads or updates the requested virtualenv *[virtualenv]*.  Optionally, it accepts a second param with the path to a requirements file to be used to populate the virtualenv (path is relative to the .bme_env file where the function is loaded).
   1. If the function can't find the requested virtualenv *[virtualenv]*, it will look for its requirements file at *"${BME_PROJECT_DIR}/python-virtualenvs/[virtualenv].requirements"* and it will create the requested *virtualenv* using it.  
      It will also use the *requirements_file* provided as second param, if provided.
   1. If the requirements file can't be found, it will create either an *"empty"* virtualenv *[virtualenv]*, along with an empty *requirements* file, so you can start installing packages on it, or the virtualenv *[virtualenv]* populated with pips from the *[requirements_file]* passed as second parameter.
   1. If *pip* is listed in the *requirements* file, and given the requirements' file format is quite sensible about the exact version of *pip* in use, *load_virtualenv* will try to honor your requested pip version before installing the remaining packages into the virtualenv.
-  1. This function also stores the requirements file's *md5sum* under the *'~/.bme.d/'* hidden directory, so it can update the virtualenv when changes are detected.
+  1. This function also stores the requirements file's *md5sum* under the project's *'.bme.d/'* hidden directory, so it can update the virtualenv when changes are detected.
   
   **NOTES:**
   * For virtualenvs created with the help of a requirements file, it is advised to add their associated *"${BME_PROJECT_DIR}/python-virtualenvs/[virtualenv].requirements"* files to *.gitignore* so you don't have two files to maintain providing the same info.

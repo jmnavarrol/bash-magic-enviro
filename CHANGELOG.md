@@ -5,10 +5,11 @@
 * [#10](../../issues/10): `make uninstall` preserves contents it doesn't manage.
   * install/uninstall process moved to MANIFEST file based one.
   * Added tests for this new feature.
+* [python3-virtualenvs.module](./src/bash-magic-enviro_modules/python3-virtualenvs.module) doesn't depend on [virtualenvwrapper](https://virtualenvwrapper.readthedocs.io) anymore.
 * **UPGRADE NOTES:**
   * **[python3-virtualenvs.module](./src/bash-magic-enviro_modules/python3-virtualenvs.module):**
-    * **BME_PYTHON_VERSION** renamed to **BME_PYTHON3_CMD**.  If you make use of the *BME_PYTHON_VERSION* environment variable to set a explicit Python executable, you should rename it to *BME_PYTHON3_CMD* in your *\*.bme_\** files.
-  * `make uninstall` no longer looks for *.installdir* and *.devinstalldir* under sources but **.MANIFEST** and **.MANIFEST.DEV** instead to *"remeber"* where BME was installed.  If you made use of these file contents you should review the new files and format and plan accordingly.
+    * **BME_PYTHON_VERSION** renamed to **BME_PYTHON3_CMD**.  If you make use of the *BME_PYTHON_VERSION* environment variable to set a explicit Python executable, you should rename it to *BME_PYTHON3_CMD* in your *.bme_\** files.
+  * `make uninstall` no longer looks for *.installdir* and *.devinstalldir* under sources but **.MANIFEST** and **.MANIFEST.DEV** instead to *"remeber"* where BME was installed.  If you made use of these files' contents you should review the new files and format and plan accordingly.
 
 ## v1.8.2 (2024-NOV-22)
 * differences from [previous tag](/../../compare/v1.8.1…v1.8.2).
