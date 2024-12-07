@@ -17,6 +17,7 @@ main() {
 	call_virtualenv_without_param || return $?
 	create_empty_virtualenv || return $?
 	create_virtualenv_with_extra_param || return $?
+	create_virtualenv_with_custom_pip || return $?
 }
 
 
@@ -222,6 +223,58 @@ function create_virtualenv_with_extra_param() {
 # Clean
 	cd "${HOME}" && bme_eval_dir || return $?
 	test_log "virtualenv with parameter management" ok
+}
+
+
+function create_virtualenv_with_custom_pip() {
+	source bash-magic-enviro || return $?
+
+	test_title "create virtualenv with custom pip version:"
+
+# Creates a suitable requirements file
+	mkdir --parents "${project_dir}/python-virtualenvs" || return $?
+	cat <<- EOF > "${project_dir}/python-virtualenvs/with-pip.requirements"
+	example-package-name-mc==0.0.1
+	pip==21.0.1
+	EOF
+	local rc_code=$?
+	if (( $rc_code != 0 )); then
+		test_log "WHILE CREATING REQUIREMENTS FILE AT ${T_BOLD}'${project_dir}/python-virtualenvs/with-pip.requirements'${T_NC}." error
+		[ -r "${project_dir}/python-virtualenvs/with-pip.requirements" ] && {
+			file_contents=`cat "${project_dir}/python-virtualenvs/with-pip.requirements"`
+			test_log "${T_BOLD}---> REQUIREMENTS FILE START${T_NC}"
+			test_log "${file_contents}" '' 2
+			test_log "${T_BOLD}<--- REQUIREMENTS FILE END${T_NC}"
+			unset file_contents
+		}
+		return $rc_code
+	fi
+# And then, a suitable .bme_env file
+	cat <<- 'EOF' > "${project_dir}/.bme_env"
+	load_virtualenv 'with-pip' || return $?
+	EOF
+	local rc_code=$?
+	if (( $rc_code != 0 )); then
+		test_log "WHILE CREATING .bme_env FILE AT ${T_BOLD}'${project_dir}/.bme_env'${T_NC}." error
+		[ -r "${project_dir}/.bme_env" ] && {
+			file_contents=`cat "${project_dir}/.bme_env"`
+			test_log "${T_BOLD}---> BME_ENV FILE START${T_NC}"
+			test_log "${file_contents}" '' 2
+			test_log "${T_BOLD}<--- BME_ENV FILE END${T_NC}"
+			unset file_contents
+		}
+		return $rc_code
+	fi
+
+# Load the environment and check the results
+	cd "${project_dir}" && bme_eval_dir || return $?
+	pip freeze --all | grep --quiet 'pip==21.0.1' || {
+		test_log "virtualenv with custom pip (see above)" fail
+		pip freeze --all
+		return 1
+	}
+
+	test_log "virtualenv with custom pip" ok
 }
 
 main; exit $?

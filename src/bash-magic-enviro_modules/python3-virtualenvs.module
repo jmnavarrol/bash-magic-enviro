@@ -116,7 +116,7 @@ local with_requests="${2:-}"
 	)
 
 # if $venv_outdated is empty, the main virtualenv is up to date.
-# # but it can point to includes that we should consider
+# but it can point to includes that we should consider
 # 	if [ -z "${venv_outdated}" ]; then
 # 		venv_outdated=$(__check_requirements_includes "${requested_virtualenv}")
 # 	fi
@@ -154,20 +154,21 @@ local with_requests="${2:-}"
 # Creates a virtualenv by name
 __create_python_virtualenv() {
 local requested_virtualenv="${1}"
+local requirements_file="${virtualenvs_requirements}/${requested_virtualenv}.requirements"
 
 # "pseudo private" function protection
 	if [ "${FUNCNAME[1]}" != 'load_virtualenv' ]; then
 		bme_log "Function ${C_BOLD}'${FUNCNAME[0]}()'${C_NC} is ${C_BOLD}private${C_NC}.  You shouldn't invoke it!" error
-		return -1
+		return 1
 	fi
 
 # tries to acquire a lock
 	(
 		if flock -n 100; then
-			if ! [ -r "${virtualenvs_requirements}/${requested_virtualenv}.requirements" ]; then
+			if ! [ -r "${requirements_file}" ]; then
 			# not even a requirements file! let's create an empty one
-				bme_log "Requirements file for virtualenv ${C_BOLD}'${virtualenvs_requirements}/${requested_virtualenv}.requirements'${C_NC} doesn't exist. Creating empty virtualenv." warning 1
-				touch "${virtualenvs_requirements}/${requested_virtualenv}.requirements"
+				bme_log "Requirements file for virtualenv ${C_BOLD}'${requirements_file}'${C_NC} doesn't exist. Creating empty virtualenv." warning 1
+				touch "${requirements_file}"
 			fi
 
 			# virtualenv creation
@@ -179,18 +180,23 @@ local requested_virtualenv="${1}"
 			# 3. everything else
 			local pip_found=$(
 				# this first grep strips comments
-				grep --only-matching '^[^#]*' "${virtualenvs_requirements}/${requested_virtualenv}.requirements" | \
+				grep --only-matching '^[^#]*' "${requirements_file}" | \
 				# this second one finds pip entries: '~|=|<|>' is the list of valid version-specifier characters
 				grep --ignore-case --extended-regexp '^pip[[:space:]]*((~|=|<|>)|$)'
 			)
 			if [ ! -z "${pip_found}" ]; then
 			# custom pip found in the requirements file
 				bme_log "Custom pip version requested." info 1
-# 				# 1. "empty" virtualenv (it also activates it)
+				# 1. "empty" virtualenv (it also activates it)
+				"${BME_PYTHON3_CMD}" -m venv "${virtualenvs_path}/${requested_virtualenv}" || return $?
+				source "${virtualenvs_path}/${requested_virtualenv}/bin/activate" || return $?
 # 				mkvirtualenv --python=${BME_PYTHON_VERSION} ${requested_virtualenv} || virtualenv_error=true
-# 				# 2. install pip
+
+				# 2. install pip
+				pip install "${pip_found}" || return $?
 # 				pip install "${pip_found}" || virtualenv_error=true
-# 				# 3. install the full requirements file
+				# 3. install the full requirements file
+				pip install --requirement "${requirements_file}" || return $?
 # 				pip install -r "${virtualenvs_requirements}/${requested_virtualenv}.requirements" || virtualenv_error=true
 			else
 			# no custom pip version: "standard" virtualenv creation
@@ -198,7 +204,7 @@ local requested_virtualenv="${1}"
 
 				source "${virtualenvs_path}/${requested_virtualenv}/bin/activate" || return $?
 
-				pip install --requirement "${virtualenvs_requirements}/${requested_virtualenv}.requirements" || return $?
+				pip install --requirement "${requirements_file}" || return $?
 # 				mkvirtualenv --python=${BME_PYTHON_VERSION} ${requested_virtualenv} -r "${virtualenvs_requirements}/${requested_virtualenv}.requirements" || virtualenv_error=true
 			fi
 
@@ -227,6 +233,9 @@ local requested_virtualenv="${1}"
 			return 1
 		fi
 	) 100>"${virtualenvs_lockfile}"
+
+# Final virtualenv (re)activation
+	source "${virtualenvs_path}/${requested_virtualenv}/bin/activate" || return $?
 }
 
 
