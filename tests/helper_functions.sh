@@ -101,3 +101,19 @@ local _i _char _escape=0
 }
 export -f strip_escape_codes
 
+
+# Converts seconds to properly formatted time
+# 1st param: the number of seconds to convert
+function seconds_duration() {
+local seconds="${1}"
+
+	if [ -z "${seconds}" ]; then
+		test_log "You should call 'seconds_duration' with a seconds parameter." fatal
+		return 1
+	fi
+
+	local hours=$((${seconds}/3600))
+	local minutes=$(((${seconds}/60)%60))
+	local seconds=$((${seconds}%60))
+	printf "%02d:%02d:%02d" ${hours} ${minutes} ${seconds}
+}
