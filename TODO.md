@@ -20,8 +20,6 @@ Pending actions, general notes, etc. (in no particular order):
 * **Modules:**
   * Allow to put them in subdirectories
   * Heavy refactor: `modulename [load|unload|version|help]`
-* **[python3-virtualenvs module](./src/bash-magic-enviro_modules/python3-virtualenvs.module):**
-  * I think Python3 provides better virtualenv support than Phython2 so, maybe, virtualenvwrapper support is not needed anymore.  Consider this and act accordingly (See [Python3 doc](https://docs.python.org/3/library/venv.html)).
 * **[aws-support module](./src/bash-magic-enviro_modules/aws-support.module):**
   * Make the module not to require the *$AWS_MFA* environment variable, as it can be read from the proper AWS profile, or even not requested at all by means of *"bypassing"* its request right to aws-cli.
   * Add flexibility to authentication methods, so MFA is not mandatory.
@@ -31,8 +29,6 @@ Pending actions, general notes, etc. (in no particular order):
   * Review [terraform-config-inspect](https://github.com/hashicorp/terraform-config-inspect), which allows to extract configurations from terraform.
 * **Unit tests:**
   * Allow for a subdirectory full of tests (i.e.: so modules' testing can be better organized)
-  * Add global and each test file timing.
   * More support functions to load/unload BME, indented output, etc.
 
 ## IN PROGRESS
-* Working on getting rid of virtualenvwrapper dependency.
