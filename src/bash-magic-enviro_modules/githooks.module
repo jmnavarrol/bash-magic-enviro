@@ -1,13 +1,13 @@
 # Meant to be sourced by 'Bash Magic Enviro'
 # Adds support for shared client-side githooks
 # Requires git >= 2.9 (checked at install time by `make check`)
-# Depends on environment variable BME_WITHIN_GIT (set by BME's main script
+# Depends on environment variable BME_WITHIN_GIT (set by BME's main script)
 
 # Manages a clean exit
 githooks_unmet_dependencies() {
 	githooks_unload
 	bme_log "${C_BOLD}'githooks'${C_NC} not loaded. See missed dependencies above." error 1
-	return -1
+	return 1
 }
 
 
@@ -31,7 +31,7 @@ local unmet_dependencies=false
 	fi
 	$unmet_dependencies && {
 		githooks_unmet_dependencies
-		return -1
+		return 1
 	}
 # Sets new githooks directory as needed
 	if ! [ -d "${BME_PROJECT_DIR}/githooks" ]; then
@@ -46,7 +46,7 @@ local unmet_dependencies=false
 	fi
 	$unmet_dependencies && {
 		githooks_unmet_dependencies
-		return -1
+		return 1
 	}
 # tests git config core.hooksPath value
 	local git_config=`git config --get core.hooksPath`
@@ -64,9 +64,9 @@ local unmet_dependencies=false
 	fi
 	$unmet_dependencies && {
 		githooks_unmet_dependencies
-		return -1
+		return 1
 	}
-	
+
 # Final message: if we reached here, everything went OK
 	echo -e "\t${C_BOLD}'githooks'${C_NC} support: ${C_GREEN}LOADED!${C_NC}"
 }
