@@ -114,20 +114,6 @@ check_virtualenv() {
 	fi
 }
 
-# Checks if virtualenvwrapper can be found
-# This is not trivial, since "commands" are in fact sourced functions.
-# It means they can't be found neither by `which` nor as commands, hash... in subshells
-check_virtualenvwrapper() {
-	if [ -n "${VIRTUALENVWRAPPER_SCRIPT}" ]; then
-		echo -e "${C_BOLD}*${C_NC} ${C_BOLD}'virtualenvwrapper'${C_NC} found: ${C_GREEN}OK${C_NC}"
-		echo -e "\tSourced from ${C_BOLD}'${VIRTUALENVWRAPPER_SCRIPT}'${C_NC}."
-	else
-		echo -e "${C_BOLD}*${C_NC} ${C_YELLOW}WARNING:${C_NC} ${C_BOLD}'virtualenvwrapper'${C_NC} couldn't be found."
-		echo -e "\tYou won't be able to use Python virtualenv-related features."
-		warning_dependencies=true
-	fi
-}
-
 # Checks for md5sum (python virtualenvs dependency)
 check_md5sum() {
 	if md5sum --version > /dev/null 2>&1; then
@@ -172,7 +158,6 @@ check_jq() {
 check_bash_version
 check_destdir_in_path
 check_git_version
-# check_virtualenvwrapper
 check_virtualenv
 check_md5sum
 check_flock
