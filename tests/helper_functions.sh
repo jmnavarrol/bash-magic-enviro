@@ -51,22 +51,31 @@ local log_level=${3:-1}  # indentation level (with a default of 1)
 		;;
 	esac
 
-# Let's convert the (possibly) multiline message into a "proper" array
-	readarray -t log_msg <<< $(echo -e "${log_msg}")
+	local final_msg=$(indentor "${log_msg}" ${log_level})
+	echo -e "${final_msg}"
+}
+export -f test_log
 
-# Set the log indentation level
+# Indents each line a number of tabs
+# 1st param: the text to indent
+# 2nd param: the number of tabs to indent
+function indentor {
+local original_text="${1}"
+local indentation=${2}
+
 	local indented_prefix=''
-	for ((i=0; i<${log_level}; i++)); do
+	for ((i=0; i<${indentation}; i++)); do
 		indented_prefix+="\t"
 	done
 
-# Pad each line
-	for line in "${log_msg[@]}"; do
+# Let's convert the (possibly) multiline message into a "proper" array
+	readarray -t original_text <<< $(echo -e "${original_text}")
+
+	for line in "${original_text[@]}"; do
 		echo -e "${indented_prefix}${line}"
 	done
-	unset line
 }
-export -f test_log
+export -f indentor
 
 
 # Strips ANSI escape codes/sequences so tests can assert return messages with ease.

@@ -6,7 +6,9 @@
   * install/uninstall process moved to MANIFEST file based one.
   * Added tests for this new feature.
 * [python3-virtualenvs.module](./src/bash-magic-enviro_modules/python3-virtualenvs.module) doesn't depend on [virtualenvwrapper](https://virtualenvwrapper.readthedocs.io) anymore.
-* **unit tests framework:** total and per-batch timers added.
+* **unit tests framework:**
+  * total and per-batch timers added.
+  * new helper method: **indentor**.
 * **UPGRADE NOTES:**
   * **[python3-virtualenvs.module](./src/bash-magic-enviro_modules/python3-virtualenvs.module):**
     * **BME_PYTHON_VERSION** renamed to **BME_PYTHON3_CMD**.  If you make use of the *BME_PYTHON_VERSION* environment variable to set a explicit Python executable, you should rename it to *BME_PYTHON3_CMD* in your *.bme_\** files.

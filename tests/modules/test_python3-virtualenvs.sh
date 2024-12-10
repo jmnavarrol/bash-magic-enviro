@@ -39,12 +39,13 @@ create_project_config() {
 	EOF
 	local rc_code=$?
 	if (( $rc_code != 0 )); then
-		test_log "WHILE CREATING BME's PROJECT FILE AT ${T_BOLD}'${project_dir}/${BME_PROJECT_FILE}'${T_NC}." error
+		local err_msg="WHILE CREATING BME's PROJECT FILE AT ${T_BOLD}'${project_dir}/${BME_PROJECT_FILE}'${T_NC}."
 		[ -r "${project_dir}/${BME_PROJECT_FILE}" ] && {
-			file_contents=`cat "${project_dir}/${BME_PROJECT_FILE}"`
-			test_log "${T_BOLD}---> BME PROJECT FILE START${T_NC}"
-			test_log "${file_contents}" '' 2
-			test_log "${T_BOLD}<--- BME PROJECT FILE END${T_NC}"
+			file_contents=$(<"${project_dir}/${BME_PROJECT_FILE}")
+			err_msg+="\n${T_BOLD}---> BME PROJECT FILE START${T_NC}\n"
+			err_msg+=$(indentor "${file_contents}" 1)
+			err_msg+="${T_BOLD}\n<--- BME PROJECT FILE END${T_NC}"
+			test_log "${err_msg}" error
 			unset file_contents
 		}
 		return $rc_code
@@ -59,12 +60,13 @@ create_project_config() {
 	EOF
 	local rc_code=$?
 	if (( $rc_code != 0 )); then
-		test_log "WHILE CREATING BME's WHITELIST FILE AT ${T_BOLD}'${BME_WHITELISTED_FILE}'${T_NC}." error
-		[ -r "${BME_WHITELISTED_FILE}" ] && {
-			file_contents=`cat "${BME_WHITELISTED_FILE}"`
-			test_log "${T_BOLD}---> WHITELIST FILE START${T_NC}"
-			test_log "${file_contents}" '' 2
-			test_log "${T_BOLD}<--- WHITELIST FILE END${T_NC}"
+		local err_msg="WHILE CREATING BME's WHITELIST FILE AT ${T_BOLD}'${BME_WHITELISTED_FILE}'${T_NC}."
+		[ -r "${project_dir}/${BME_PROJECT_FILE}" ] && {
+			file_contents=$(<"${project_dir}/${BME_PROJECT_FILE}")
+			err_msg+="\n${T_BOLD}---> WHITELIST FILE START${T_NC}\n"
+			err_msg+=$(indentor "${file_contents}" 1)
+			err_msg+="${T_BOLD}\n<--- WHITELIST FILE END${T_NC}"
+			test_log "${err_msg}" error
 			unset file_contents
 		}
 		return $rc_code
@@ -84,10 +86,11 @@ load_module() {
 	declare | grep -vE "${regex_var}" > "${HOME}/before.txt"
 	in_output=$(cd "${project_dir}" 2>&1 && bme_eval_dir 2>&1) || in_rc=$?
 	${in_rc} || {
-		test_log "(${in_rc}) while loading project config at ${T_BOLD}'${project_dir}'${T_NC}" error
-		test_log "${T_BOLD}OUTPUT >>>${T_NC}"
-		test_log "${in_output}" '' 2
-		test_log "${T_BOLD}<<< END OF OUTPUT${T_NC}"
+		local err_msg="(${in_rc}) while loading project config at ${T_BOLD}'${project_dir}'${T_NC}\n"
+		err_msg+="${T_BOLD}OUTPUT >>>${T_NC}\n"
+		err_msg+=$(indentor "${in_output}" 1)
+		err_msg+="\n${T_BOLD}<<< END OF OUTPUT${T_NC}"
+		test_log "${err_msg}" error
 		return ${in_rc}
 	}
 	unset in_output
@@ -95,10 +98,11 @@ load_module() {
 # deactivates the project
 	out_output=$(cd "${HOME}" 2>&1 && bme_eval_dir 2>&1) || out_rc=$?
 	${out_rc} || {
-		test_log "(${out_rc}) while unloading project config at ${T_BOLD}'${project_dir}'${T_NC}" error
-		test_log "${T_BOLD}OUTPUT >>>${T_NC}"
-		test_log "${in_output}" '' 2
-		test_log "${T_BOLD}<<< END OF OUTPUT${T_NC}"
+		local err_msg="(${out_rc}) while unloading project config at ${T_BOLD}'${project_dir}'${T_NC}\n"
+		err_msg+="${T_BOLD}OUTPUT >>>${T_NC}\n"
+		err_msg+=$(indentor "${out_output}" 1)
+		err_msg+="\n${T_BOLD}<<< END OF OUTPUT${T_NC}"
+		test_log "${err_msg}" error
 		return ${out_rc}
 	}
 	unset out_output
@@ -119,9 +123,10 @@ load_module() {
 
 
 function call_virtualenv_without_param() {
+	test_title ''
+
 	source bash-magic-enviro || return $?
 
-	test_title "call 'load_virtualenv' without parameters"
 	cd "${project_dir}" && bme_eval_dir || return $?
 	function_output=$(load_virtualenv 2>&1)
 	stripped_output=$(strip_escape_codes "${function_output}")
@@ -130,11 +135,11 @@ function call_virtualenv_without_param() {
 		test_log "Check ${C_BOLD}'virtualenv without param'${C_NC}: ${C_GREEN}OK${C_NC}" info
 	else
 		local rc=$?
-		local err_msg="Check ${C_BOLD}'virtualenv without param'${C_NC}:"
-		err_msg+="\n${T_BOLD}---> OUTPUT START${T_NC}"
+		local err_msg="Check ${C_BOLD}'virtualenv without param'${C_NC}:\n"
+		err_msg+="${T_BOLD}---> OUTPUT START${T_NC}\n"
+		err_msg+=$(indentor "${function_output}" 1)
+		err_msg+="\n${T_BOLD}<--- OUTPUT END${T_NC}"
 		test_log "${err_msg}" error
-		test_log "${function_output}" '' 2
-		test_log "${T_BOLD}<--- OUTPUT END${T_NC}"
 		return $rc
 	fi
 
@@ -144,19 +149,26 @@ function call_virtualenv_without_param() {
 
 
 function create_empty_virtualenv() {
+	test_title ''
+
 	source bash-magic-enviro || return $?
 
-	test_title "create an empty virtualenv"
 	cd "${project_dir}" && bme_eval_dir || return $?
 	function_output=$(load_virtualenv 'test-virtualenv' 2>&1) || rc=$?
 	if [[ -n $rc ]]; then
-		test_log "Check ${C_BOLD}'empty virtualenv creation'${C_NC}:" error
-		test_log "${T_BOLD}---> OUTPUT START${T_NC}"
-		test_log "${function_output}" '' 2
-		test_log "${T_BOLD}<--- OUTPUT END${T_NC}"
+		local err_msg="Check ${C_BOLD}'empty virtualenv creation'${C_NC}:\n"
+		err_msg+="${T_BOLD}---> OUTPUT START${T_NC}\n"
+		err_msg+=$(indentor "${function_output}" 1)
+		err_msg+="\n${T_BOLD}<--- OUTPUT END${T_NC}"
+		test_log "${err_msg}" error
+		unset function_output
 		return $rc
 	fi
-	echo "${function_output}"
+	local log_msg="Check ${C_BOLD}'empty virtualenv creation'${C_NC}:\n"
+	log_msg+="${T_BOLD}---> OUTPUT START${T_NC}\n"
+	log_msg+=$(indentor "${function_output}" 1)
+	log_msg+="\n${T_BOLD}<--- OUTPUT END${T_NC}"
+	test_log "${log_msg}" ok
 	unset function_output
 
 # Checks the results
@@ -178,21 +190,24 @@ function create_empty_virtualenv() {
 
 
 function create_virtualenv_with_extra_param() {
+	test_title 'load environment'
+
 	source bash-magic-enviro || return $?
 
-	test_title "create virtualenv with extra param for requirements:"
 	mkdir --parents "${project_dir}/requirements_subdir" || return $?
-	echo -e 'hello-hello' > "${project_dir}/requirements_subdir/requirements.txt" || return $?
-
+	echo 'hello-hello' > "${project_dir}/requirements_subdir/requirements.txt" || return $?
 	cd "${project_dir}" && bme_eval_dir || return $?
 
 # Load a virtualenv with parameter
+	test_title 'load a simple virtualenv by name'
 	function_output=$(load_virtualenv 'test-virtualenv' 'requirements_subdir/requirements.txt' 2>&1) || rc=$?
 	if [[ -n $rc ]]; then
-		test_log "Check ${C_BOLD}'parameterized virtualenv creation'${C_NC}:" fail
-		test_log "${C_BOLD}---> OUTPUT START${C_NC}"
-		test_log "${function_output}" '' 1
-		test_log "${C_BOLD}<--- OUTPUT END${C_NC}"
+		local err_msg="Check ${C_BOLD}'parameterized virtualenv creation'${C_NC}:\n"
+		err_msg+="${C_BOLD}---> OUTPUT START${C_NC}\n"
+		err_msg+=$(indentor "${function_output}" 1)
+		err_msg+="\n${C_BOLD}<--- OUTPUT END${C_NC}"
+		test_log "${err_msg}" fail
+		unset function_output
 		return $rc
 	fi
 	unset function_output
@@ -202,10 +217,12 @@ function create_virtualenv_with_extra_param() {
 	test_title "parameterized virtualenv reload"
 	function_output=$(load_virtualenv 'test-virtualenv' 'requirements_subdir/requirements.txt' 2>&1) || rc=$?
 	if [[ -n $rc ]]; then
-		test_log "Check ${C_BOLD}'parameterized virtualenv reactivation'${C_NC}:" fail
-		test_log "${C_BOLD}---> OUTPUT START${C_NC}"
-		test_log "${function_output}" '' 1
-		test_log "${C_BOLD}<--- OUTPUT END${C_NC}"
+		local err_msg="Check ${C_BOLD}'parameterized virtualenv reactivation'${C_NC}:\n"
+		err_msg+="${C_BOLD}---> OUTPUT START${C_NC}\n"
+		err_msg+=$(indentor "${function_output}" 1)
+		err_msg+="\n${C_BOLD}<--- OUTPUT END${C_NC}"
+		test_log "${err_msg}" fail
+		unset function_output
 		return $rc
 	else
 		test_log "Check ${C_BOLD}'parameterized virtualenv reactivation'${C_NC}." ok
@@ -216,10 +233,12 @@ function create_virtualenv_with_extra_param() {
 	echo -e 'wheel' >> "${project_dir}/requirements_subdir/requirements.txt"
 	function_output=$(load_virtualenv 'test-virtualenv' 'requirements_subdir/requirements.txt' 2>&1) || rc=$?
 	if [[ -n $rc ]]; then
-		test_log "Check ${C_BOLD}'parameterized virtualenv update'${C_NC}:" fail
-		test_log "${C_BOLD}---> OUTPUT START${C_NC}"
-		test_log "${function_output}" '' 1
-		test_log "${C_BOLD}<--- OUTPUT END${C_NC}"
+		err_msg="Check ${C_BOLD}'parameterized virtualenv update'${C_NC}:\n"
+		err_msg+="${C_BOLD}---> OUTPUT START${C_NC}\n"
+		err_msg+=$(indentor "${function_output}" 1)
+		err_msg+="\n${C_BOLD}<--- OUTPUT END${C_NC}"
+		test_log "${err_msg}" fail
+		unset function_output
 		return $rc
 	else
 		test_log "Check ${C_BOLD}'parameterized virtualenv update'${C_NC}." ok
@@ -232,9 +251,9 @@ function create_virtualenv_with_extra_param() {
 
 
 function create_virtualenv_with_custom_pip() {
-	source bash-magic-enviro || return $?
+	test_title "prepare environment"
 
-	test_title "create virtualenv with custom pip version:"
+	source bash-magic-enviro || return $?
 
 # Creates a suitable requirements file
 	mkdir --parents "${project_dir}/python-virtualenvs" || return $?
@@ -244,14 +263,17 @@ function create_virtualenv_with_custom_pip() {
 	EOF
 	local rc_code=$?
 	if (( $rc_code != 0 )); then
-		test_log "WHILE CREATING REQUIREMENTS FILE AT ${T_BOLD}'${project_dir}/python-virtualenvs/with-pip.requirements'${T_NC}." error
-		[ -r "${project_dir}/python-virtualenvs/with-pip.requirements" ] && {
-			file_contents=`cat "${project_dir}/python-virtualenvs/with-pip.requirements"`
-			test_log "${T_BOLD}---> REQUIREMENTS FILE START${T_NC}"
-			test_log "${file_contents}" '' 2
-			test_log "${T_BOLD}<--- REQUIREMENTS FILE END${T_NC}"
+		local err_msg="WHILE CREATING REQUIREMENTS FILE AT ${T_BOLD}'${project_dir}/python-virtualenvs/with-pip.requirements'${T_NC}.\n"
+		if [ -r "${project_dir}/python-virtualenvs/with-pip.requirements" ]; then
+			err_msg+="${T_BOLD}---> REQUIREMENTS FILE START${T_NC}\n"
+			file_contents=$(<"${project_dir}/python-virtualenvs/with-pip.requirements")
+			err_msg+=$(indentor "${file_contents}" 1)
 			unset file_contents
-		}
+			err_msg+="\n${T_BOLD}<--- REQUIREMENTS FILE END${T_NC}"
+			test_log "${err_msg}" fail
+		else
+			test_log "Couldn't find ${T_BOLD}'${project_dir}/python-virtualenvs/with-pip.requirements'${T_NC}." error
+		fi
 		return $rc_code
 	fi
 # And then, a suitable .bme_env file
@@ -260,18 +282,22 @@ function create_virtualenv_with_custom_pip() {
 	EOF
 	local rc_code=$?
 	if (( $rc_code != 0 )); then
-		test_log "WHILE CREATING .bme_env FILE AT ${T_BOLD}'${project_dir}/.bme_env'${T_NC}." error
-		[ -r "${project_dir}/.bme_env" ] && {
-			file_contents=`cat "${project_dir}/.bme_env"`
-			test_log "${T_BOLD}---> BME_ENV FILE START${T_NC}"
-			test_log "${file_contents}" '' 2
-			test_log "${T_BOLD}<--- BME_ENV FILE END${T_NC}"
+		local err_msg="WHILE CREATING .bme_env FILE AT ${T_BOLD}'${project_dir}/.bme_env'${T_NC}.\n"
+		if [ -r "${project_dir}/.bme_env" ]; then
+			file_contents=$(<"${project_dir}/.bme_env")
+			err_msg+="${T_BOLD}---> BME_ENV FILE START${T_NC}\n"
+			err_msg+=$(indentor "${file_contents}" 1)
+			err_msg+="\n${T_BOLD}<--- BME_ENV FILE END${T_NC}"
 			unset file_contents
-		}
+		else
+			err_msg+="\tCouldn't find ${T_BOLD}'${project_dir}/python-virtualenvs/with-pip.requirements'${T_NC}."
+		fi
+		test_log "${err_msg}" error
 		return $rc_code
 	fi
 
 # Load the environment and check the results
+	test_title 'load virtualenv with custom pip'
 	cd "${project_dir}" && bme_eval_dir || return $?
 	pip freeze --all | grep --quiet 'pip==21.0.1' || {
 		test_log "virtualenv with custom pip (see above)" fail
@@ -285,8 +311,9 @@ function create_virtualenv_with_custom_pip() {
 
 
 function create_virtualenv_with_includes() {
+	test_title 'prepare environment'
+
 	source bash-magic-enviro || return $?
-	test_title ''
 
 # Creates a suitable requirements file
 	mkdir --parents "${project_dir}/python-virtualenvs" || return $?
@@ -296,14 +323,18 @@ function create_virtualenv_with_includes() {
 	EOF
 	local rc_code=$?
 	if (( $rc_code != 0 )); then
-		test_log "WHILE CREATING REQUIREMENTS FILE AT ${T_BOLD}'${project_dir}/python-virtualenvs/with-pip.requirements'${T_NC}." error
-		[ -r "${project_dir}/python-virtualenvs/with-pip.requirements" ] && {
-			file_contents=`cat "${project_dir}/python-virtualenvs/with-pip.requirements"`
-			test_log "${T_BOLD}---> REQUIREMENTS FILE START${T_NC}"
-			test_log "${file_contents}" '' 2
-			test_log "${T_BOLD}<--- REQUIREMENTS FILE END${T_NC}"
+		local err_msg="WHILE CREATING REQUIREMENTS FILE AT ${T_BOLD}'${project_dir}/python-virtualenvs/with-includes.requirements'${T_NC}.\n"
+		if [ -r "${project_dir}/python-virtualenvs/with-includes.requirements" ]; then
+			file_contents=$(<${project_dir}/python-virtualenvs/with-includes.requirements)
+			err_msg+="${T_BOLD}---> REQUIREMENTS FILE START${T_NC}\n"
+			err_msg+=$(indentor "${file_contents}" 1)
+			err_msg+="\n${T_BOLD}<--- REQUIREMENTS FILE END${T_NC}"
 			unset file_contents
-		}
+		else
+			err_msg+="\tCouldn't find ${T_BOLD}'${project_dir}/python-virtualenvs/with-includes.requirements'${T_NC}."
+		fi
+		test_log "${err_msg}" error
+		unset file_contents
 		return $rc_code
 	fi
 # ...and the included one
@@ -312,14 +343,18 @@ function create_virtualenv_with_includes() {
 	EOF
 	local rc_code=$?
 	if (( $rc_code != 0 )); then
-		test_log "WHILE CREATING REQUIREMENTS FILE AT ${T_BOLD}'${project_dir}/python-virtualenvs/venv-include'${T_NC}." error
-		[ -r "${project_dir}/python-virtualenvs/venv-include" ] && {
-			file_contents=`cat "${project_dir}/python-virtualenvs/venv-include"`
-			test_log "${T_BOLD}---> INCLUDED REQUIREMENTS FILE START${T_NC}"
-			test_log "${file_contents}" '' 2
-			test_log "${T_BOLD}<--- INCLUDED REQUIREMENTS FILE END${T_NC}"
+		local err_msg="WHILE CREATING REQUIREMENTS FILE AT ${T_BOLD}'${project_dir}/python-virtualenvs/venv-include'${T_NC}.\n"
+		if [ -r "${project_dir}/python-virtualenvs/venv-include" ]; then
+			file_contents=$(<"${project_dir}/python-virtualenvs/venv-include")
+			err_msg+="${T_BOLD}---> REQUIREMENTS FILE START${T_NC}\n"
+			err_msg+=$(indentor "${file_contents}" 1)
+			err_msg+="\n${T_BOLD}<--- REQUIREMENTS FILE END${T_NC}"
 			unset file_contents
-		}
+		else
+			err_msg+="\tCouldn't find ${T_BOLD}'${project_dir}/python-virtualenvs/venv-include'${T_NC}."
+		fi
+		test_log "${err_msg}" error
+		unset file_contents
 		return $rc_code
 	fi
 
@@ -329,18 +364,22 @@ function create_virtualenv_with_includes() {
 	EOF
 	local rc_code=$?
 	if (( $rc_code != 0 )); then
-		test_log "WHILE CREATING .bme_env FILE AT ${T_BOLD}'${project_dir}/.bme_env'${T_NC}." error
-		[ -r "${project_dir}/.bme_env" ] && {
-			file_contents=`cat "${project_dir}/.bme_env"`
-			test_log "${T_BOLD}---> BME_ENV FILE START${T_NC}"
-			test_log "${file_contents}" '' 2
-			test_log "\n${T_BOLD}<--- BME_ENV FILE END${T_NC}"
+		local err_msg="WHILE CREATING .bme_env FILE AT ${T_BOLD}'${project_dir}/.bme_env'${T_NC}.\n"
+		if [ -r "${project_dir}/.bme_env" ]; then
+			file_contents=$(<"${project_dir}/.bme_env")
+			err_msg+="${T_BOLD}---> BME_ENV FILE START${T_NC}\n"
+			err_msg+=$(indentor "${file_contents}" 1)
+			err_msg+="\n${T_BOLD}<--- BME_ENV FILE END${T_NC}"
 			unset file_contents
-		}
+		else
+			err_msg+="\tCouldn't find ${T_BOLD}'${project_dir}/python-virtualenvs/with-pip.requirements'${T_NC}."
+		fi
+		test_log "${err_msg}" error
 		return $rc_code
 	fi
 
 # Load the environment and check the results
+	test_title 'load virtualenv with includes'
 	cd "${project_dir}" && bme_eval_dir || return $?
 	pip freeze --all | grep --quiet 'example-package-name-mc==0.0.1' || {
 		local err_msg="virtualenv with include doesn't include "

@@ -29,6 +29,6 @@ Pending actions, general notes, etc. (in no particular order):
   * Review [terraform-config-inspect](https://github.com/hashicorp/terraform-config-inspect), which allows to extract configurations from terraform.
 * **Unit tests:**
   * Allow for a subdirectory full of tests (i.e.: so modules' testing can be better organized)
-  * More support functions to load/unload BME, indented output, etc.
+  * More support functions to load/unload BME, etc.
 
 ## IN PROGRESS
