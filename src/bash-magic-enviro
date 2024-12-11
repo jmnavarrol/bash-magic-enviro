@@ -87,7 +87,7 @@ local debug_msg="${1:-}"
 		fi
 	else
 	# insures proper return code when debug is not activated
-		return 0
+		return $true
 	fi
 }
 
@@ -126,7 +126,7 @@ local full_message=''
 	# standard log message processing
 	if [ -z "$log_message" ]; then
 		echo -e "${C_RED}FATAL:${C_NC} ${C_BOLD}'${FUNCNAME[0]}'${C_NC} called in code from ${C_BOLD}'${FUNCNAME[1]}'${C_NC} with no message."
-		return -1
+		return $false
 	fi
 # Sets indentation level
 	for (( i=0; i < ${log_level}; i++ )); do
@@ -535,7 +535,7 @@ local allowed_callers=('__bme_whitelist')
 		local log_msg="Function ${C_BOLD}'${FUNCNAME[0]}()'${C_NC} is ${C_BOLD}private${C_NC}.  You shouldn't invoke it!\n"
 		log_msg+="\tUnexpectedly called from ${C_BOLD}'${FUNCNAME[1]}'${C_NC}."
 		bme_log "${log_msg}" error
-		return -1
+		return $false
 	fi
 
 # Check for params
@@ -544,7 +544,7 @@ local allowed_callers=('__bme_whitelist')
 		local log_msg="${C_RED}(INTERNAL ERROR)${C_NC} Function ${C_BOLD}'${FUNCNAME[0]}'${C_NC} didn't get expected parameter ${C_BOLD}'project_name'${C_NC}.\n"
 		log_msg+="\t${C_BOLD} FROM:${C_NC} ${caller_data}"
 		bme_log "${log_msg}" fatal
-		return -1
+		return $false
 	fi
 
 # There's a project name.  Now: is it valid?
@@ -566,7 +566,7 @@ local allowed_callers=('__bme_whitelist')
 # exit on error
 	if ($bad_name); then
 		bme_log "${C_BOLD}'BME_PROJECT_NAME'${C_NC} should be a valid name (see above)." fatal
-		return -1
+		return $false
 	fi
 }
 
@@ -600,9 +600,8 @@ local env_file="${base_dir}/${BME_FILE}"
 		__bme_debug "${FUNCNAME[0]}: '${env_file}' LOADED"
 	else
 		__bme_debug "${FUNCNAME[0]}: '${env_file}' NOT FOUND."
+		cd "${current_dir}"
 	fi
-# Protection against wrong return code from __bme_debug
-	return 0
 }
 
 
@@ -613,7 +612,7 @@ local env_file="${base_dir}/${BME_FILE}"
 # First time configuration
 if ! [ -d "${BME_CONFIG_DIR}" ]; then
 	bme_log "${C_BOLD}'${BME_CONFIG_DIR}'${C_NC} directory doesn't exist.  Creating it" info
-	mkdir -p "${BME_CONFIG_DIR}" || return $?
+	mkdir --parents "${BME_CONFIG_DIR}" || return $?
 fi
 if ! [ -e "${BME_WHITELISTED_FILE}" ]; then
 # Creates an "empty" white list if it didn't yet exist
