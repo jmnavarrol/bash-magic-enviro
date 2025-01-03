@@ -148,7 +148,6 @@ local with_requests="${2:-}"
 	# deactivates virtualenv (if any active and just in case)
 		[ "$VIRTUAL_ENV" ] && deactivate
 		rm --recursive --force "${virtualenvs_path}/${requested_virtualenv}" || return $?
-# 		rmvirtualenv "${requested_virtualenv}"
 	fi
 
 # if requested virtualenv still exists, activate it, unless already so
@@ -221,6 +220,7 @@ local requirements_file="${virtualenvs_requirements}/${requested_virtualenv}.req
 				bme_log "${C_BOLD}'${requested_virtualenv}'${C_NC} creation FAILED (see above)." error
 				return 1
 			else
+			# Everything went OK, update md5sums file
 				# running in a subshell so I securely can change directories
 				(
 					cd "${virtualenvs_requirements}"
@@ -231,7 +231,7 @@ local requirements_file="${virtualenvs_requirements}/${requested_virtualenv}.req
 						bme_log "md5sum for ${C_BOLD}'${requested_virtualenv}'${C_NC} virtualenv collected." info 1
 					fi
 				# But there can also be references to included requirements
-					__check_requirements_includes "${requested_virtualenv}" || return $?
+					__check_requirements_includes "${requested_virtualenv}" true || return $?
 				)
 				bme_log "${C_BOLD}'${requested_virtualenv}'${C_NC} virtualenv created." info
 			fi

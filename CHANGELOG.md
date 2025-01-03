@@ -2,6 +2,7 @@
 
 ## Next Release
 * differences from [previous tag](/../../compare/v1.9.0…main).
+* [#11](../../issues/11): python3-virtualenvs module doesn't properly manage requirements' includes.
 
 ## v1.9.0 (2025-JAN-03)
 * differences from [previous tag](/../../compare/v1.8.2…v1.9.0).

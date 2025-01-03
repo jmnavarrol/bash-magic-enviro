@@ -372,7 +372,7 @@ function create_virtualenv_with_includes() {
 			err_msg+="\n${T_BOLD}<--- BME_ENV FILE END${T_NC}"
 			unset file_contents
 		else
-			err_msg+="\tCouldn't find ${T_BOLD}'${project_dir}/python-virtualenvs/with-pip.requirements'${T_NC}."
+			err_msg+="\tCouldn't find ${T_BOLD}'${project_dir}/python-virtualenvs/with-includes.requirements'${T_NC}."
 		fi
 		test_log "${err_msg}" error
 		return $rc_code
@@ -399,6 +399,19 @@ function create_virtualenv_with_includes() {
 		test_log "${err_msg}" error
 		return 1
 	}
+
+	for venv in 'with-includes' 'venv-include'; do
+		grep --quiet "${venv}" "${virtualenvs_md5sums}" || {
+			local err_msg="virtualenv ${T_BOLD}'${venv}'${T_NC} md5sum couldn't be found.\n"
+			err_msg+="\tat ${T_BOLD}'${virtualenvs_md5sums}'${T_NC}:\n"
+			err_msg+="${T_BOLD}---> MD5SUMS FILE START${T_NC}\n"
+			err_msg+=`cat "${virtualenvs_md5sums}"`
+			err_msg+="\n${T_BOLD}<--- MD5SUMS FILE END${T_NC}"
+			test_log "${err_msg}" error
+			return 1
+		}
+	done
+	unset venv
 
 	cd &&  bme_eval_dir || return $?
 	test_log "virtualenv with includes" ok
