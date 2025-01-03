@@ -1,7 +1,10 @@
 # CHANGELOG
 
 ## Next Release
-* differences from [previous tag](/../../compare/v1.8.2…main).
+* differences from [previous tag](/../../compare/v1.9.0…main).
+
+## v1.9.0 (2025-JAN-03)
+* differences from [previous tag](/../../compare/v1.8.2…v1.9.0).
 * [#10](../../issues/10): `make uninstall` preserves contents it doesn't manage.
   * install/uninstall process moved to MANIFEST file based one.
   * Added tests for this new feature.
