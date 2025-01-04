@@ -21,14 +21,21 @@ function main() {
 local test_counter=0
 local test_start=$(date +%s)
 
-# list of tests to run
-	if (( ${#} > 0 )); then
-		tests_list="${@}"
-	else
-		tests_list=( ${TESTS_DIR}/**/test_*.sh )
-	fi
+# List of tests to run
+	declare -a tests_list=()
+	# Find all tests under tests' root directory (default) or tests found within given argument(s)
+	for argument in "${@:-$TESTS_DIR}"; do
+		argument=$(realpath --canonicalize-existing "${argument}") || exit $?
+		tests_list+=(
+			$(
+				find "${argument}" -type f -executable -name test_*.sh \
+				| sort --numeric-sort
+			)
+		)
+	done
 
-	source "${TESTS_DIR}/helper_functions.sh"
+# Go with tests
+	source "${TESTS_DIR}/helper_functions.sh" || exit $?
 
 	[ ${DEBUG:+1} ] && echo "DEBUGGING IS ACTIVE" # debugging example
 	check_environment || exit $?
