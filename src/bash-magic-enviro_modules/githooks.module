@@ -37,7 +37,7 @@ local unmet_dependencies=false
 	if ! [ -d "${BME_PROJECT_DIR}/githooks" ]; then
 		bme_log "directory ${C_BOLD}'${BME_PROJECT_DIR}/githooks'${C_NC} does NOT exist." warning 1
 		echo -en "\t\tCreating it... "
-		if `mkdir --parents "${BME_PROJECT_DIR}/githooks"`; then
+		if `mkdir -p "${BME_PROJECT_DIR}/githooks"`; then
 			echo -e "${C_GREEN}DONE!${C_NC}"
 		else
 			bme_log "Couldn't create ${C_BOLD}'${BME_PROJECT_DIR}/githooks'${C_NC}" error 1

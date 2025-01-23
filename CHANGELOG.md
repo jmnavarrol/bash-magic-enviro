@@ -3,6 +3,7 @@
 ## Next Release
 * differences from [previous tag](/../../compare/v1.9.1…main).
 * tests framework discovers test scripts on generic paths.
+* [#12](../../issues/12): supporting commands moved to short options to make macOS (BSD) happy.
 
 ## v1.9.1 (2025-JAN-03)
 * differences from [previous tag](/../../compare/v1.9.0…v1.9.1).

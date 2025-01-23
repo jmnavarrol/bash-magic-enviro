@@ -92,7 +92,7 @@ export TF_PLUGIN_CACHE_DIR="${BME_CONFIG_DIR}/.terraform.d/plugin-cache"
 	if ($unmet_dependencies); then
 		terraform-support_unload
 		bme_log "${C_BOLD}'terraform-support'${C_NC} not loaded. See missed dependencies above." error 1
-		return -1
+		return 1
 	else
 		bme_log "${C_BOLD}'terraform-support'${C_NC} loaded." info 1
 	fi

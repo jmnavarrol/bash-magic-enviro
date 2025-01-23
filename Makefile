@@ -47,10 +47,10 @@ check: build
 # Builds BME modules
 $(BUILDDIR)/$(BME_BASENAME)_modules: $(wildcard $(SRCDIR)/$(BME_BASENAME)_modules/*.module)
 	@echo -e "$${C_BOLD}Building BME modules...$${C_NC}"
-	@mkdir --parents $(BUILDDIR)/$(BME_BASENAME)_modules
+	@mkdir -p $(BUILDDIR)/$(BME_BASENAME)_modules
 	@for module in $^; do \
 		echo -e "\tinstalling module $${C_BOLD}'$$module'$${C_NC}"; \
-		install --mode=0644 $$module $(BUILDDIR)/$(BME_BASENAME)_modules/; \
+		install -m 0644 $$module $(BUILDDIR)/$(BME_BASENAME)_modules/; \
 	done
 	@echo -e "$${C_BOLD}Building BME modules:$${C_NC} $${C_GREEN}DONE!$${C_NC}"
 
@@ -63,7 +63,7 @@ $(BUILDDIR)/$(VERSION_FILE): Makefile VERSION $(SRCDIR)/$(VERSION_FILE).tpl make
 # Builds main script
 $(BUILDDIR)/$(BME_BASENAME): $(BUILDDIR)/$(VERSION_FILE) $(SRCDIR)/$(BME_BASENAME)
 	@echo -e "$${C_BOLD}Building main script...$${C_NC}"
-	install --mode=0644 $(SRCDIR)/$(BME_BASENAME) $(BUILDDIR)/$(BME_BASENAME)
+	install -m 0644 $(SRCDIR)/$(BME_BASENAME) $(BUILDDIR)/$(BME_BASENAME)
 	@echo -e "$${C_BOLD}Building main script:$${C_NC} $${C_GREEN}DONE!$${C_NC}"
 
 # Builds BME
@@ -72,7 +72,7 @@ build: Makefile $(BUILDDIR)/$(BME_BASENAME)_modules $(BUILDDIR)/$(VERSION_FILE) 
 
 # Makes sure DESTDIR is in place
 $(DESTDIR):
-	mkdir --parents ${DESTDIR}
+	mkdir -p ${DESTDIR}
 
 
 # Sets symlinks for easy development

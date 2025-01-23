@@ -11,7 +11,7 @@ readonly MANDATORY_VARS=(
 	'BUILDDIR'
 	'DESTDIR'
 )
-readonly BASE_DIR=$(dirname $(readlink --canonicalize --verbose ${BASH_SOURCE[0]}))
+readonly BASE_DIR=$(dirname $(readlink -fv ${BASH_SOURCE[0]}))
 readonly INSTALL_TRACKER="${BASE_DIR}/.MANIFEST"
 readonly DEV_TRACKER="${BASE_DIR}/.MANIFEST.DEV"
 
@@ -45,13 +45,15 @@ make_install() {
 	unset uninstall_output
 
 # Now, the install process itself
-	mkdir --parents "${DESTDIR}/" || return $?
+	mkdir -p "${DESTDIR}/" || return $?
 	find "${BUILDDIR}" -mindepth 1 -printf '%P\n' \
 	| while read install_item; do
 		if [ -d "${BUILDDIR}/${install_item}" ]; then
-			mkdir --parents "${DESTDIR}/${install_item}" || return $?
+			mkdir -p "${DESTDIR}/${install_item}" || return $?
 		else
-			cp --no-dereference --preserve=all \
+		# -Pp -> --no-dereference --preserve=all
+		# (short options to make macOS happy)
+			cp -Pp \
 				"${BUILDDIR}/${install_item}" \
 				"${DESTDIR}/${install_item}" \
 				|| return $?
@@ -76,14 +78,14 @@ make_dev() {
 	unset uninstall_output
 
 # Now, the dev install process itself
-	mkdir --parents "${DESTDIR}/" || return $?
+	mkdir -p "${DESTDIR}/" || return $?
 	find "${BUILDDIR}" -mindepth 1 -maxdepth 1 -printf '%P\n' \
 	| while read install_item; do
 		if [ -e "${DESTDIR}/${install_item}" ]; then
 			echo -e "\t${C_YELLOW}WARNING:${C_NC} deleting '${DESTDIR}/${install_item}'"
-			rm --force --recursive "${DESTDIR}/${install_item}"
+			rm -rf "${DESTDIR}/${install_item}"
 		fi
-		ln --symbolic \
+		ln -s \
 			"${BUILDDIR}/${install_item}" \
 			"${DESTDIR}/${install_item}" \
 			|| return $?
@@ -103,7 +105,7 @@ make_uninstall() {
 				local msg="\t${C_YELLOW}WARNING${C_NC}:"
 				msg+=" deleting '${line}'."
 				echo -e "${msg}"
-				rm --force --recursive "${line}" || return $?
+				rm -rf "${line}" || return $?
 				local parent_dir=$(dirname "${line}")
 				if [ -d "${parent_dir}" ]; then
 					empty_dir=$(find "${parent_dir}" -maxdepth 0 -empty)
@@ -117,7 +119,7 @@ make_uninstall() {
 				fi
 			done < "${tracker}"
 			unset line
-			rm --force "${tracker}"
+			rm -f "${tracker}"
 		else
 			echo -e "\t${C_YELLOW}WARNING:${C_NC} install info file ${C_BOLD}'${tracker}'${C_NC} couldn't be found."
 		fi

@@ -163,7 +163,7 @@ export -f bme_log
 # BME version checker
 bme_check_version() {
 # Gets the sorted list of remote tags
-	local remote_tags=(`git --git-dir "${BME_SRC_DIR}/.git" ls-remote --refs --tags --sort -version:refname ${BME_REMOTE_GIT} | cut --delimiter='/' --fields=3`)
+	local remote_tags=(`git --git-dir "${BME_SRC_DIR}/.git" ls-remote --refs --tags --sort -version:refname ${BME_REMOTE_GIT} | cut -d '/' -f 3`)
 	__bme_debug "${FUNCNAME[0]}: REMOTE TAGS: '${remote_tags[@]}'"
 # then, get the last one (which should be the highest by "version name").
 	local highest_tag="${remote_tags[0]}"
@@ -290,7 +290,7 @@ local project_dir="${1}"
 	# one way or the other, let's create the project's config dir
 	if ! [[ -d ${BME_PROJECT_CONFIG_DIR} ]]; then
 		bme_log "${C_BOLD}'${BME_PROJECT_CONFIG_DIR}/'${C_NC} directory requested, but not found." warning 1
-		mkdir --parents ${BME_PROJECT_CONFIG_DIR} || return $?
+		mkdir -p ${BME_PROJECT_CONFIG_DIR} || return $?
 		bme_log "${C_BOLD}'${BME_PROJECT_CONFIG_DIR}/'${C_NC} created." info 1
 	fi
 
@@ -612,7 +612,7 @@ local env_file="${base_dir}/${BME_FILE}"
 # First time configuration
 if ! [ -d "${BME_CONFIG_DIR}" ]; then
 	bme_log "${C_BOLD}'${BME_CONFIG_DIR}'${C_NC} directory doesn't exist.  Creating it" info
-	mkdir --parents "${BME_CONFIG_DIR}" || return $?
+	mkdir -p "${BME_CONFIG_DIR}" || return $?
 fi
 if ! [ -e "${BME_WHITELISTED_FILE}" ]; then
 # Creates an "empty" white list if it didn't yet exist

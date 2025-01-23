@@ -85,7 +85,7 @@ check_virtualenv() {
 		err_msg+="${venv_output}"
 		echo -e "${err_msg}"
 		warning_dependencies=true
-		rm --recursive --force .here
+		rm -rf .here
 		return $rc_venv
 	}
 	unset venv_output
@@ -102,11 +102,11 @@ check_virtualenv() {
 		err_msg+="${pip_install}"
 		echo -e "${err_msg}"
 		warning_dependencies=true
-		rm --recursive --force .here
+		rm -rf .here
 		return $rc_pip
 	}
 	unset pip_install
-	rm --recursive --force .here
+	rm -rf .here
 
 # Final message
 	if [ ! true == "${warning_dependencies}" ]; then
@@ -116,7 +116,8 @@ check_virtualenv() {
 
 # Checks for md5sum (python virtualenvs dependency)
 check_md5sum() {
-	if md5sum --version > /dev/null 2>&1; then
+# It seems `md5sum --version` returns 255 in macOS, so using `which` instead
+	if which md5sum > /dev/null 2>&1; then
 		echo -e "${C_BOLD}*${C_NC} ${C_BOLD}'md5sum'${C_NC} found: ${C_GREEN}OK${C_NC}"
 	else
 		echo -e "${C_BOLD}*${C_NC} ${C_YELLOW}WARNING:${C_NC} ${C_BOLD}'md5sum'${C_NC} couldn't be found."

@@ -38,7 +38,7 @@ local unmet_dependencies=false
 
 # Makes sure virtualenvs' directory for requirements files is in place
 	if ! [[ -d "${virtualenvs_requirements}" ]]; then
-		if mkdir --parents "${virtualenvs_requirements}/"; then
+		if mkdir -p "${virtualenvs_requirements}/"; then
 			bme_log "${C_BOLD}'${virtualenvs_requirements}/'${C_NC} created." info 1
 		else
 			local mkdir_rc=$?
@@ -147,7 +147,7 @@ local with_requests="${2:-}"
 		bme_log "${C_BOLD}'${requested_virtualenv}'${C_NC} virtualenv outdated or non existent." info
 	# deactivates virtualenv (if any active and just in case)
 		[ "$VIRTUAL_ENV" ] && deactivate
-		rm --recursive --force "${virtualenvs_path}/${requested_virtualenv}" || return $?
+		rm -rf "${virtualenvs_path}/${requested_virtualenv}" || return $?
 	fi
 
 # if requested virtualenv still exists, activate it, unless already so
@@ -194,9 +194,9 @@ local requirements_file="${virtualenvs_requirements}/${requested_virtualenv}.req
 			# 3. everything else
 			local pip_found=$(
 				# this first grep strips comments
-				grep --only-matching '^[^#]*' "${requirements_file}" | \
+				grep -o '^[^#]*' "${requirements_file}" | \
 				# this second one finds pip entries: '~|=|<|>' is the list of valid version-specifier characters
-				grep --ignore-case --extended-regexp '^pip[[:space:]]*((~|=|<|>)|$)'
+				grep -i -E '^pip[[:space:]]*((~|=|<|>)|$)'
 			)
 			if [ ! -z "${pip_found}" ]; then
 			# custom pip found in the requirements file
@@ -226,7 +226,7 @@ local requirements_file="${virtualenvs_requirements}/${requested_virtualenv}.req
 					cd "${virtualenvs_requirements}"
 				# Updates the 'main' requirements md5sum
 					if ! grep " ${requested_virtualenv}.requirements$" "${virtualenvs_md5sums}" | md5sum --check --status > /dev/null 2>&1; then
-						sed --in-place "/ ${requested_virtualenv}.requirements/d" ${virtualenvs_md5sums}
+						sed -i "/ ${requested_virtualenv}.requirements/d" ${virtualenvs_md5sums}
 						md5sum "${requested_virtualenv}.requirements" >> "${virtualenvs_md5sums}"
 						bme_log "md5sum for ${C_BOLD}'${requested_virtualenv}'${C_NC} virtualenv collected." info 1
 					fi
@@ -279,8 +279,8 @@ local allowed_callers=(
 	# --requirement=path
 		local include_list=$(
 			grep --perl-regexp \
-			     --ignore-case \
-			     --only-matching \
+			     -i \
+			     -o \
 			     '^((-r|--requirement)(=|[[:space:]])*)\K(.+)' \
 			     ${requested_virtualenv}.requirements
 		)
@@ -295,7 +295,7 @@ local allowed_callers=(
 					| md5sum --check --status > /dev/null 2>&1; then
 					if ( $update_md5 ); then
 					# ${real_path//\//\\/} escapes backslashes so sed is happy
-						sed --in-place "/ ${real_path//\//\\/}/d" ${virtualenvs_md5sums}
+						sed -i "/ ${real_path//\//\\/}/d" ${virtualenvs_md5sums}
 						md5sum "${real_path}" >> "${virtualenvs_md5sums}"
 						bme_log "md5sum for ${C_BOLD}'${real_path}'${C_NC} virtualenv collected." info 1
 					else
