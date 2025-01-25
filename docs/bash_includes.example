@@ -9,8 +9,13 @@
 # (...) other "secrets" you may need to export come here
 
 # Adds user's bin dir to path, if it exists -it better should, or else Bash Magic Enviro won't work ;^)
-if [ -d ~/bin ]; then
-	PATH=~/bin:$PATH
+# Thanks to https://stackoverflow.com/questions/1396066/detect-if-path-has-a-specific-directory-entry-in-it
+if ! [[ ":$PATH:" == *":$HOME/bin:"* ]]; then
+	if [ -d "$HOME/bin" ] ; then
+		PATH="$HOME/bin:$PATH"
+	else
+		echo "Please create '~/bin' for BME to work properly."
+	fi
 fi
 
 # In case you are taking advantage of the 'python3-virtualenvs' module...
