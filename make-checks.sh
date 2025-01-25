@@ -1,6 +1,34 @@
 #!/usr/bin/env bash
 
 #--
+# MAIN ENTRY POINT
+#--
+main() {
+	check_bash_version
+	check_destdir_in_path
+	check_git_version
+# for python3-virtualenvs module
+	check_virtualenv
+	check_md5sum
+	check_flock
+	check_sed
+# for aws-support module
+	check_jq
+
+	# Check overall results
+	if [ true == "${warning_dependencies}" ]; then
+		echo -e "\n${C_YELLOW}WARNING:${C_NC} Some non-critical dependencies unmet.  See above."
+	fi
+	if [ true == "${error_dependencies}" ]; then
+		echo -e "\n${C_RED}ERROR:${C_NC} Unmet dependencies: BME won't be installed.  See above."
+		echo -e "\tPlease correct errors and retry."
+		exit 1
+	else
+		echo -e "\n${C_BOLD}ALL CHECKS:${C_NC} ${C_GREEN}PASSED${C_NC}."
+	fi
+}
+
+#--
 # FUNCTIONS
 #--
 # Checks Bash >= 4
@@ -139,6 +167,17 @@ check_flock() {
 	fi
 }
 
+# Checks that sed can be found (python virtualenvs dependency)
+check_sed () {
+	if which sed > /dev/null 2>&1; then
+		echo -e "${C_BOLD}*${C_NC} ${C_BOLD}'sed'${C_NC} found: ${C_GREEN}OK${C_NC}"
+	else
+		echo -e "${C_BOLD}*${C_NC} ${C_YELLOW}WARNING:${C_NC} ${C_BOLD}'sed'${C_NC} couldn't be found."
+		echo -e "\tYou won't be able to use Python virtualenv-related features unless you install it."
+		warning_dependencies=true
+	fi
+}
+
 # Checks for jq (aws module dependency)
 check_jq() {
 	if jq --version > /dev/null 2>&1; then
@@ -151,27 +190,4 @@ check_jq() {
 	fi
 }
 
-
-
-#--
-# MAIN ENTRY POINT
-#--
-check_bash_version
-check_destdir_in_path
-check_git_version
-check_virtualenv
-check_md5sum
-check_flock
-check_jq
-
-# Check overall results
-if [ true == "${warning_dependencies}" ]; then
-	echo -e "\n${C_YELLOW}WARNING:${C_NC} Some non-critical dependencies unmet.  See above."
-fi
-if [ true == "${error_dependencies}" ]; then
-	echo -e "\n${C_RED}ERROR:${C_NC} Unmet dependencies: BME won't be installed.  See above."
-	echo -e "\tPlease correct errors and retry."
-	exit 1
-else
-	echo -e "\n${C_BOLD}ALL CHECKS:${C_NC} ${C_GREEN}PASSED${C_NC}."
-fi
+main; exit $?

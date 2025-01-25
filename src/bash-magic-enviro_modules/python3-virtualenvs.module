@@ -273,19 +273,21 @@ local allowed_callers=(
 		cd "${virtualenvs_requirements}"
 
 	# matches lines like:
-	# -rpath
 	# -r path
 	# --requirement path
 	# --requirement=path
 		local include_list=$(
-			grep --perl-regexp \
-			     -i \
-			     -o \
-			     '^((-r|--requirement)(=|[[:space:]])*)\K(.+)' \
-			     ${requested_virtualenv}.requirements
+		# First, let's get rid of comments
+			grep -o '^[^#]*' ${requested_virtualenv}.requirements | \
+		# then, grab -r|--requirement lines
+			grep -E '(-r|--requirement)([[:space:]]|=)' | \
+		# strip the '--requirements' part'
+			sed -E 's/\s*--requirement\s*=*\s*//' | \
+		# and, finally, strip the '-r' part
+			sed -E 's/\s*-r\s+//'
 		)
 	# Checks found includes (if any)
-		for include in ${include_list}; do
+		for include in "${include_list[@]}"; do
 		# Real path holds the absolute path to the file to be included.
 			local real_path=`realpath -qe "${include}"`
 			local current_error=$?
