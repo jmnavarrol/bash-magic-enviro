@@ -131,8 +131,13 @@ local with_requests="${2:-}"
 	# the idea is to populate ${venv_outdated} **only** if the virtualenv needs to be regenerated.
 	local venv_outdated=$(
 		cd "${virtualenvs_requirements}"
-		if ! grep " ${requested_virtualenv}.requirements$" "${virtualenvs_md5sums}" | md5sum --check --status > /dev/null 2>&1; then
-			bme_log "Virtualenv ${C_BOLD}'${requested_virtualenv}'${C_NC} outdated." warning
+		if builtin command -v md5sum > /dev/null ; then
+			if ! grep " ${requested_virtualenv}.requirements$" "${virtualenvs_md5sums}" | md5sum --check --status > /dev/null 2>&1; then
+				bme_log "Virtualenv ${C_BOLD}'${requested_virtualenv}'${C_NC} outdated." warning
+			fi
+		else
+			bme_log "'md5sum' command not found." fatal
+			return 1
 		fi
 	)
 
@@ -225,10 +230,15 @@ local requirements_file="${virtualenvs_requirements}/${requested_virtualenv}.req
 				(
 					cd "${virtualenvs_requirements}"
 				# Updates the 'main' requirements md5sum
-					if ! grep " ${requested_virtualenv}.requirements$" "${virtualenvs_md5sums}" | md5sum --check --status > /dev/null 2>&1; then
-						sed -i "/ ${requested_virtualenv}.requirements/d" ${virtualenvs_md5sums}
-						md5sum "${requested_virtualenv}.requirements" >> "${virtualenvs_md5sums}"
-						bme_log "md5sum for ${C_BOLD}'${requested_virtualenv}'${C_NC} virtualenv collected." info 1
+					if builtin command -v md5sum > /dev/null ; then
+						if ! grep " ${requested_virtualenv}.requirements$" "${virtualenvs_md5sums}" | md5sum --check --status > /dev/null 2>&1; then
+							sed -i "/ ${requested_virtualenv}.requirements/d" ${virtualenvs_md5sums}
+							md5sum "${requested_virtualenv}.requirements" >> "${virtualenvs_md5sums}"
+							bme_log "md5sum for ${C_BOLD}'${requested_virtualenv}'${C_NC} virtualenv collected." info 1
+						fi
+					else
+						bme_log "'md5sum' command not found." fatal
+						return 1
 					fi
 				# But there can also be references to included requirements
 					__check_requirements_includes "${requested_virtualenv}" true || return $?
@@ -293,19 +303,24 @@ local allowed_callers=(
 			local current_error=$?
 			if [ $current_error -eq 0 ]; then
 			# This checks if the md5sum currently recorded matches the current one
-				if ! grep " ${real_path}$" "${virtualenvs_md5sums}" \
-					| md5sum --check --status > /dev/null 2>&1; then
-					if ( $update_md5 ); then
-					# ${real_path//\//\\/} escapes backslashes so sed is happy
-						sed -i "/ ${real_path//\//\\/}/d" ${virtualenvs_md5sums}
-						md5sum "${real_path}" >> "${virtualenvs_md5sums}"
-						bme_log "md5sum for ${C_BOLD}'${real_path}'${C_NC} virtualenv collected." info 1
-					else
-					# wrong match, but only logging requested
-						local log_msg="Virtualenv ${C_BOLD}'${real_path}'${C_NC} outdated.\n"
-						log_msg+="\tIncluded from ${C_BOLD}'${requested_virtualenv}'${C_NC}."
-						bme_log "${log_msg}" warning
+				if builtin command -v md5sum > /dev/null ; then
+					if ! grep " ${real_path}$" "${virtualenvs_md5sums}" \
+						| md5sum --check --status > /dev/null 2>&1; then
+						if ( $update_md5 ); then
+						# ${real_path//\//\\/} escapes backslashes so sed is happy
+							sed -i "/ ${real_path//\//\\/}/d" ${virtualenvs_md5sums}
+							md5sum "${real_path}" >> "${virtualenvs_md5sums}"
+							bme_log "md5sum for ${C_BOLD}'${real_path}'${C_NC} virtualenv collected." info 1
+						else
+						# wrong match, but only logging requested
+							local log_msg="Virtualenv ${C_BOLD}'${real_path}'${C_NC} outdated.\n"
+							log_msg+="\tIncluded from ${C_BOLD}'${requested_virtualenv}'${C_NC}."
+							bme_log "${log_msg}" warning
+						fi
 					fi
+				else
+					bme_log "'md5sum' command not found." fatal
+					return 1
 				fi
 			# ...except there's an error trying to find it!
 			else
