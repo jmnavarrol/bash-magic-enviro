@@ -11,7 +11,7 @@ readonly MANDATORY_VARS=(
 	'BUILDDIR'
 	'DESTDIR'
 )
-readonly BASE_DIR=$(dirname $(readlink -fv ${BASH_SOURCE[0]}))
+readonly BASE_DIR=$(dirname $(readlink -f ${BASH_SOURCE[0]}))
 readonly INSTALL_TRACKER="${BASE_DIR}/.MANIFEST"
 readonly DEV_TRACKER="${BASE_DIR}/.MANIFEST.DEV"
 
