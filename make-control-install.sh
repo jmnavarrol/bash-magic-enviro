@@ -27,6 +27,16 @@ check_environment() {
 			exit 1
 		fi
 	done
+
+# Platform-dependent
+	case "${OSTYPE}" in
+		darwin*)
+			export find_bin='gfind'
+		;;
+		*)
+			export find_bin='find'
+		;;
+	esac
 }
 
 
