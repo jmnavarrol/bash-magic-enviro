@@ -12,6 +12,7 @@ main() {
 	check_md5sum
 	check_flock
 	check_sed
+	check_find
 # for aws-support module
 	check_jq
 
@@ -144,8 +145,7 @@ check_virtualenv() {
 
 # Checks for md5sum (python virtualenvs dependency)
 check_md5sum() {
-# It seems `md5sum --version` returns 255 in macOS, so using `which` instead
-	if which md5sum > /dev/null 2>&1; then
+	if md5sum --version > /dev/null 2>&1; then
 		echo -e "${C_BOLD}*${C_NC} ${C_BOLD}'md5sum'${C_NC} found: ${C_GREEN}OK${C_NC}"
 	else
 		echo -e "${C_BOLD}*${C_NC} ${C_YELLOW}WARNING:${C_NC} ${C_BOLD}'md5sum'${C_NC} couldn't be found."
@@ -176,6 +176,18 @@ check_sed () {
 		echo -e "\tYou won't be able to use Python virtualenv-related features unless you install it."
 		warning_dependencies=true
 	fi
+}
+
+# Checks for OS-dependent find
+check_find() {
+	case "${OSTYPE}" in
+		darwin*)
+			export find_bin='gfind'
+		;;
+		*)
+			export find_bin='find'
+		;;
+	esac
 }
 
 # Checks for jq (aws module dependency)

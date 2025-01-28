@@ -56,7 +56,7 @@ make_install() {
 
 # Now, the install process itself
 	mkdir -p "${DESTDIR}/" || return $?
-	gfind "${BUILDDIR}" -mindepth 1 -printf '%P\n' \
+	"${find_bin}" "${BUILDDIR}" -mindepth 1 -printf '%P\n' \
 	| while read install_item; do
 		if [ -d "${BUILDDIR}/${install_item}" ]; then
 			mkdir -p "${DESTDIR}/${install_item}" || return $?
@@ -89,7 +89,7 @@ make_dev() {
 
 # Now, the dev install process itself
 	mkdir -p "${DESTDIR}/" || return $?
-	gfind "${BUILDDIR}" -mindepth 1 -maxdepth 1 -printf '%P\n' \
+	"${find_bin}" "${BUILDDIR}" -mindepth 1 -maxdepth 1 -printf '%P\n' \
 	| while read install_item; do
 		if [ -e "${DESTDIR}/${install_item}" ]; then
 			echo -e "\t${C_YELLOW}WARNING:${C_NC} deleting '${DESTDIR}/${install_item}'"
@@ -118,7 +118,7 @@ make_uninstall() {
 				rm -rf "${line}" || return $?
 				local parent_dir=$(dirname "${line}")
 				if [ -d "${parent_dir}" ]; then
-					empty_dir=$(gfind "${parent_dir}" -maxdepth 0 -empty)
+					empty_dir=$("${find_bin}" "${parent_dir}" -maxdepth 0 -empty)
 					if [ -n "${empty_dir}" ]; then
 						local msg="\t${C_YELLOW}WARNING${C_NC}:"
 						msg+=" deleting empty dir '${parent_dir}'."
