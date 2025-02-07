@@ -3,6 +3,7 @@
 ## Next Release
 * differences from [previous tag](/../../compare/v1.9.1…main).
 * tests framework discovers test scripts on generic paths.
+* [#12](../../issues/12): BME now runs on macos.
 
 ## v1.9.1 (2025-JAN-03)
 * differences from [previous tag](/../../compare/v1.9.0…v1.9.1).

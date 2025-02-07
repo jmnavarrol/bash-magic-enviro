@@ -2,6 +2,9 @@
 *~
 tmp/
 
+# macOS
+.DS_Store
+
 # Other
 build/
 .MANIFEST
