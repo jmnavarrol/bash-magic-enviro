@@ -39,7 +39,6 @@ date:
 	@formated_date=`LC_ALL=C date +"%Y-%^b-%d"` \
 	&& echo -e "$${C_BOLD}Changelog date is:$${C_NC} $${C_GREEN}$${formated_date}$${C_NC}"
 
-# check: build
 check:
 	@echo -e "$${C_BOLD}Checking requirements...$${C_NC}"
 	@./make-checks.sh

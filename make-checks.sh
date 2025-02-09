@@ -99,6 +99,49 @@ check_macos() {
 			exit $err_rc
 		fi
 	}
+# other gnu tools
+	# find
+	find --version > /dev/null 2>&1 || {
+	# trying findutils' "g-version" on macos
+		if ! which gfind > /dev/null; then
+			local err_msg="${C_RED}ERROR:${C_NC} while testing ${C_BOLD}'$OSTYPE'${C_NC}:\n"
+			err_msg+="\tGNU tooling couldn't be found.\n"
+			err_msg+="\tYou should install ${C_BOLD}'brew install findutils'${C_NC} and follow instructions to properly set '\$PATH' environment variable."
+			echo -e "${err_msg}"
+			error_dependencies=true
+		# non-recoverable error: exit immediately
+			exit $err_rc
+		else
+			local err_msg="${C_RED}ERROR:${C_NC} while testing ${C_BOLD}'$OSTYPE'${C_NC}:\n"
+			err_msg+="\tit seems ${C_BOLD}'brew findutils'${C_NC} is installed but unconfigured.\n"
+			err_msg+="\tyou need to propely set your '\$PATH' environment variable."
+			echo -e "${err_msg}"
+			error_dependencies=true
+		# non-recoverable error: exit immediately
+			exit $err_rc
+		fi
+	}
+	# grep
+	echo "HELLO!" | grep --perl-regex --only-matching "^HELLO!" > /dev/null 2>&1 || {
+	# trying grep' "g-version" on macos
+		if ! which ggrep > /dev/null; then
+			local err_msg="${C_RED}ERROR:${C_NC} while testing ${C_BOLD}'$OSTYPE'${C_NC}:\n"
+			err_msg+="\tGNU tooling couldn't be found.\n"
+			err_msg+="\tYou should install ${C_BOLD}'brew install grep'${C_NC} and follow instructions to properly set '\$PATH' environment variable."
+			echo -e "${err_msg}"
+			error_dependencies=true
+		# non-recoverable error: exit immediately
+			exit $err_rc
+		else
+			local err_msg="${C_RED}ERROR:${C_NC} while testing ${C_BOLD}'$OSTYPE'${C_NC}:\n"
+			err_msg+="\tit seems ${C_BOLD}'brew grep'${C_NC} is installed but unconfigured.\n"
+			err_msg+="\tyou need to propely set your '\$PATH' environment variable."
+			echo -e "${err_msg}"
+			error_dependencies=true
+		# non-recoverable error: exit immediately
+			exit $err_rc
+		fi
+	}
 }
 
 # Checks Git >= 2.9
