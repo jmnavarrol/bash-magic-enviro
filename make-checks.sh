@@ -1,5 +1,28 @@
 #!/usr/bin/env bash
 
+main() {
+	check_bash_version
+	check_destdir_in_path
+	check_os
+	check_git_version
+	check_virtualenv
+	check_md5sum
+	check_flock
+	check_jq
+
+# Check overall results
+	if [ true == "${warning_dependencies}" ]; then
+		echo -e "\n${C_YELLOW}WARNING:${C_NC} Some non-critical dependencies unmet.  See above."
+	fi
+	if [ true == "${error_dependencies}" ]; then
+		echo -e "\n${C_RED}ERROR:${C_NC} Unmet dependencies: BME won't be installed.  See above."
+		echo -e "\tPlease correct errors and retry."
+		exit 1
+	else
+		echo -e "\n${C_BOLD}ALL CHECKS:${C_NC} ${C_GREEN}PASSED${C_NC}."
+	fi
+}
+
 #--
 # FUNCTIONS
 #--
@@ -23,6 +46,59 @@ check_destdir_in_path() {
 		echo -e "\t${C_BOLD}CURRENT PATH:${C_NC} ${PATH}"
 		error_dependencies=true
 	fi
+}
+
+# Checks OS-dependent nuances
+check_os() {
+	case "$OSTYPE" in
+		darwin*)
+			local os_msg="MacOS detected ($OSTYPE)\n"
+			os_msg+="\tchecking for GNU tooling..."
+			echo -e "${os_msg}"
+			check_macos || return $?
+		;;
+		linux*)
+			local os_msg="Linux detected ($OSTYPE)\n"
+			os_msg+="\tFollow on."
+			echo -e "${os_msg}"
+		;;
+		*)
+			local os_msg="Unmanaged OS ($OSTYPE)\n"
+			os_msg+="\tLet's hope BME works OK. You may open an issue to check for support."
+			echo -e "${os_msg}"
+			warning_dependencies=true
+		;;
+	esac
+
+# Final message
+	if [ ! true == "${warning_dependencies}" ] && [ ! true == "${error_dependencies}" ]; then
+		echo -e "* ${C_BOLD}OS dependencies for '${OSTYPE}': ${C_GREEN}OK${C_NC}"
+	fi
+}
+
+# Custom checks on macOS
+check_macos() {
+	mkdir --parents .testdir > /dev/null 2>&1 || {
+		local err_rc=$?
+	# trying coreutils' "g-versions" on macos
+		if ! which gmkdir > /dev/null; then
+			local err_msg="${C_RED}ERROR:${C_NC} while testing ${C_BOLD}'$OSTYPE'${C_NC}:\n"
+			err_msg+="\tGNU tooling couldn't be found.\n"
+			err_msg+="\tYou should install ${C_BOLD}'brew install coreutils'${C_NC} and follow instructions to properly set '\$PATH' environment variable."
+			echo -e "${err_msg}"
+			error_dependencies=true
+		# non-recoverable error: exit immediately
+			exit $err_rc
+		else
+			local err_msg="${C_RED}ERROR:${C_NC} while testing ${C_BOLD}'$OSTYPE'${C_NC}:\n"
+			err_msg+="\tit seems ${C_BOLD}'brew coreutils'${C_NC} is installed but unconfigured.\n"
+			err_msg+="\tyou need to propely set your '\$PATH' environment variable."
+			echo -e "${err_msg}"
+			error_dependencies=true
+		# non-recoverable error: exit immediately
+			exit $err_rc
+		fi
+	}
 }
 
 # Checks Git >= 2.9
@@ -71,6 +147,7 @@ check_virtualenv() {
 	else
 		local err_msg="No valid Python3 version found.\n"
 		err_msg+="\tYou won't be able to use Python virtualenv-related features."
+		echo -e "${err_msg}"
 		warning_dependencies=true
 		return 1
 	fi
@@ -85,7 +162,15 @@ check_virtualenv() {
 		err_msg+="${venv_output}"
 		echo -e "${err_msg}"
 		warning_dependencies=true
-		rm --recursive --force .here
+		rm --recursive --force .here || {
+			local rc_rm=$?
+			local err_msg="${C_RED}ERROR${C_NC} (${rc_rm}): "
+			err_msg+="${C_BOLD}Couldn't delete '.here':${C_NC}\n"
+			err_msg+="\tis this system using GNU tooling?"
+			echo -e "${err_msg}"
+			error_dependencies=true
+			return $rc_rm
+		}
 		return $rc_venv
 	}
 	unset venv_output
@@ -102,14 +187,30 @@ check_virtualenv() {
 		err_msg+="${pip_install}"
 		echo -e "${err_msg}"
 		warning_dependencies=true
-		rm --recursive --force .here
+		rm --recursive --force .here || {
+			local rc_rm=$?
+			local err_msg="${C_RED}ERROR${C_NC} (${rc_rm}): "
+			err_msg+="${C_BOLD}Couldn't delete '.here':${C_NC}\n"
+			err_msg+="\tis this system using GNU tooling?"
+			echo -e "${err_msg}"
+			error_dependencies=true
+			return $rc_rm
+		}
 		return $rc_pip
 	}
 	unset pip_install
-	rm --recursive --force .here
+	rm --recursive --force .here || {
+		local rc_rm=$?
+		local err_msg="${C_RED}ERROR${C_NC} (${rc_rm}): "
+		err_msg+="${C_BOLD}Couldn't delete '.here':${C_NC}\n"
+		err_msg+="\tis this system using GNU tooling?"
+		echo -e "${err_msg}"
+		error_dependencies=true
+		return $rc_rm
+	}
 
 # Final message
-	if [ ! true == "${warning_dependencies}" ]; then
+	if [ ! true == "${warning_dependencies}" ] && [ ! true == "${error_dependencies}" ]; then
 		echo -e "* ${C_BOLD}Python virtualenv management: ${C_GREEN}OK${C_NC}"
 	fi
 }
@@ -131,9 +232,14 @@ check_flock() {
 	if flock --version > /dev/null 2>&1; then
 		echo -e "${C_BOLD}*${C_NC} ${C_BOLD}'flock'${C_NC} found: ${C_GREEN}OK${C_NC}"
 	else
-		echo -e "${C_BOLD}*${C_NC} ${C_YELLOW}WARNING:${C_NC} ${C_BOLD}'flock'${C_NC} couldn't be found."
-		echo -e "\tYou won't be able to use Python virtualenv-related features."
-		echo -e "\tYou should install your system's ${C_BOLD}'util-linux'${C_NC} package."
+		local warn_msg="${C_BOLD}*${C_NC} ${C_YELLOW}WARNING:${C_NC} ${C_BOLD}'flock'${C_NC} couldn't be found.\n"
+		warn_msg+="\tYou won't be able to use Python virtualenv-related features.\n"
+		if [[ "${OSTYPE}" == "darwin"* ]]; then
+			warn_msg+="\tYou should install ${C_BOLD}'brew install flock'${C_NC}."
+		else
+			warn_msg+="\tYou should install your system's ${C_BOLD}'util-linux'${C_NC} package."
+		fi
+		echo -e "${warn_msg}"
 		warning_dependencies=true
 	fi
 }
@@ -143,34 +249,19 @@ check_jq() {
 	if jq --version > /dev/null 2>&1; then
 		echo -e "${C_BOLD}*${C_NC} ${C_BOLD}'jq'${C_NC} found: ${C_GREEN}OK${C_NC}"
 	else
-		echo -e "${C_BOLD}*${C_NC} ${C_YELLOW}WARNING:${C_NC} ${C_BOLD}'jq'${C_NC} couldn't be found."
-		echo -e "\tYou won't be able to use AWS-related features."
-		echo -e "\tYou should install your system's ${C_BOLD}'jq'${C_NC} package."
+		local warn_msg="${C_BOLD}*${C_NC} ${C_YELLOW}WARNING:${C_NC} ${C_BOLD}'jq'${C_NC} couldn't be found.\n"
+		warn_msg+="\tYou won't be able to use AWS-related features.\n"
+		if [[ "${OSTYPE}" == "darwin"* ]]; then
+			warn_msg+="\tYou should install ${C_BOLD}'brew install jq'${C_NC}."
+		else
+			warn_msg+="\tYou should install your system's ${C_BOLD}'jq'${C_NC} package."
+		fi
+		echo -e "${warn_msg}"
 		warning_dependencies=true
 	fi
 }
 
-
-
 #--
-# MAIN ENTRY POINT
+# ENTRY POINT
 #--
-check_bash_version
-check_destdir_in_path
-check_git_version
-check_virtualenv
-check_md5sum
-check_flock
-check_jq
-
-# Check overall results
-if [ true == "${warning_dependencies}" ]; then
-	echo -e "\n${C_YELLOW}WARNING:${C_NC} Some non-critical dependencies unmet.  See above."
-fi
-if [ true == "${error_dependencies}" ]; then
-	echo -e "\n${C_RED}ERROR:${C_NC} Unmet dependencies: BME won't be installed.  See above."
-	echo -e "\tPlease correct errors and retry."
-	exit 1
-else
-	echo -e "\n${C_BOLD}ALL CHECKS:${C_NC} ${C_GREEN}PASSED${C_NC}."
-fi
+main "$@"; exit $?

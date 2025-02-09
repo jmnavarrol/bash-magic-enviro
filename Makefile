@@ -1,5 +1,5 @@
 # Main project's Makefile
-SHELL := /bin/bash
+SHELL := /usr/bin/env bash
 
 export MAKEFILEDIR := $(shell dirname $(realpath $(firstword $(MAKEFILE_LIST))))
 export VERSION := $(shell cat ./VERSION)
@@ -39,7 +39,8 @@ date:
 	@formated_date=`LC_ALL=C date +"%Y-%^b-%d"` \
 	&& echo -e "$${C_BOLD}Changelog date is:$${C_NC} $${C_GREEN}$${formated_date}$${C_NC}"
 
-check: build
+# check: build
+check:
 	@echo -e "$${C_BOLD}Checking requirements...$${C_NC}"
 	@./make-checks.sh
 	@echo -e "$${C_BOLD}Checking requirements:$${C_NC} $${C_GREEN}DONE!$${C_NC}"
