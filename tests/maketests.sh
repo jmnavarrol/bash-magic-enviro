@@ -39,6 +39,7 @@ local test_start=$(date +%s)
 
 	[ ${DEBUG:+1} ] && echo "DEBUGGING IS ACTIVE" # debugging example
 	check_environment || exit $?
+	extra_path=$(set_tests_path) || exit $?
 
 	test_log "${C_BOLD}RUNNING UNITARY TESTS...${C_NC}" info 0
 	# call back on each test within a clean environment
@@ -58,8 +59,9 @@ local test_start=$(date +%s)
 		[ ${DEBUG:+1} ] && test_log "TEST's scratch dir: '${test_scratch_dir}'"
 		mkdir --parents ${test_scratch_dir}
 		local batch_start=$(date +%s)
+
 		env --ignore-environment \
-			PATH="$(realpath "${BUILDDIR}"):/usr/local/sbin:/usr/bin:/usr/sbin:/bin:/sbin" \
+			PATH="$(realpath "${BUILDDIR}"):${extra_path}" \
 			HOME="${test_scratch_dir}" \
 			CURRENT_TESTFILE_NUMBER=${test_counter} \
 			bash -c "source "${TESTS_DIR}/helper_functions.sh" && ${test}"
@@ -109,7 +111,45 @@ function check_environment() {
 		test_log "${err_msg}" error 0
 		return 1
 	}
-	[ ${DEBUG:+1} ] && tree ${BUILDDIR} || return 0
+
+	if [[ "${OSTYPE}" == "darwin"* ]]; then
+		if ! which brew > /dev/null; then
+			local err_msg="Runing on ${T_BOLD}'${OSTYPE}'${T_NC}:\n"
+			err_msg+="\thomebrew is mandatory but couldn't be found."
+			test_log "${err_msg}" error 0
+			return 1
+		fi
+	fi
+}
+
+
+# Prepares the restricted environment for tests
+function set_tests_path() {
+# sets "internal" path
+	local tests_path='/usr/local/sbin:/usr/bin:/usr/sbin:/bin:/sbin'
+	if [[ "${OSTYPE}" == "darwin"* ]]; then
+		local brew_path=$(brew --prefix)/bin
+		tests_path="${brew_path}:${tests_path}"
+
+		local gnu_packages=(
+			coreutils
+			findutils
+			grep
+		)
+		for gnu_package in ${gnu_packages[@]}; do
+			if [[ -d "/usr/local/opt/${gnu_package}" ]]; then
+				tests_path="/usr/local/opt/${gnu_package}/libexec/gnubin:${tests_path}"
+			else
+				local warn_msg="WARNING: while trying to set \$PATH for '${gnu_package}':\n"
+				warn_msg+="\tdirectory '/usr/local/opt/${gnu_package}' couldn't be found.\n"
+				warn_msg+="\tdid you 'brew install ${gnu_package}'?"
+				echo -e "${warn_msg}"
+				return 1
+			fi
+		done
+	fi
+
+	echo "${tests_path}"
 }
 
 #--

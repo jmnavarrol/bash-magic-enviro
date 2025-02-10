@@ -28,7 +28,7 @@ function setup() {
 	export REPO_DIR="${HOME}/sourcecode"
 	mkdir --parents "${REPO_DIR}"
 	shopt -s extglob dotglob
-	cp --archive --recursive "${BASE_DIR}"/!(tests|.git) "${REPO_DIR}/"
+	cp --archive --recursive "${BASE_DIR}"/!(tests|.git) "${REPO_DIR}/" || return $?
 	shopt -u extglob dotglob
 
 # Sets install dir
