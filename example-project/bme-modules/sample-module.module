@@ -12,7 +12,7 @@ local unmet_dependencies=false
 	# an export to attest the module has been properly loaded
 	export BME_SAMPLE_MODULE=true
 	bme_log "${C_BOLD}'samplemodule-test'${C_NC} - Output message to attest this module has been properly loaded" function 2
-	
+
 	if ($unmet_dependencies); then
 		bme_log "${C_BOLD}'sample-module'${C_NC} not loaded. See missed dependencies above." error 1
 	else
@@ -33,6 +33,6 @@ samplemodule-test() {
 	bme_log "${C_BOLD}'sample-module'${C_NC} project-level module is in fact loaded!" info
 	else
 		bme_log "${C_BOLD}'sample-module'${C_NC} project-level module is not ready." error
-		return -1
+		return 1
 	fi
 }

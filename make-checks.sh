@@ -121,6 +121,27 @@ check_macos() {
 			exit $err_rc
 		fi
 	}
+	# sed
+	sed --version > /dev/null 2>&1 || {
+	# trying gnu-sed's "g-version" on macos
+		if ! which gsed > /dev/null; then
+			local err_msg="${C_RED}ERROR:${C_NC} while testing ${C_BOLD}'$OSTYPE'${C_NC}:\n"
+			err_msg+="\tGNU tooling couldn't be found.\n"
+			err_msg+="\tYou should install ${C_BOLD}'brew install gnu-sed'${C_NC} and follow instructions to properly set '\$PATH' environment variable."
+			echo -e "${err_msg}"
+			error_dependencies=true
+		# non-recoverable error: exit immediately
+			exit $err_rc
+		else
+			local err_msg="${C_RED}ERROR:${C_NC} while testing ${C_BOLD}'$OSTYPE'${C_NC}:\n"
+			err_msg+="\tit seems ${C_BOLD}'brew gnu-sed'${C_NC} is installed but unconfigured.\n"
+			err_msg+="\tyou need to propely set your '\$PATH' environment variable."
+			echo -e "${err_msg}"
+			error_dependencies=true
+		# non-recoverable error: exit immediately
+			exit $err_rc
+		fi
+	}
 	# grep
 	echo "HELLO!" | grep --perl-regex --only-matching "^HELLO!" > /dev/null 2>&1 || {
 	# trying grep' "g-version" on macos

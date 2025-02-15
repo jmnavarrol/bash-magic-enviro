@@ -39,7 +39,11 @@ local test_start=$(date +%s)
 
 	[ ${DEBUG:+1} ] && echo "DEBUGGING IS ACTIVE" # debugging example
 	check_environment || exit $?
-	extra_path=$(set_tests_path) || exit $?
+	extra_path=$(set_tests_path) || {
+		local err_rc=$?
+		test_log "(${err_rc})\n${extra_path}" error 0
+		return $err_rc
+	}
 
 	test_log "${C_BOLD}RUNNING UNITARY TESTS...${C_NC}" info 0
 	# call back on each test within a clean environment
@@ -132,9 +136,10 @@ function set_tests_path() {
 		tests_path="${brew_path}:${tests_path}"
 
 		local gnu_packages=(
-			coreutils
-			findutils
-			grep
+			'coreutils'
+			'findutils'
+			'grep'
+			'gnu-sed'
 		)
 		for gnu_package in ${gnu_packages[@]}; do
 			if [[ -d "/usr/local/opt/${gnu_package}" ]]; then

@@ -6,7 +6,9 @@ case $- in
 	  *) return;;
 esac
 
-echo "HELLO, WORLD! from .bashrc"
+# You can uncomment this below for a trace that this file is indeed sourced
+# echo "HELLO, WORLD! from .bashrc"
+
 # don't put duplicate lines or lines starting with space in the history.
 # See bash(1) for more options
 HISTCONTROL=ignoreboth
@@ -22,7 +24,10 @@ HISTFILESIZE=2000
 # update the values of LINES and COLUMNS.
 shopt -s checkwinsize
 
-# Other configurations
-if [ -f ~/bash_includes ]; then
-	source ~/bash_includes
+# BME configurations
+# this implies you are using a custom Terminal profile on macOS which exports a suitable TERMINAL_PROFILE environment variable
+if [ "${TERMINAL_PROFILE}" == 'BME' ]; then
+	if [ -f ~/.bme_includes ]; then
+		source  ~/.bme_includes
+	fi
 fi

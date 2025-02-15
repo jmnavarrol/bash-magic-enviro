@@ -11,9 +11,9 @@ Once within a *"BME project"* context, it will also look for a file named **'.bm
 BME abilities are extended by means of *"BME modules"* either global or project-level.
 
 So, in brief:
-1. You *"declare"* a project by means of its *'.bme_project'* file at its topmost directory (the expectation, but not a hard requirement, is that a project's entry point is the root of a *git sandbox*).  This topmost file sets the project's name, the [BME modules](#modules) you want to be loaded, etc.
+1. You *"declare"* a project by means of its *[.bme_project](./example-project/.bme_project)* file at its topmost directory (the expectation, but not a hard requirement, is that a project's entry point is the root of a *git sandbox*).  This topmost file sets the project's name, the [BME modules](#modules) you want to be loaded, etc.
 1. Project behaviour is attained by the contents of your *bme files* and the global or local *BME modules* loaded.
-1. Aditional *'.bme_env'* files within the project's directory hierarchy may call exported functions, tweak the environment for that given directory, etc. (i.e.: you may load a Python virtualenv, request a custom Terraform version, even run whatever Bash code you may need).
+1. Aditional *[.bme_env](./example-project/.bme_env)* files within the project's directory hierarchy may call exported functions, tweak the environment for that given directory, etc. (i.e.: you may [load a Python virtualenv](./example-project/virtualenv-example/.bme_env), [request a custom Terraform version](./example-project/terraform-example/.bme_env), even run whatever Bash code you may need).
 1. Once you *"cd out"* from the project's directory hierarchy all these customizations will be automatically cleaned out.
 
 ----
@@ -53,6 +53,8 @@ So, in brief:
 * **[GNU make](https://www.gnu.org/software/make/) >= 4.2**. Used by this tool's install process.
 * **Internet connectivity:** Some features and modules may access Internet at run time (i.e.: *check-version*, *terraform-support*...).
 * See each module's requirements section for other dependencies.
+
+**NOTE FOR macOS users:** this project depends heavily on GNU/GPL tooling (Bash itself, but also basic utilities like find, sed, grep...) while BSD versions are installed on this platform.  It is suggested the use of homebrew to install the proper dependencies (see [macOS' README](./docs/macos.md) for further details).
 
 <sub>[back to contents](#contents).</sub>
 

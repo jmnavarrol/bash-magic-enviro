@@ -21,15 +21,21 @@ function main() {
 # (artifacts and environment variables)
 # shopt outside the function.
 # See https://unix.stackexchange.com/questions/787437/weird-behaviour-on-bash-function
-shopt -s extglob dotglob
 function setup() {
 # Sets sources
 	test_title ''
 	export REPO_DIR="${HOME}/sourcecode"
 	mkdir --parents "${REPO_DIR}"
-	shopt -s extglob dotglob
-	cp --archive --recursive "${BASE_DIR}"/!(tests|.git) "${REPO_DIR}/" || return $?
-	shopt -u extglob dotglob
+
+	# not using cp --archive to avoid dreaded "can't copy a directory into itself" on older coreutils versions
+	for target in $(
+		find "${BASE_DIR}/" \
+		-mindepth 1 -maxdepth 1 \
+		\( -path */.git -or -path */tests \) \
+		-prune -o -print
+	); do
+		cp --archive "${target}" "${REPO_DIR}/"
+	done
 
 # Sets install dir
 	mkdir --parents "${HOME}/bin" || return $?
@@ -43,7 +49,6 @@ function setup() {
 
 	test_log 'Sources setup' OK
 }
-shopt -u extglob dotglob
 
 
 function check_script() {
