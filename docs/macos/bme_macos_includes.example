@@ -1,0 +1,47 @@
+# To be sourced by Bash sessions
+
+# You can uncomment this below for a trace that this file is indeed sourced
+# echo "HELLO FROM bme_macos_includes"
+
+# Checks BME dependencies on macos and sets PATH accodingly
+bme_macos_dependencies() {
+local updated_path="${PATH}"
+local updated_manpath="${MANTPATH}"
+local brew_prefix=$(brew --prefix)
+
+local gnu_packages=(
+	'coreutils'
+	'findutils'
+	'grep'
+	'gnu-sed'
+)
+
+	for gnu_package in ${gnu_packages[@]}; do
+		if [ -d "${brew_prefix}/opt/${gnu_package}" ]; then
+			updated_path="${brew_prefix}/opt/${gnu_package}/libexec/gnubin:${updated_path}"
+			updated_manpath="${brew_prefix}/opt/${i}/libexec/gnuman:${updated_manpath}"
+		else
+			local warn_msg="WARNING: while trying to set \$PATH for '${gnu_package}':\n"
+			warn_msg+="\tdirectory '${brew_prefix}/opt/${gnu_package}' couldn't be found.\n"
+			warn_msg+="\tdid you 'brew install ${gnu_package}'?"
+			echo -e "${warn_msg}"
+			return 1
+		fi
+	done
+
+# Final exports
+	export PATH="${updated_path}"
+	export MANPATH="${updated_manpath}"
+}
+
+# Sets BME dependencies (and gets out of the way once finished)
+if [ "${TERMINAL_PROFILE}" == 'BME' ]; then
+	bme_macos_dependencies || return $?
+else
+	err_msg="THIS IS NOT THE TERMINAL THE TERMINAL PROFILE YOU EXPECT.\n"
+	err_msg="\tPlease run this on 'BME' Terminal Profile."
+	echo -e "${err_msg}"
+	unset err_msg
+	return 1
+fi
+unset -f bme_macos_dependencies

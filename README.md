@@ -3,7 +3,7 @@ Bash Magic Enviro
 
 **An opinionated Bash configuration tool for development environments.**
 
-This tool allows to set isolated and configurable *"Bash environments"* (*"projects"*).
+This tool allows you to set isolated and configurable *"Bash environments"* (*"projects"*).
 
 Once installed and configured, BME will look for a file named **'.bme_project'** each time you change directories for a *"BME project definition"*, which will be *sourced* when found.  
 Once within a *"BME project"* context, it will also look for a file named **'.bme_env'** at each subdirectory to customize your environment as per its contents, which will also be sourced.
@@ -164,19 +164,29 @@ Use [the included Makefile](./Makefile).  See the output of the bare `make` comm
 This tool works by altering your Bash prompt so it can process files it finds each time you traverse a directory on the console (by means of Bash' source function).
 
 For this to happen, you need to source *Bash Magic Enviro's* main file ([*'bash-magic-enviro'*](./src/bash-magic-enviro)) and then make your *"prompt command"* to run its main function ([*'bme_eval_dir()'*](https://github.com/jmnavarrol/bash-magic-enviro/blob/24b6de1f364c0b25a5082bd33408a566df8cf76d/src/bash-magic-enviro#L34)) each time you `cd` into a new directory.
-1. Create your own *~/bash_includes* file using [this 'bash_includes.example'](./docs/bash_includes.example) as reference.  It provides two features:
+1. Create your own *~/bme_includes* file using [this 'bme_includes.example'](./docs/bme_includes.example) as reference.  It provides two features:
    1. It adds your `~/bin` directory (if it exists) to your $PATH.  This way, the helper functions provided by this repository can be found and eventually loaded (of course, if you already added `~/bin` to your $PATH by other means, you won't need to do it here again).
    1. The critical part: it sources the main *bash-magic-enviro* file and alters your Bash prompt so it runs the **bme_eval_dir()** function each time your change directories, which is the one that makes possible looking for (and eventually sourcing) *.bme_\** files.  
-You can/should also use your *~/bash_includes* file to export your personal project-related variables, like *secrets*, *tokens* and other data that shouldn't be checked-in to source code management systems (make sure you protect this file with restrictive permissions).
+You can/should also use your *~/bme_includes* file to export your personal project-related variables, like *secrets*, *tokens* and other data that shouldn't be checked-in to source code management systems (make sure you protect this file with restrictive permissions).
 1. Add to the end of your `~/.bashrc` file (or whatever other file you know it gets processed/sourced at login):
    ```bash
    # Other includes
-   if [ -f ~/bash_includes ]; then
-   	. ~/bash_includes
+   if [ -r ~/bme_includes ]; then
+   	. ~/bme_includes
    fi
    ```
 
 Once you open a new terminal, changes will be loaded.
+
+**In brief:**  
+When you open a Bash console once everything is installed and configured:
+1. `~/.bashrc`, `~/.secrets`, and `~/bme_includes` are already in place.
+   * on macOS, `~/.bash_profile` and `~/bme_macos_includes` are also in place.
+1. Bash will source your `~/.bashrc`.
+1. On interactive sessions, `~/.bashrc` will source `~/bme_includes`.
+1. `~/bme_includes` will source your `~/.secrets` file.
+   * on macOS further configuration will be done (see [macos configuration](./docs/macos.md)).
+1. `~/bme_includes` will activate BME by updating your Bash prompt to run `bme_eval_dir()` as you traverse directories on your console.
 
 <sub>[back to contents](#contents).</sub>
 
@@ -392,7 +402,7 @@ As of now, it works on the expectation that you own a *"personal AWS account"*, 
 **Requirements:**
 * [jq](https://github.com/stedolan/jq): a *"lightweight and flexible command-line JSON processor"*.  It is used here to parse AWS API responses.  You should most possibly install it with the help of your system's package manager (i.e.: `sudo apt install jq`).
 * A properly profiled AWS access configuration.  I tested this with a local *~/.aws/* directory (this module will use your AWS's **default** profile).  See [examples for *config* and *credentials* files](./docs/aws_dir).
-* *$AWS_MFA* environment variable.  You need to export your MFA device to this variable, usually from your [bash_includes file](./docs/bash_includes.example).  Make sure it matches the **mfa_serial** configuration from [your **default** AWS profile](./docs/aws_dir/credentials.example).
+* *$AWS_MFA* environment variable.  You need to export your MFA device to this variable, usually from your [bme_includes file](./docs/bme_includes.example).  Make sure it matches the **mfa_serial** configuration from [your **default** AWS profile](./docs/aws_dir/credentials.example).
 * [AWS CLI](https://docs.aws.amazon.com/cli/latest/userguide/cli-chap-welcome.html): most possibly, your best approach is including it in a python virtualenv with the help of our [python3-virtualenvs module](#virtualenvs).
 * [python3-virtualenvs module](#virtualenvs): if you load your *awscli* support from within a python virtualenv.
 * This module can only be used in an interactive Bash session.

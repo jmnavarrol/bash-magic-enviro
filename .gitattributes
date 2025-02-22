@@ -3,8 +3,8 @@
 # these are also shell files
 src/bash-magic-enviro linguist-language=bash
 .bash* linguist-language=bash
-docs/bash_includes.example linguist-language=bash
-docs/bme* linguist-language=bash
+docs/**/bash_includes.example linguist-language=bash
+docs/**/bme* linguist-language=bash
 .bme* linguist-language=bash
 *.module linguist-language=bash
 docs/aws_dir/*.example linguist-language=INI

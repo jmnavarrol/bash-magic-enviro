@@ -1,0 +1,47 @@
+# To be sourced by Bash sessions
+
+# You can uncomment this below for a trace that this file is indeed sourced
+# echo "HELLO FROM bme_includes"
+
+# Adds user's bin dir to path, if it exists -it better should, or else Bash Magic Enviro won't work ;^)
+# Thanks to https://stackoverflow.com/questions/1396066/detect-if-path-has-a-specific-directory-entry-in-it
+if ! [[ ":${PATH}:" == *":${HOME}/bin:"* ]]; then
+	if [ -d "${HOME}/bin" ] ; then
+		export PATH="${HOME}/bin:${PATH}"
+	else
+		echo "Please create '${HOME}/bin' for BME to work properly."
+	fi
+fi
+
+# Loads secrets (if it exits)
+# Make sure you protect this file with proper permissions
+if [ -r ~/.secrets ]; then
+	source  ~/.secrets
+fi
+
+# In case you are taking advantage of the 'python3-virtualenvs' module...
+# NOTE: The path to 'virtualenvwrapper.sh' will depend on the way you install it,
+# so make sure you substitute the path below with the proper one for your system.
+# if [ -r /usr/share/virtualenvwrapper/virtualenvwrapper.sh ]; then
+# 	source /usr/share/virtualenvwrapper/virtualenvwrapper.sh
+# fi
+
+# This is required only on macos systems.  You may delete this on Linux.
+# If you already know that this is running on macos, you may delete this conditional and either undconditionally load this file or copy-paste its contents here (edit accordingly)
+if [[ "${OSTYPE}" == darwin* ]]; then
+	if [ -r "${HOME}/bme_macos_includes" ]; then
+		source "${HOME}/bme_macos_includes" || return $?
+	else
+		echo "This is a macOS system.  Please make sure you include proper check provisions."
+		return 1
+	fi
+fi
+
+# By the "export" below, the function 'bme_eval_dir()' is run every time we change directories
+# Then, it's a matter of what you include within the '.bme_*' files on each dir.
+if ! source bash-magic-enviro; then
+	echo "Please make sure 'bash-magic-enviro' is installed and in your path!"
+	return 1
+else
+	export PROMPT_COMMAND=bme_eval_dir
+fi

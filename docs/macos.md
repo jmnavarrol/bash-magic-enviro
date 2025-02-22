@@ -3,7 +3,9 @@
 * [development for macos](#macos-development)
 
 ## install<a name="install"></a>
-macOS uses BSD tooling while BME is developed mainly on Linux with GNU tooling support.  For BME to run on macOS with its required dependencies, I suggest installing them through [homebrew](https://brew.sh/).  Once *homebrew* is installed and configured, you should `brew install` the following packages:
+macOS uses BSD tooling by default while BME is developed mainly on Linux with GNU tooling support.  
+For BME to run on macOS with its required dependencies, I suggest installing them through [homebrew](https://brew.sh/).  
+Once *homebrew* is installed and configured, you should `brew install` the following packages:
 * bash
 * coreutils
 * findutils
@@ -12,9 +14,25 @@ macOS uses BSD tooling while BME is developed mainly on Linux with GNU tooling s
 * flock
 * jq
 
-Once those packages are installed, they should be made the default instead of those from the system by setting the PATH environment variable on the console.  To help with this process, an example of a [custom BME Terminal profile](./macos/BME.terminal) is provided here which you could import, as well as examples for [.bash_profile](./macos/.bash_profile.example), [.bashrc](./macos/.bashrc.example) and [.bme_includes](./macos/.bme_includes.example) you could use as a reference for your own ones under your `${HOME}/` directory.
+Once those packages are installed, they should be made the default instead of those from the system by setting the PATH environment variable on the console.  To help with this process, an example of custom BME Terminal profiles are provided here which you could import, as well as examples for [.bash_profile](./macos/.bash_profile.example), [.bashrc](./macos/.bashrc.example) and [bme_macos_includes](./macos/bme_macos_includes.example) to be sourced from the general [bme_includes file](./bme_includes.example). You could use them as a reference for your own ones under your `${HOME}/` directory.
+
+Two terminal profiles are included (their only difference being the absolute path to brew's Bash), one for [intel-based platforms](./macos/BME.intel.terminal), and another one for [arm64 ones](./macos/BME.arm64.terminal). Review the output of `uname -m` to check your architecture and select the one you import accordingly.
 
 Once *Terminal Profile* and homebrew dependencies are properly installed and configured, you can go on with [the general install instructions](../README.md#install) within your BME (Bash-configured) console.
+
+**In brief:**  
+Session steps on macOS:
+1. set in place proper `~/.bash_profile`, `~/.bashrc`, `~/.secrets`, `~/bme_includes` and `~/bme_macos_includes` files.
+1. import and review the proper *BME Terminal Profile*.
+1. open a console with that *BME Terminal Profile*.  Upon start, it will:
+   1. run Bash in login mode.
+   1. Bash will source your `~/.bash_profile`.
+   1. `~/.bash_profile` will source `~/.bashrc`.
+   1. On interactive sessions, `~/.bashrc` will source `~/bme_includes`.
+   1. `~/bme_includes` will source your `~/.secrets` file.
+   1. On macOS' *BME Terminal Profile*, `~/bme_includes` will source `~/bme_macos_includes`.
+   1. `~/bme_macos_includes` will check for the required brew dependencies and it will set your session's `$PATH` environment variable as needed.
+   1. Finally, back to `~/bme_includes`, it will activate BME by updating your Bash prompt to run `bme_eval_dir()` as you traverse directories on your console.
 
 <sub>[back to top](#top).</sub>
 
