@@ -1,6 +1,9 @@
 # CHANGELOG
 
 ## Next Release
+* differences from [previous tag](/../../compare/v1.9.2…main).
+
+## v1.9.2 (2025-FEB-23)
 * differences from [previous tag](/../../compare/v1.9.1…main).
 * tests framework discovers test scripts on generic paths.
 * [#12](../../issues/12): BME now runs on macos.

@@ -1,6 +1,5 @@
 # TO-DO: bash-magic-enviro
 Pending actions, general notes, etc. (in no particular order):
-* publish docker container so it can be just used.
 * Automatic support for project root's '.bme.d/' directory '.gitignore' inclusion.
 * Find a way for modules to provide their own (formatted) help.
 * Easier/global management of whitelisting and projects' root directories.
@@ -11,6 +10,9 @@ Pending actions, general notes, etc. (in no particular order):
 * Helper function to indent lines (for proper log formatting)
 * Allow for environment-related files (i.e.: *.bme_env.production*, *.bme_env.local-development*...; consider if this should work just for *.bme_env* files only or also for the main *.bme_project* file).
 * Install dir shouldn't need to be in $PATH since we are not installing executable files.
+* **Containers:**
+  * publish docker container so it can be just used.
+  * review how to add a *dockercompose.yml* or something to that end for easier macos development on Linux.
 * **Makefile:**
   * `make install` may offer to tweak your environment for BME autoconfiguration.
   * Consider new target for checks prior to close a version, i.e.: VERSION, CHANGELOG, Dockerfile, tests... are properly updated, etc.
