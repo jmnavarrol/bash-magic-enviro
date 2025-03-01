@@ -38,6 +38,8 @@ function check_log_indentation() {
 		expected_msg_string+="${indented_prefix}${message_array[$i]}"
 		((i++))
 	done
+	# expand control codes in the expected string
+	expected_msg_string=$(echo -e "${expected_msg_string}")
 
 # Process the log string
 	local output_msg=$(bme_log "${msg_string}" '' ${indentation})

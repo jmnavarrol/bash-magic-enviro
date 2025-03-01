@@ -34,4 +34,3 @@ Pending actions, general notes, etc. (in no particular order):
   * More support functions to load/unload BME, etc.
 
 ## IN PROGRESS
-* bme_log() to indent lines (for proper log formatting)

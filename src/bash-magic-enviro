@@ -100,13 +100,12 @@ bme_log() {
 local log_message="${1}"  # first param
 local log_type="${2^^}"   # second param (uppercased)
 local log_level=${3:-0}   # third param (with a default of 0)
-local full_message=''
 # Params debug
 # 	echo "log_message: ${log_message}"
 # 	echo "log_type: ${log_type}"
 # 	echo "log_level: ${log_level}"
 
-	# No parameters.  Show help instead
+# No parameters.  Show help instead
 	if (( $# == 0 )); then
 		local log_msg="'log message' ['log type' (see below)] [indentation level (0,1,2...)]"
 		log_msg+="\n${C_BOLD}'log type'${C_NC} will add a colored prefix as shown below:"
@@ -123,39 +122,47 @@ local full_message=''
 		return 0
 	fi
 
-	# standard log message processing
+# Otherwise, log_message is mandatory
 	if [ -z "$log_message" ]; then
 		echo -e "${C_RED}FATAL:${C_NC} ${C_BOLD}'${FUNCNAME[0]}'${C_NC} called in code from ${C_BOLD}'${FUNCNAME[1]}'${C_NC} with no message."
 		return $false
 	fi
-# Sets indentation level
-	for (( i=0; i < ${log_level}; i++ )); do
-		full_message+='\t'
-	done
-	unset i
-# Then, message type
+
+# Adds message type to log message
 	case "$log_type" in
 		FATAL | ERROR | FAIL)
-			full_message+="${C_RED}${log_type}:${C_NC} "
+			log_message="${C_RED}${log_type}:${C_NC} ${log_message}"
 		;;
 		WARNING)
-			full_message+="${C_YELLOW}${log_type}:${C_NC} "
+			log_message="${T_YELLOW}${log_type}:${T_NC} ${log_message}"
 		;;
 		INFO | OK \
 		| LOADING | CLEANING \
 		| FUNCTION)
-			full_message+="${C_GREEN}${log_type}:${C_NC} "
+			log_message="${T_GREEN}${log_type}:${T_NC} ${log_message}"
 		;;
 		*)
 			if [ -n "$log_type" ]; then
-				full_message+="${C_BOLD}${log_type}:${C_NC} "
+				log_message="${T_BOLD}${log_type}:${T_NC} ${log_message}"
 			fi
 		;;
 	esac
-# Finally, the message itself
-	full_message+="${log_message}"
 
-	echo -e "${full_message}"
+# Sets indentation level
+	local indented_prefix=''
+	for (( i=0; i < ${log_level}; i++ )); do
+		indented_prefix+='\t'
+	done
+	unset i
+
+	# transforms input message into an array so it can be processed line by line
+	readarray -t log_message <<< $(echo -e "${log_message}")
+
+	# adds the requested indentation to the output
+	for line in "${log_message[@]}"; do
+		echo -e "${indented_prefix}${line}"
+	done
+	unset line
 }
 export -f bme_log
 
