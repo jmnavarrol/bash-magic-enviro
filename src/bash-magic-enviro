@@ -134,16 +134,16 @@ local log_level=${3:-0}   # third param (with a default of 0)
 			log_message="${C_RED}${log_type}:${C_NC} ${log_message}"
 		;;
 		WARNING)
-			log_message="${T_YELLOW}${log_type}:${T_NC} ${log_message}"
+			log_message="${C_YELLOW}${log_type}:${C_NC} ${log_message}"
 		;;
 		INFO | OK \
 		| LOADING | CLEANING \
 		| FUNCTION)
-			log_message="${T_GREEN}${log_type}:${T_NC} ${log_message}"
+			log_message="${C_GREEN}${log_type}:${C_NC} ${log_message}"
 		;;
 		*)
 			if [ -n "$log_type" ]; then
-				log_message="${T_BOLD}${log_type}:${T_NC} ${log_message}"
+				log_message="${C_BOLD}${log_type}:${C_NC} ${log_message}"
 			fi
 		;;
 	esac
