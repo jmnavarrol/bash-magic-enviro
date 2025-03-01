@@ -7,7 +7,6 @@ Pending actions, general notes, etc. (in no particular order):
 * Dynamic load/unload of functions/variables that are only needed within a project environment.
 * Per-directory clean function (on top of or instead of the global one?)
 * Review the [bashlog project](https://github.com/Zordrak/bashlog).  Authored by the same person than tfenv, seems quite powerful.
-* Helper function to indent lines (for proper log formatting)
 * Allow for environment-related files (i.e.: *.bme_env.production*, *.bme_env.local-development*...; consider if this should work just for *.bme_env* files only or also for the main *.bme_project* file).
 * Install dir shouldn't need to be in $PATH since we are not installing executable files.
 * **Containers:**
@@ -35,3 +34,4 @@ Pending actions, general notes, etc. (in no particular order):
   * More support functions to load/unload BME, etc.
 
 ## IN PROGRESS
+* bme_log() to indent lines (for proper log formatting)
