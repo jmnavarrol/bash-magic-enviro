@@ -15,8 +15,8 @@ export TF_PLUGIN_CACHE_DIR="${BME_CONFIG_DIR}/.terraform.d/plugin-cache"
 	# 'terraform-support' depends on 'bindir'
 	if ! [[ "${BME_ACTIVE_MODULES[@]}" =~ 'bindir' ]]; then
 		local log_msg="${C_BOLD}'terraform-support'${C_NC} depends on ${C_BOLD}'bindir'${C_NC} module, which is not active.\n"
-		log_msg+="\t\tPlease, activate ${C_BOLD}'bindir'${C_NC} in your configuration ${C_BOLD}BEFORE${C_NC} this one."
-		bme_log "${log_msg}" error 1
+		log_msg+="\tPlease, activate ${C_BOLD}'bindir'${C_NC} in your configuration ${C_BOLD}BEFORE${C_NC} this one."
+# 		bme_log "${log_msg}" error 1
 		unmet_dependencies=true
 	fi
 
@@ -92,7 +92,7 @@ export TF_PLUGIN_CACHE_DIR="${BME_CONFIG_DIR}/.terraform.d/plugin-cache"
 	if ($unmet_dependencies); then
 		terraform-support_unload
 		bme_log "${C_BOLD}'terraform-support'${C_NC} not loaded. See missed dependencies above." error 1
-		return -1
+		return 1
 	else
 		bme_log "${C_BOLD}'terraform-support'${C_NC} loaded." info 1
 	fi

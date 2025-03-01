@@ -210,13 +210,13 @@ local project_dir="${1}"
 # "pseudo private" function protection
 	if [ "${FUNCNAME[1]}" != 'bme_eval_dir' ]; then
 		bme_log "Function ${C_BOLD}'${FUNCNAME[0]}()'${C_NC} is ${C_BOLD}private${C_NC}.  You shouldn't invoke it!" error
-		return -1
+		return 1
 	fi
 
 # Check if really there's a project file where requested
 	if [ ! -r "${project_dir}/${BME_PROJECT_FILE}" ]; then
 		bme_log "${FUNCNAME[0]}: No valid ${C_BOLD}'${BME_PROJECT_FILE}'${C_NC} found at ${C_BOLD}'${project_dir}'${C_NC}." fatal
-		return -1
+		return 1
 	fi
 
 # if $BME_PROJECT_NAME is defined, we are already within a "BME session"
@@ -225,7 +225,7 @@ local project_dir="${1}"
 		local new_project=$(source "${project_dir}/${BME_PROJECT_FILE}" > /dev/null && echo "${BME_PROJECT_NAME}")
 		if [[ -z "${new_project}" ]]; then
 			bme_log "You didn't set ${C_BOLD}'BME_PROJECT_NAME=[your_project_name]'${C_NC} in your ${C_BOLD}'${BME_PROJECT_FILE}'${C_NC} file." error
-			return -1
+			return 1
 		fi
 
 		if [ "${new_project}" != "${BME_PROJECT_NAME}" ]; then
@@ -252,7 +252,7 @@ local project_dir="${1}"
 # Check project's whitelisting status
 	if ! __bme_whitelist "${project_dir}"; then
 		bme_log "${C_BOLD}'${BME_PROJECT_FILE}'${C_NC} file found at ${C_BOLD}'${project_dir}'${C_NC}, but load was rejected." fail
-		return -1
+		return 1
 	fi
 
 # Load already validated project
@@ -336,7 +336,7 @@ local allowed_callers=('__bme_load_project' 'bme_eval_dir')
 		local log_msg="Function ${C_BOLD}'${FUNCNAME[0]}()'${C_NC} is ${C_BOLD}private${C_NC}.  You shouldn't invoke it!\n"
 		log_msg+="\tUnexpectedly called from ${C_BOLD}'${FUNCNAME[1]}'${C_NC}."
 		bme_log "${log_msg}" error
-		return -1
+		return 1
 	fi
 
 	bme_log "Cleaning ${C_BOLD}'${BME_PROJECT_NAME}'${C_NC}..." cleaning
@@ -381,7 +381,7 @@ local allowed_callers=('__bme_load_project')
 		local log_msg="Function ${C_BOLD}'${FUNCNAME[0]}()'${C_NC} is ${C_BOLD}private${C_NC}.  You shouldn't invoke it!\n"
 		log_msg+="\tUnexpectedly called from ${C_BOLD}'${FUNCNAME[1]}'${C_NC}."
 		bme_log "${log_msg}" error
-		return -1
+		return 1
 	fi
 
 # Safe check: is this really a "project directory"?
@@ -389,7 +389,7 @@ local allowed_callers=('__bme_load_project')
 		local log_msg="${C_BOLD}'${FUNCNAME[0]}()'${C_NC} called from ${C_BOLD}'${FUNCNAME[1]}()'${C_NC}:\n"
 		log_msg+="\twhitelisting status for ${C_BOLD}'${test_path}'${C_NC} requested, but no ${C_BOLD}${BME_PROJECT_FILE}${C_NC} file found at that place."
 		bme_log "${log_msg}" fatal
-		return -1
+		return 1
 	fi
 
 # Loops to find if it's an already known project directory
@@ -405,7 +405,7 @@ local allowed_callers=('__bme_load_project')
 	local new_project=$(source "${test_path}/${BME_PROJECT_FILE}" > /dev/null && echo "${BME_PROJECT_NAME}")
 	if [[ -z "${new_project}" ]]; then
 		bme_log "You didn't set ${C_BOLD}'BME_PROJECT_NAME=[your_project_name]'${C_NC} in your ${C_BOLD}'${BME_PROJECT_FILE}'${C_NC} file." fatal
-		return -1
+		return 1
 	fi
 	__bme_debug "${FUNCNAME[0]}: New project name is '${new_project}'"
 	__bme_check_project_name "${new_project}" || return $?
@@ -479,9 +479,9 @@ local module=$1
 		# No module found by that name
 			else
 				local log_msg="Couldn't load ${C_BOLD}'${module}'${C_NC} module.\n"
-				log_msg+="\t\tFile ${C_BOLD}'${module}.module'${C_NC} couldn't be found.\n"
-				log_msg+="\t\tNot at ${C_BOLD}'${BME_PROJECT_DIR}/bme-modules/${module}.module'${C_NC}.\n"
-				log_msg+="\t\tNot at ${C_BOLD}'${BASH_SOURCE}_modules/${module}.module'${C_NC}."
+				log_msg+="\tFile ${C_BOLD}'${module}.module'${C_NC} couldn't be found.\n"
+				log_msg+="\tNot at ${C_BOLD}'${BME_PROJECT_DIR}/bme-modules/${module}.module'${C_NC}.\n"
+				log_msg+="\tNot at ${C_BOLD}'${BASH_SOURCE}_modules/${module}.module'${C_NC}."
 				bme_log "${log_msg}" warning 1
 				continue
 			fi
@@ -491,14 +491,14 @@ local module=$1
 				source "${module_path}" ||
 				{
 					local log_msg="${C_BOLD}${FUNCNAME[0]}:${C_NC} Couldn't source ${C_BOLD}'${module}'${C_NC}.\n"
-					log_msg+="\t\tat ${C_BOLD}'${module_path}'${C_NC}."
+					log_msg+="\tat ${C_BOLD}'${module_path}'${C_NC}."
 					__bme_debug "${bme_log}"
 					continue
 				}
 				${module}_load && BME_ACTIVE_MODULES+=("${module}") ||
 				{
 					local log_msg="${C_BOLD}${FUNCNAME[0]}:${C_NC} Couldn't load ${C_BOLD}'${module}_load'${C_NC}.\n"
-					log_msg+="\t\tat ${C_BOLD}'${module_path}'${C_NC}."
+					log_msg+="\tat ${C_BOLD}'${module_path}'${C_NC}."
 					__bme_debug "${bme_log}"
 					continue
 				}
@@ -589,7 +589,7 @@ local env_file="${base_dir}/${BME_FILE}"
 		local log_msg="Function ${C_BOLD}'${FUNCNAME[0]}()'${C_NC} is ${C_BOLD}private${C_NC}.  You shouldn't invoke it!\n"
 		log_msg+="\tUnexpectedly called from ${C_BOLD}'${FUNCNAME[1]}'${C_NC}."
 		bme_log "${log_msg}" error
-		return -1
+		return 1
 	fi
 
 	__bme_debug "${FUNCNAME[0]}: ENV FILE TO LOOK FOR: '${env_file}'"

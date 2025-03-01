@@ -120,7 +120,7 @@ fi
 # Then, it's a matter of what you include within the '.bme_*' files on each dir.
 if ! source bash-magic-enviro; then
 	echo "Please make sure 'bash-magic-enviro' is installed and in your path!"
-	return -1
+	return 1
 else
 	export PROMPT_COMMAND=bme_eval_dir
 fi

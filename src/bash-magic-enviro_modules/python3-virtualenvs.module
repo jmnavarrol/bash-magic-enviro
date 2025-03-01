@@ -74,7 +74,7 @@ local unmet_dependencies=false
 		return 1
 	else
 		local log_msg="${C_BOLD}'python3-virtualenvs'${C_NC} loaded."
-		log_msg+="\n\t\tUsing ${C_BOLD}'${BME_PYTHON3_CMD}' (${python_version})${C_NC}"
+		log_msg+="\n\tUsing ${C_BOLD}'${BME_PYTHON3_CMD}' (${python_version})${C_NC}"
 		bme_log "${log_msg}" info 1
 		bme_log "${C_BOLD}load_virtualenv 'venv_name'${C_NC} - Loads the Python virtualenv by name ${C_BOLD}'venv_name'${C_NC}." function 2
 	fi
@@ -264,7 +264,7 @@ local allowed_callers=(
 		local log_msg="Function ${C_BOLD}'${FUNCNAME[0]}()'${C_NC} is ${C_BOLD}private${C_NC}.  You shouldn't invoke it!\n"
 		log_msg+="\tUnexpectedly called from ${C_BOLD}'${FUNCNAME[1]}'${C_NC}."
 		bme_log "${log_msg}" error
-		return -1
+		return 1
 	fi
 
 # running in a subshell so I securely can change directories

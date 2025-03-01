@@ -3,6 +3,7 @@
 ## Next Release
 * differences from [previous tag](/../../compare/v1.9.2…main).
 * **bme_log():** on multiline log messages it now honors the requested indentation level instead of indenting just the first line.
+* all `return -1` calls updated to `return 1` for POSIX standard alignment.
 * **UPGRADE NOTES:**
   * Due to the change in *bme_log()*, you may need to review your own calls to this function with a multiline message and adjust the number of tabs you add on the 2nd line onwards.
 

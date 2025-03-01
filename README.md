@@ -479,7 +479,7 @@ This means that, at the very minimum, every module needs to define these two fun
      if ($unmet_dependencies); then
        [modulename]_unload
        bme_log "${C_BOLD}'[modulename]'${C_NC} not loaded. See missed dependencies above." error 1
-       return -1
+       return 1
      else
        bme_log "${C_BOLD}'[modulename]'${C_NC} loaded." info 1
      fi

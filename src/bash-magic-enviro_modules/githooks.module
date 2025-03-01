@@ -23,8 +23,8 @@ local unmet_dependencies=false
 		local git_root=`git rev-parse --show-toplevel`
 		if [[ "${git_root}" != "${BME_PROJECT_DIR}" ]]; then
 			local log_msg="Module ${C_BOLD}'githooks'${C_NC} should only be enabled on projects at the root of a git repository.\n"
-			log_msg+="\t\tGit root: ${C_BOLD}'${git_root}'${C_NC}.\n"
-			log_msg+="\t\tProject root: ${C_BOLD}'${BME_PROJECT_DIR}'${C_NC}."
+			log_msg+="\tGit root: ${C_BOLD}'${git_root}'${C_NC}.\n"
+			log_msg+="\tProject root: ${C_BOLD}'${BME_PROJECT_DIR}'${C_NC}."
 			bme_log "${log_msg}" error 1
 			unmet_dependencies=true
 		fi
@@ -36,7 +36,7 @@ local unmet_dependencies=false
 # Sets new githooks directory as needed
 	if ! [ -d "${BME_PROJECT_DIR}/githooks" ]; then
 		bme_log "directory ${C_BOLD}'${BME_PROJECT_DIR}/githooks'${C_NC} does NOT exist." warning 1
-		echo -en "\t\tCreating it... "
+		echo -en "\tCreating it... "
 		if `mkdir --parents "${BME_PROJECT_DIR}/githooks"`; then
 			echo -e "${C_GREEN}DONE!${C_NC}"
 		else
@@ -52,8 +52,8 @@ local unmet_dependencies=false
 	local git_config=`git config --get core.hooksPath`
 	if [[ "${git_config}" != "${BME_PROJECT_DIR}/githooks" ]]; then
 		local log_msg="${C_BOLD}'git config --get core.hooksPath':${C_NC} not the expected value.\n"
-		log_msg+="\t\tGot: ${C_BOLD}'${git_config}'${C_NC}.\n"
-		log_msg+="\t\tExpected: ${C_BOLD}'${BME_PROJECT_DIR}/githooks'${C_NC}."
+		log_msg+="\tGot: ${C_BOLD}'${git_config}'${C_NC}.\n"
+		log_msg+="\tExpected: ${C_BOLD}'${BME_PROJECT_DIR}/githooks'${C_NC}."
 		bme_log "${log_msg}" warning 1
 		echo -en "\t\tUpdating... "
 		if `git config --local core.hooksPath "${BME_PROJECT_DIR}/githooks"`; then
