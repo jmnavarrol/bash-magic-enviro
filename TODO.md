@@ -24,6 +24,7 @@ Pending actions, general notes, etc. (in no particular order):
   * Different environment loaded for different stages (i.e.: check/install process vs core vs modules)
 * **BME version pinning:** both projects and modules should be able to declare a range of compatible BME versions.
 * **Logging:**
+  * log function should allow either positional or by-name parameters.
   * Ability to set logging levels (DEBUG|INFO|WARN|ERROR...) maybe on a scoped level (global vs project vs module-level)
   * Log to either STDOUT or STDERR (maybe two different logging functions)
   * Ability to log to file (possibly on top of console).  Also, file logging level may or may not be tied to console log level.
@@ -48,3 +49,4 @@ Pending actions, general notes, etc. (in no particular order):
     * Review [terraform-config-inspect](https://github.com/hashicorp/terraform-config-inspect), which allows to extract configurations from terraform.
 
 ## IN PROGRESS
+1. Different environment loaded for different stages (i.e.: check/install process vs core vs modules)

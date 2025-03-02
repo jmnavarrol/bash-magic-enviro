@@ -21,22 +21,39 @@ function main() {
 local test_counter=0
 local test_start=$(date +%s)
 
-# List of tests to run
+	source "${TESTS_DIR}/helper_functions.sh" || exit $?
+
+# List of components to search for
 	declare -a tests_list=()
-	# Find all tests under tests' root directory (default) or tests found within given argument(s)
-	for argument in "${@:-$TESTS_DIR}"; do
-		argument=$(realpath --canonicalize-existing "${argument}") || exit $?
-		tests_list+=(
-			$(
-				find "${argument}" -type f -executable -name test_*.sh \
-				| sort --numeric-sort
+	if (( $# > 0 )); then
+	# find tests within given arguments
+		for argument in "${@}"; do
+			search_path+=("${argument}")
+		done
+	else
+	# no arguments: standard test list
+		for argument in "${TESTS_DIR}"/{core,modules}; do
+			search_path+=("${argument}")
+		done
+	fi
+
+# Find all tests under the components list
+	for argument in "${search_path[@]}"; do
+			abs_argument=$(realpath --canonicalize-existing "${argument}") || {
+				argument=$(realpath --canonicalize-missing "${argument}")
+				local err_msg="'${argument}' can't be found."
+				test_log "${err_msg}" fatal 0
+				exit $?
+			}
+			tests_list+=(
+				$(
+					find "${abs_argument}" -type f -executable -name test_*.sh \
+					| sort --numeric-sort
+				)
 			)
-		)
 	done
 
 # Go with tests
-	source "${TESTS_DIR}/helper_functions.sh" || exit $?
-
 	[ ${DEBUG:+1} ] && echo "DEBUGGING IS ACTIVE" # debugging example
 	check_environment || exit $?
 	extra_path=$(set_tests_path) || {
