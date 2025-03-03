@@ -32,7 +32,7 @@ local test_start=$(date +%s)
 		done
 	else
 	# no arguments: standard test list
-		for argument in "${TESTS_DIR}"/{core,modules}; do
+		for argument in "${TESTS_DIR}"/{setup,core,modules}; do
 			search_path+=("${argument}")
 		done
 	fi
@@ -52,20 +52,23 @@ local test_start=$(date +%s)
 				)
 			)
 	done
+	if (( ${#tests_list[@]} == 0 )); then
+		printf -v list_of_paths '%s, ' "${search_path[@]}"
+		test_log "no tests were found at [${list_of_paths%, }]" warning 0
+		exit 0
+	fi
 
 # Go with tests
 	[ ${DEBUG:+1} ] && echo "DEBUGGING IS ACTIVE" # debugging example
 	check_environment || exit $?
-	extra_path=$(set_tests_path) || {
-		local err_rc=$?
-		test_log "(${err_rc})\n${extra_path}" error 0
-		return $err_rc
-	}
+	(
+		cd ${TESTS_DIR}/../ && make build
+	)
 
 	test_log "${C_BOLD}RUNNING UNITARY TESTS...${C_NC}" info 0
-	# call back on each test within a clean environment
-	# nullglob avoids 'match on asterisk' if no file is found
-	shopt -s nullglob globstar
+# 	# call back on each test within a clean environment
+# 	# nullglob avoids 'match on asterisk' if no file is found
+# 	shopt -s nullglob globstar
 	for test in "${tests_list[@]}"; do
 		[ -x "${test}" ] || {
 			test_log "${T_BOLD}'${test}'${T_NC} is not executable.  Stopping here." error 0
@@ -74,6 +77,13 @@ local test_start=$(date +%s)
 
 		[ ${DEBUG:+1} ] && echo -e "\tFOUND TEST FILE '${test}'"
 		test_log "\n${T_BOLD}$((++test_counter)). '${test}'${T_NC}..." '' 0
+		for sub_path in setup core modules; do
+			unset test_type
+			if [[ ${test#"${TESTS_DIR}/${sub_path}/"} != ${test} ]]; then
+				test_type="${sub_path}"
+				break
+			fi
+		done
 
 		local padded_random=$(printf "%03d\n" $((0 + $RANDOM % 999)))
 		local test_scratch_dir="${SCRATCH_BASE_DIR}/test_${padded_random}"
@@ -81,11 +91,52 @@ local test_start=$(date +%s)
 		mkdir --parents ${test_scratch_dir}
 		local batch_start=$(date +%s)
 
-		env --ignore-environment \
-			PATH="$(realpath "${BUILDDIR}"):${extra_path}" \
-			HOME="${test_scratch_dir}" \
-			CURRENT_TESTFILE_NUMBER=${test_counter} \
-			bash -c "source "${TESTS_DIR}/helper_functions.sh" && ${test}"
+		[ ${DEBUG:+1} ] && echo "CURRENT TEST TYPE IS: '${test_type}'"
+		extra_path=$(set_tests_path) || {
+			local err_rc=$?
+			test_log "(${err_rc})\n${extra_path}" error 0
+			return $err_rc
+		}
+		case "${test_type}" in
+			'setup')
+				[ ${DEBUG:+1} ] && echo "SETUP REQUESTED FOR '${test}'."
+			# Copies sources to the test environment
+				mkdir --parents "${test_scratch_dir}/sources"
+				for target in $(
+					find "${TESTS_DIR}/../" \
+						-mindepth 1 -maxdepth 1 \
+						\( -path */.git -or -path */tests \) \
+						-prune -o -print
+				); do
+					cp --archive "${target}" "${test_scratch_dir}/sources/"
+				done
+			# runs the test
+				env --ignore-environment \
+					PATH="${extra_path}" \
+					SOURCES_DIR="${test_scratch_dir}/sources" \
+					HOME="${test_scratch_dir}" \
+					CURRENT_TESTFILE_NUMBER=${test_counter} \
+					bash -c "source "${TESTS_DIR}/helper_functions.sh" \
+					&& ${test}"
+			;;
+			'core')
+				echo "CORE: not yet."
+			;;
+			'modules')
+				echo "CORE: not yet."
+			;;
+			*)
+				echo "UNKNOWN: what to do here?"
+			;;
+		esac
+
+	# once finished, out of the switch/case, test results
+
+# 		env --ignore-environment \
+# 			PATH="$(realpath "${BUILDDIR}"):${extra_path}" \
+# 			HOME="${test_scratch_dir}" \
+# 			CURRENT_TESTFILE_NUMBER=${test_counter} \
+# 			bash -c "source "${TESTS_DIR}/helper_functions.sh" && ${test}"
 	# Now, check result from command above
 		local test_rc=$?
 		local batch_duration=$( seconds_duration $(( $(date +%s)-batch_start )) )
@@ -103,7 +154,7 @@ local test_start=$(date +%s)
 		rm --recursive --force ${test_scratch_dir}
 		test_log "${batch_msg}" ok 0
 	done
-	shopt -u nullglob globstar
+# 	shopt -u nullglob globstar
 
 	echo ''
 	local final_msg="${T_BOLD}TEST BATCHES RUN:${T_NC} "
@@ -125,13 +176,6 @@ local test_start=$(date +%s)
 
 # Makes sure the environment is ready for testing
 function check_environment() {
-	[ ${DEBUG:+1} ] && echo "BUILDDIR: '${BUILDDIR}'"
-	[ -d ${BUILDDIR} ] || {
-		local err_msg="BME code dir ${T_BOLD}'${BUILDDIR}'${T_NC} doesn't exist."
-		err_msg+="\n\tDid you run ${T_BOLD}'make build'${T_NC}?"
-		test_log "${err_msg}" error 0
-		return 1
-	}
 
 	if [[ "${OSTYPE}" == "darwin"* ]]; then
 		if ! which brew > /dev/null; then
@@ -148,6 +192,7 @@ function check_environment() {
 function set_tests_path() {
 # sets "internal" path
 	local tests_path='/usr/local/sbin:/usr/bin:/usr/sbin:/bin:/sbin'
+
 	if [[ "${OSTYPE}" == "darwin"* ]]; then
 		local brew_path=$(brew --prefix)/bin
 		tests_path="${brew_path}:${tests_path}"

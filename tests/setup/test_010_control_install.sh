@@ -4,8 +4,8 @@
 # Tests for the make-control-install.sh script
 
 # GLOBALS
-readonly MY_DIR=$(dirname $(readlink --canonicalize --verbose ${BASH_SOURCE[0]}))
-readonly BASE_DIR=$(readlink --canonicalize --verbose "${MY_DIR}/../..")
+# readonly MY_DIR=$(dirname $(readlink --canonicalize --verbose ${BASH_SOURCE[0]}))
+# readonly BASE_DIR=$(readlink --canonicalize --verbose "${MY_DIR}/../..")
 readonly INSTALL_SCRIPT='make-control-install.sh'
 
 function main() {
@@ -21,25 +21,13 @@ function main() {
 
 # Sets up environment within out test dir
 # (artifacts and environment variables)
-# shopt outside the function.
-# See https://unix.stackexchange.com/questions/787437/weird-behaviour-on-bash-function
 function setup() {
 	test_title ''
-	export REPO_DIR="${HOME}/sourcecode"
-	mkdir --parents "${REPO_DIR}"
 
-	# not using cp --archive to avoid dreaded "can't copy a directory into itself" on older coreutils versions
-	for target in $(
-		find "${BASE_DIR}/" \
-		-mindepth 1 -maxdepth 1 \
-		\( -path */.git -or -path */tests \) \
-		-prune -o -print
-	); do
-		cp --archive "${target}" "${REPO_DIR}/"
-	done
+	mkdir --parents "${HOME}/bin" || return $?
 
-	export SRCDIR="${REPO_DIR}/src"
-	export BUILDDIR="${REPO_DIR}/build"
+	export SRCDIR="${SOURCES_DIR}/src"
+	export BUILDDIR="${SOURCES_DIR}/build"
 	export BME_BASENAME='bash-magic-enviro'
 	export VERSION_FILE="${BME_BASENAME}.version"
 	export DESTDIR="${HOME}/bin"
@@ -49,11 +37,11 @@ function setup() {
 
 
 function check_dev() {
-local install_tracker="${REPO_DIR}/.MANIFEST.DEV"
+local install_tracker="${SOURCES_DIR}/.MANIFEST.DEV"
 
 	test_title ''
 
-	install_output=$("${REPO_DIR}/${INSTALL_SCRIPT}" dev) || {
+	install_output=$("${SOURCES_DIR}/${INSTALL_SCRIPT}" dev) || {
 		local rc=$?
 		local err_msg="(${rc}) ${T_BOLD}error output:${T_NC}\n"
 		err_msg+="${install_output}"
@@ -82,11 +70,11 @@ local install_tracker="${REPO_DIR}/.MANIFEST.DEV"
 }
 
 function check_install() {
-local install_tracker="${REPO_DIR}/.MANIFEST"
+local install_tracker="${SOURCES_DIR}/.MANIFEST"
 
 	test_title ''
 
-	install_output=$("${REPO_DIR}/${INSTALL_SCRIPT}" install) || {
+	install_output=$("${SOURCES_DIR}/${INSTALL_SCRIPT}" install) || {
 		local rc=$?
 		local err_msg="(${rc}) ${T_BOLD}error output:${T_NC}\n"
 		err_msg+="${install_output}"
@@ -119,7 +107,7 @@ function check_uninstall() {
 	touch "${DESTDIR}/${BME_BASENAME}_modules/faux.module"
 
 # Run uninstall
-	uninstall_output=$("${REPO_DIR}/${INSTALL_SCRIPT}" uninstall) || {
+	uninstall_output=$("${SOURCES_DIR}/${INSTALL_SCRIPT}" uninstall) || {
 		local rc=$?
 		local err_msg="(${rc}) ${T_BOLD}error output:${T_NC}\n"
 		err_msg+="${uninstall_output}"

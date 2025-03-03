@@ -8,6 +8,7 @@ Pending actions, general notes, etc. (in no particular order):
 * Review the [bashlog project](https://github.com/Zordrak/bashlog).  Authored by the same person than tfenv, seems quite powerful.
 * Allow for environment-related files (i.e.: *.bme_env.production*, *.bme_env.local-development*...; consider if this should work just for *.bme_env* files only or also for the main *.bme_project* file).
 * Install dir shouldn't need to be in $PATH since we are not installing executable files.
+* Install dependencies on known platforms.
 * **Containers:**
   * publish docker container so it can be just used.
   * review how to add a *dockercompose.yml* or something to that end for easier macos development on Linux.
@@ -49,4 +50,4 @@ Pending actions, general notes, etc. (in no particular order):
     * Review [terraform-config-inspect](https://github.com/hashicorp/terraform-config-inspect), which allows to extract configurations from terraform.
 
 ## IN PROGRESS
-1. Different environment loaded for different stages (i.e.: check/install process vs core vs modules)
+1. **unit tests:** different environment loaded for different stages (i.e.: check/install process vs core vs modules)

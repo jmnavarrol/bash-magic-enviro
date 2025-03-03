@@ -10,10 +10,12 @@ As BME grows more complex, the need for unit tests arises.  While there are some
   i.e.: `./maketests.sh core` or `./maketests.sh ../../alternate_dir/modules/something/test_sometest.sh core`.
 * [maketests.sh](./maketests.sh) runs each script on a clean subshell with helper functions and some environment variables:
   * **helper functions:** the [helper functions file](./helper_functions.sh) is sourced into the tests' environment so its included functions can be used by scripts.  Review its contents.
-  * **environment variables:** only those needed to launch the test scripts.
-    * **PATH:** PATH is mangled so it includes the directory where BME code can be found.  That means that in order to load BME's entrypoint you just need to `source bash-magic-enviro` (just like it's expected for end-users to do on their Bash environments).
-    * **HOME:** an empty directory that the tests may use (i.e.: it can mimic a user's home directory under which you can set a test project, etc.).  This scratch dir is deleted after each test unless it fails; in that case it is preserved for diagnosis.
-    * **CURRENT_TESTFILE_NUMBER:** *"internal"* counter that helps tests' presentation output from the *test_name()* helper function.  Do not modify.
+  * **environment variables:** only those needed to launch the test scripts.  Three kinds of tests are considered and sorted per directory, each of one with there own set of environment variables:
+    * **[setup](./setup/):** tests for the configure/install process.
+      * **PATH:** set to a default, minimal path: *'/usr/local/sbin:/usr/bin:/usr/sbin:/bin:/sbin'*.
+      * **SOURCES_DIR:** directory with a copy of BME's sources.
+      * **HOME:** an empty directory that the tests may use (i.e.: it can mimic a user's home directory under which you can set a test project, etc.).  This scratch dir is deleted after each test unless it fails; in that case it is preserved for diagnosis.
+      * **CURRENT_TESTFILE_NUMBER:** *"internal"* counter that helps tests' presentation output from the *test_name()* helper function.  Do not modify.
 
 Each test script runs on a clean subshell (except for the environment variables described above) and its return code is checked: **0** for success, any other code for failure.
 
