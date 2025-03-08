@@ -4,8 +4,10 @@
 * differences from [previous tag](/../../compare/v1.9.2…main).
 * **bme_log():** on multiline log messages it now honors the requested indentation level instead of indenting just the first line.
 * all `return -1` calls updated to `return 1` for POSIX standard alignment.
+* **unit tests:** framework refactored so now it offers different pre-loaded environments for *setup*, *core* or *modules* tests (see [README](./tests/README.md)).
 * **UPGRADE NOTES:**
   * Due to the change in *bme_log()*, you may need to review your own calls to this function with a multiline message and adjust the number of tabs you add on the 2nd line onwards.
+  * If you made use of the unit testing framework you may need to review your scripts' expectations.
 
 ## v1.9.2 (2025-FEB-23)
 * differences from [previous tag](/../../compare/v1.9.1…main).

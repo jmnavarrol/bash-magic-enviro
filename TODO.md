@@ -2,13 +2,16 @@
 Pending actions, general notes, etc. (in no particular order):
 * Automatic support for project root's '.bme.d/' directory '.gitignore' inclusion.
 * Easier/global management of whitelisting and projects' root directories.
-* Auto white/blacklisting of subdirectories (i.e.: to make easy using BME on non-interactive sessions).
 * Dynamic load/unload of functions/variables that are only needed within a project environment.
 * Per-directory clean function (on top of or instead of the global one?)
 * Review the [bashlog project](https://github.com/Zordrak/bashlog).  Authored by the same person than tfenv, seems quite powerful.
 * Allow for environment-related files (i.e.: *.bme_env.production*, *.bme_env.local-development*...; consider if this should work just for *.bme_env* files only or also for the main *.bme_project* file).
 * Install dir shouldn't need to be in $PATH since we are not installing executable files.
 * Install dependencies on known platforms.
+* Review BME-related environment variables and check which ones should be exported
+* BME on non-interactive sessions:
+  * Review BME-related environment variables and check which ones should be exported and so, available on subshells.
+  * Auto white/blacklisting of subdirectories.
 * **Containers:**
   * publish docker container so it can be just used.
   * review how to add a *dockercompose.yml* or something to that end for easier macos development on Linux.
@@ -22,7 +25,6 @@ Pending actions, general notes, etc. (in no particular order):
   * https://github.com/deadc0de6/dotdrop
 * **Unit tests:**
   * More support functions to load/unload BME, etc.
-  * Different environment loaded for different stages (i.e.: check/install process vs core vs modules)
 * **BME version pinning:** both projects and modules should be able to declare a range of compatible BME versions.
 * **Logging:**
   * log function should allow either positional or by-name parameters.
@@ -30,7 +32,7 @@ Pending actions, general notes, etc. (in no particular order):
   * Log to either STDOUT or STDERR (maybe two different logging functions)
   * Ability to log to file (possibly on top of console).  Also, file logging level may or may not be tied to console log level.
 * **Documentation:**
-  * Document upgrade process explicitly (with highlighted mention to *UPGRADE NOTES*^).
+  * Document upgrade process explicitly (with highlighted mention to *UPGRADE NOTES*).
   * Document support expectations.
 * **Modules:**
   * Allow to put them in subdirectories
@@ -50,4 +52,3 @@ Pending actions, general notes, etc. (in no particular order):
     * Review [terraform-config-inspect](https://github.com/hashicorp/terraform-config-inspect), which allows to extract configurations from terraform.
 
 ## IN PROGRESS
-1. **unit tests:** different environment loaded for different stages (i.e.: check/install process vs core vs modules)

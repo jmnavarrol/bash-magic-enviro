@@ -133,9 +133,9 @@ local test_start=$(date +%s)
 				cp -ra "${sources_template}" "${test_scratch_dir}"
 			# runs the test
 				env --ignore-environment \
+					HOME="${test_scratch_dir}" \
 					PATH="${extra_path}" \
 					SOURCES_DIR="${test_scratch_dir}/sources" \
-					HOME="${test_scratch_dir}" \
 					CURRENT_TESTFILE_NUMBER=${test_counter} \
 					bash -c "{
 						source "${TESTS_DIR}/helper_functions.sh" \

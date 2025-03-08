@@ -341,11 +341,11 @@ This function compares your current *Bash Magic Enviro's* version against the hi
 ### Per-project custom modules<a name="custom-modules"></a>
 If there's a [bme-modules/ directory](./example-project/bme-modules/) within the root of your BME project, it will be honored and you can load modules from files within in exactly the same conditions and **with precedence** to *global* modules of same name.
 
-You may use of this when you want the module features (autoloading, preparing an environment, exporting functions, etc.) for things that doesn't make sense out of the limited scope of your project or if/when you need to *overload* the way a global module works.
+You may use this feature when you want module-management abilities (autoloading, preparing an environment, exporting functions, etc.) for things that doesn't make sense out of the limited scope of your project or if/when you need to *overload* the way a global module works.
 
 The standard conditions for modules are supported (i.e.: [naming](#available-modules), [loading](#available-modules), [development](#dev-modules)...).
 
-You can look for inspiration about what can be done [a *"barebones"* example](./example-project/bme-modules/sample-module.module) as well as the included [global modules' source code](./src/bash-magic-enviro_modules/).
+You can look for inspiration about what can be done with [a *"barebones"* example](./example-project/bme-modules/sample-module.module) as well as the included [global modules' source code](./src/bash-magic-enviro_modules/).
 
 <sub>[back to feature list](#feature_list) | [back to contents](#contents).</sub>
 
@@ -458,7 +458,7 @@ There's a `make dev` target on [the Makefile](./Makefile), that creates *symboli
 **NOTE:** remember you need to re-run `make dev` each time you alter either the [Makefile](./Makefile) (and/or its supporting scripts) or [bash-magic-enviro.version.tpl](./src/bash-magic-enviro.version.tpl) files.
 
 ### modules' development<a name="dev-modules"></a>
-*Modules* are the way to add new functionality to *Bash Magic Enviro*.  Any file named *[modulename].module* under the [*'bash-magic-enviro_modules/'* directory](./src/bash-magic-enviro_modules) becomes a module by that name.
+*Modules* are the way to add new functionality to *Bash Magic Enviro*.  Any file named *[modulename].module* under either the [*'bash-magic-enviro_modules/'* directory](./src/bash-magic-enviro_modules) or a [project's bme-modules subdirectory](#custom-modules) becomes a module by that name.
 
 *Modules* are loaded by including their *modulename* in the **BME_MODULES() array** of your project's *.bme_project* file (see [example](./docs/bme_project.example)).  Upon entering into your project's root directory, the file represented by the module name is first sourced and then its *[modulename]_load()* function is called with no parameters.
 
@@ -503,6 +503,8 @@ __bme_modules_load 'second_module'
 This should be made outside of any function, preferred early on your module file, so the *"pre-loading"* is run when the module code is sourced, before your own *[module]_load()* function is run.  This way the dependency order is insured both at module loading and unloading.
 
 See [the terraform module's source code for an example](./src/bash-magic-enviro_modules/terraform-support.module).
+
+See also documentation about [modules' unit testing](./tests/README.md).
 
 <sub>[back to contents](#contents).</sub>
 
