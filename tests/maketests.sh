@@ -88,7 +88,6 @@ local test_start=$(date +%s)
 		local padded_random=$(printf "%03d\n" $((0 + $RANDOM % 999)))
 		local test_scratch_dir="${SCRATCH_BASE_DIR}/test_${padded_random}"
 		[ ${DEBUG:+1} ] && test_log "TEST's scratch dir: '${test_scratch_dir}'"
-		mkdir --parents ${test_scratch_dir}
 		local batch_start=$(date +%s)
 
 		[ ${DEBUG:+1} ] && echo "CURRENT TEST TYPE IS: '${test_type}'"
@@ -99,6 +98,7 @@ local test_start=$(date +%s)
 		}
 		case "${test_type}" in
 			'setup')
+			# just copy the sources to a known path
 				[ ${DEBUG:+1} ] && echo "SETUP REQUESTED FOR '${test}'."
 			# Copies sources to the test environment
 				mkdir --parents "${test_scratch_dir}/sources"
@@ -116,20 +116,82 @@ local test_start=$(date +%s)
 					SOURCES_DIR="${test_scratch_dir}/sources" \
 					HOME="${test_scratch_dir}" \
 					CURRENT_TESTFILE_NUMBER=${test_counter} \
-					bash -c "source "${TESTS_DIR}/helper_functions.sh" \
-					&& ${test}"
+					bash -c "{
+						source "${TESTS_DIR}/helper_functions.sh" \
+						&& ${test}
+					}"
 			;;
 			'core')
-				echo "CORE: not yet."
+			# BME installed within the environment
+				[ ${DEBUG:+1} ] && echo "CORE REQUESTED FOR '${test}'."
+				local template_dir="${SCRATCH_BASE_DIR}/template"
+				if ! [ -d "${template_dir}" ]; then
+					mkdir --parents "${template_dir}/sources" || return $?
+					for target in $(
+						find "${TESTS_DIR}/../" \
+							-mindepth 1 -maxdepth 1 \
+							\( -path */.git -or -path */tests \) \
+							-prune -o -print
+					); do
+						cp --archive "${target}" "${template_dir}/sources/" || return $?
+					done
+					env --ignore-environment \
+						PATH="${template_dir}/bin:${extra_path}" \
+						SOURCES_DIR="${template_dir}/sources" \
+						HOME="${template_dir}" \
+						bash -c 'cd ${HOME}/sources && make install'
+				fi
+			# runs the test
+				cp -ra "${template_dir}" "${test_scratch_dir}"
+				env --ignore-environment \
+					PATH="${test_scratch_dir}/bin:${extra_path}" \
+					HOME="${test_scratch_dir}" \
+					CURRENT_TESTFILE_NUMBER=${test_counter} \
+					bash -c "{
+						source "${TESTS_DIR}/helper_functions.sh" \
+						&& ${test}
+					}"
 			;;
 			'modules')
-				echo "CORE: not yet."
+			# BME installed and active
+				[ ${DEBUG:+1} ] && echo "MODULES REQUESTED FOR '${test}'."
+				local template_dir="${SCRATCH_BASE_DIR}/template"
+				if ! [ -d "${template_dir}" ]; then
+					mkdir --parents "${template_dir}/sources" || return $?
+					for target in $(
+						find "${TESTS_DIR}/../" \
+							-mindepth 1 -maxdepth 1 \
+							\( -path */.git -or -path */tests \) \
+							-prune -o -print
+					); do
+						cp --archive "${target}" "${template_dir}/sources/" || return $?
+					done
+					env --ignore-environment \
+						PATH="${template_dir}/bin:${extra_path}" \
+						SOURCES_DIR="${template_dir}/sources" \
+						HOME="${template_dir}" \
+						bash -c 'cd ${HOME}/sources && make install'
+				fi
+			# runs the test
+				cp -ra "${template_dir}" "${test_scratch_dir}"
+				env --ignore-environment \
+					PATH="${test_scratch_dir}/bin:${extra_path}" \
+					HOME="${test_scratch_dir}" \
+					CURRENT_TESTFILE_NUMBER=${test_counter} \
+					bash -c "{
+						source "${TESTS_DIR}/helper_functions.sh" \
+						&& source bash-magic-enviro \
+						&& ${test}
+					}"
 			;;
 			*)
 				echo "UNKNOWN: what to do here?"
+				return 1
 			;;
 		esac
 
+	# TODO: core, modules.
+	# review and clean afterwards
 	# once finished, out of the switch/case, test results
 
 # 		env --ignore-environment \
@@ -139,7 +201,7 @@ local test_start=$(date +%s)
 # 			bash -c "source "${TESTS_DIR}/helper_functions.sh" && ${test}"
 	# Now, check result from command above
 		local test_rc=$?
-		local batch_duration=$( seconds_duration $(( $(date +%s)-batch_start )) )
+		local batch_duration=$( seconds_duration $(( $(date +%s) - batch_start )) )
 		local batch_msg="${C_BOLD}${test_counter}. '${test}'${C_NC}\n"
 		batch_msg+="\tbatch time: ${T_BOLD}${batch_duration}${T_NC}\n"
 		if [ $test_rc -ne 0 ]; then
@@ -160,7 +222,7 @@ local test_start=$(date +%s)
 	local final_msg="${T_BOLD}TEST BATCHES RUN:${T_NC} "
 	if (( ${test_rc} == 0 )); then
 		local final_status='info'
-		rm --recursive --force ${test_scratch_dir}
+		rm --recursive --force ${SCRATCH_BASE_DIR}
 		final_msg+="${T_GREEN}${test_counter}${T_NC}\n"
 	else
 		local final_status='fail'

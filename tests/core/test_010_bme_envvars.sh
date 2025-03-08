@@ -6,7 +6,7 @@ function main() {
 	bme_project_dir="${HOME}/project"
 
 # A first load of BME so its features are enabled along this script
-# 	source bash-magic-enviro || exit $?
+	source bash-magic-enviro || exit $?
 
 # Prepares a project environment
 	__create_project || return $?
@@ -15,7 +15,7 @@ function main() {
 # project-level vars shoud be there once within a project
 	__assert_project_envvars
 # project-level vars should NOT be there once moving out a project
-# 	cd "${HOME}" && bme_eval_dir || return $?
+	cd "${HOME}" && bme_eval_dir || return $?
 	__assert_no_project_envvars
 # testing the use of a project's custom config dir
 	__assert_custom_project_config_dir
@@ -49,8 +49,10 @@ function __create_project() {
 	test_log "${T_BOLD}---> WHITELIST FILE START${T_NC}"
 	test_log "${file_contents}"
 	test_log "${T_BOLD}<--- WHITELIST FILE END${T_NC}"
-
 	unset file_contents
+
+# reloads the global config for the whitelisting to take effect
+	source bash-magic-enviro || exit $?
 	test_log "${T_GREEN}OK${T_NC}"
 }
 
@@ -66,8 +68,6 @@ local project_vars=(
 	'BME_PROJECT_CONFIG_DIR'
 	'BME_PROJECT_NAME'
 )
-
-	source bash-magic-enviro || exit $?
 
 # Global vars shoud be set
 	test_title "checks BME global vars:"
