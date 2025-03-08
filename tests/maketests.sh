@@ -21,6 +21,9 @@ function main() {
 local test_counter=0
 local test_start=$(date +%s)
 
+# First, clean possible previous "dirty" test environment
+	rm -rf "${SCRATCH_BASE_DIR}"
+
 	source "${TESTS_DIR}/helper_functions.sh" || exit $?
 
 # List of components to search for
@@ -58,17 +61,48 @@ local test_start=$(date +%s)
 		exit 0
 	fi
 
-# Go with tests
 	[ ${DEBUG:+1} ] && echo "DEBUGGING IS ACTIVE" # debugging example
+# Makes sure artifacts are up to date
 	check_environment || exit $?
 	(
 		cd ${TESTS_DIR}/../ && make build
 	)
 
 	test_log "${C_BOLD}RUNNING UNITARY TESTS...${C_NC}" info 0
-# 	# call back on each test within a clean environment
-# 	# nullglob avoids 'match on asterisk' if no file is found
-# 	shopt -s nullglob globstar
+
+# Creates reusable templates
+	rm -rf "${SCRATCH_BASE_DIR}"  # in case there was a previous failure
+	local sources_template="${SCRATCH_BASE_DIR}/sources_template"
+	local installed_template="${SCRATCH_BASE_DIR}/installed_template"
+	# only sources first
+	if ! [ -d "${sources_template}" ]; then
+		mkdir --parents "${sources_template}/sources" || return $?
+		for target in $(
+			find "${TESTS_DIR}/../" \
+				-mindepth 1 -maxdepth 1 \
+				\( -path */.git -or -path */tests \) \
+				-prune -o -print
+		); do
+			cp --archive "${target}" "${sources_template}/sources/" || return $?
+		done
+	fi
+	# then, the one with BME already installed (per-using the sources one)
+	local extra_path=$(set_tests_path) || {
+			local err_rc=$?
+			test_log "(${err_rc})\n${extra_path}" error 0
+			return $err_rc
+	}
+	if ! [ -d "${installed_template}" ]; then
+		cp -ra "${sources_template}" "${installed_template}"
+		env --ignore-environment \
+			PATH="${installed_template}/bin:${extra_path}" \
+			SOURCES_DIR="${installed_template}/sources" \
+			HOME="${installed_template}" \
+			bash -c 'cd ${SOURCES_DIR} && make install'
+		rm -rf "${installed_template}/sources"
+	fi
+
+# Loops on the tests
 	for test in "${tests_list[@]}"; do
 		[ -x "${test}" ] || {
 			test_log "${T_BOLD}'${test}'${T_NC} is not executable.  Stopping here." error 0
@@ -91,25 +125,12 @@ local test_start=$(date +%s)
 		local batch_start=$(date +%s)
 
 		[ ${DEBUG:+1} ] && echo "CURRENT TEST TYPE IS: '${test_type}'"
-		extra_path=$(set_tests_path) || {
-			local err_rc=$?
-			test_log "(${err_rc})\n${extra_path}" error 0
-			return $err_rc
-		}
 		case "${test_type}" in
 			'setup')
 			# just copy the sources to a known path
 				[ ${DEBUG:+1} ] && echo "SETUP REQUESTED FOR '${test}'."
 			# Copies sources to the test environment
-				mkdir --parents "${test_scratch_dir}/sources"
-				for target in $(
-					find "${TESTS_DIR}/../" \
-						-mindepth 1 -maxdepth 1 \
-						\( -path */.git -or -path */tests \) \
-						-prune -o -print
-				); do
-					cp --archive "${target}" "${test_scratch_dir}/sources/"
-				done
+				cp -ra "${sources_template}" "${test_scratch_dir}"
 			# runs the test
 				env --ignore-environment \
 					PATH="${extra_path}" \
@@ -124,25 +145,9 @@ local test_start=$(date +%s)
 			'core')
 			# BME installed within the environment
 				[ ${DEBUG:+1} ] && echo "CORE REQUESTED FOR '${test}'."
-				local template_dir="${SCRATCH_BASE_DIR}/template"
-				if ! [ -d "${template_dir}" ]; then
-					mkdir --parents "${template_dir}/sources" || return $?
-					for target in $(
-						find "${TESTS_DIR}/../" \
-							-mindepth 1 -maxdepth 1 \
-							\( -path */.git -or -path */tests \) \
-							-prune -o -print
-					); do
-						cp --archive "${target}" "${template_dir}/sources/" || return $?
-					done
-					env --ignore-environment \
-						PATH="${template_dir}/bin:${extra_path}" \
-						SOURCES_DIR="${template_dir}/sources" \
-						HOME="${template_dir}" \
-						bash -c 'cd ${HOME}/sources && make install'
-				fi
+			# copies the "pre-computed" template with BME already installed
+				cp -ra "${installed_template}" "${test_scratch_dir}"
 			# runs the test
-				cp -ra "${template_dir}" "${test_scratch_dir}"
 				env --ignore-environment \
 					PATH="${test_scratch_dir}/bin:${extra_path}" \
 					HOME="${test_scratch_dir}" \
@@ -155,25 +160,9 @@ local test_start=$(date +%s)
 			'modules')
 			# BME installed and active
 				[ ${DEBUG:+1} ] && echo "MODULES REQUESTED FOR '${test}'."
-				local template_dir="${SCRATCH_BASE_DIR}/template"
-				if ! [ -d "${template_dir}" ]; then
-					mkdir --parents "${template_dir}/sources" || return $?
-					for target in $(
-						find "${TESTS_DIR}/../" \
-							-mindepth 1 -maxdepth 1 \
-							\( -path */.git -or -path */tests \) \
-							-prune -o -print
-					); do
-						cp --archive "${target}" "${template_dir}/sources/" || return $?
-					done
-					env --ignore-environment \
-						PATH="${template_dir}/bin:${extra_path}" \
-						SOURCES_DIR="${template_dir}/sources" \
-						HOME="${template_dir}" \
-						bash -c 'cd ${HOME}/sources && make install'
-				fi
+			# copies the "pre-computed" template with BME already installed
+				cp -ra "${installed_template}" "${test_scratch_dir}"
 			# runs the test
-				cp -ra "${template_dir}" "${test_scratch_dir}"
 				env --ignore-environment \
 					PATH="${test_scratch_dir}/bin:${extra_path}" \
 					HOME="${test_scratch_dir}" \
@@ -185,20 +174,11 @@ local test_start=$(date +%s)
 					}"
 			;;
 			*)
-				echo "UNKNOWN: what to do here?"
+				test_log "UNKNOWN: what should I do here?" fatal
 				return 1
 			;;
 		esac
 
-	# TODO: core, modules.
-	# review and clean afterwards
-	# once finished, out of the switch/case, test results
-
-# 		env --ignore-environment \
-# 			PATH="$(realpath "${BUILDDIR}"):${extra_path}" \
-# 			HOME="${test_scratch_dir}" \
-# 			CURRENT_TESTFILE_NUMBER=${test_counter} \
-# 			bash -c "source "${TESTS_DIR}/helper_functions.sh" && ${test}"
 	# Now, check result from command above
 		local test_rc=$?
 		local batch_duration=$( seconds_duration $(( $(date +%s) - batch_start )) )
@@ -216,7 +196,6 @@ local test_start=$(date +%s)
 		rm --recursive --force ${test_scratch_dir}
 		test_log "${batch_msg}" ok 0
 	done
-# 	shopt -u nullglob globstar
 
 	echo ''
 	local final_msg="${T_BOLD}TEST BATCHES RUN:${T_NC} "
