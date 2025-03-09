@@ -12,7 +12,7 @@
   * Due to the change in *bme_log()*, you may need to review your own calls to this function:
     * multiline message may need to adjust the number of tabs you add on the 2nd line onwards.
     * log messages between $BME_LOG_LEVEL wont' be printed.
-    * $DEBUG environment variable is not used anymore.  Use `BME_LOG_LEVEL=debug` instead.
+    * $DEBUG environment variable and *__bme_debug()* function are not used anymore.  Set `BME_LOG_LEVEL=debug` instead.
   * If you made use of the unit testing framework you may need to review your scripts' expectations.
 
 ## v1.9.2 (2025-FEB-23)
