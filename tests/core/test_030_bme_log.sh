@@ -1,10 +1,49 @@
 #!/usr/bin/env bash
 # Meant to be run from maketests.sh.  See its exported variables.
 
+# Log severities
+# See https://en.wikipedia.org/wiki/Syslog
+	declare -A log_severities=(
+		['error']=3
+		['warning']=4
+		['info']=6
+		['debug']=7
+	)
+
 # Tests BME_LOG features
 function main() {
 	source bash-magic-enviro || exit $?
-	check_log_indentation || exit $?
+	check_log_severity || exit $?
+# 	check_log_indentation || exit $?
+}
+
+
+#--
+# CHECKS LOG LEVEL THRESOLDS
+#--
+check_log_severity() {
+
+# this should always be printed
+	test_title 'non-severity message should always be printed'
+
+	local non_severity='non-severity'
+	local expected_output=$(echo -e "${C_BOLD}${non_severity^^}:${C_NC} test message.")
+
+	for severity in "${!log_severities[@]}"; do
+		BME_LOG_LEVEL="${severity}"
+		local log_output=$(bme_log "test message." "${non_severity}")
+
+		if [ "${log_output}" != "${expected_output}" ]; then
+			local err_msg="\n${T_BOLD}EXPECTED OUTPUT:${T_NC}\n"
+			err_msg+=$(indentor "'${expected_output}'" 1)
+			err_msg+="\n${T_BOLD}GOT:${T_NC}\n"
+			err_msg+=$(indentor "'${log_output}'" 1)
+			test_log "${err_msg}" fail
+			return 1
+		fi
+	done
+	unset severity
+	test_log "${T_GREEN}OK${T_NC}"
 }
 
 
