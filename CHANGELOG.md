@@ -5,7 +5,7 @@
 * **bme_log():**
   * on multiline log messages it now honors the requested indentation level instead of indenting just the first line.
   * syslog-like severities honored.  Log messages below $BME_LOG_LEVEL (defaults to **INFO**) won't be printed.
-  * due to the new syslog-like feature, main DEBUG variable is deprecated.
+  * due to the new syslog-like feature, *__bme_debug()* function and its related DEBUG variable are deprecated.
 * all `return -1` calls updated to `return 1` for POSIX standard alignment.
 * **unit tests:** framework refactored so now it offers different pre-loaded environments for *setup*, *core* or *modules* tests (see [README](./tests/README.md)).
 * **UPGRADE NOTES:**
