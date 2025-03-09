@@ -8,7 +8,6 @@ Pending actions, general notes, etc. (in no particular order):
 * Allow for environment-related files (i.e.: *.bme_env.production*, *.bme_env.local-development*...; consider if this should work just for *.bme_env* files only or also for the main *.bme_project* file).
 * Install dir shouldn't need to be in $PATH since we are not installing executable files.
 * Install dependencies on known platforms.
-* Review BME-related environment variables and check which ones should be exported
 * BME on non-interactive sessions:
   * Review BME-related environment variables and check which ones should be exported and so, available on subshells.
   * Auto white/blacklisting of subdirectories.
@@ -27,10 +26,9 @@ Pending actions, general notes, etc. (in no particular order):
   * More support functions to load/unload BME, etc.
 * **BME version pinning:** both projects and modules should be able to declare a range of compatible BME versions.
 * **Logging:**
-  * log function should allow either positional or by-name parameters.
-  * Ability to set logging levels (DEBUG|INFO|WARN|ERROR...) maybe on a scoped level (global vs project vs module-level)
   * Log to either STDOUT or STDERR (maybe two different logging functions)
   * Ability to log to file (possibly on top of console).  Also, file logging level may or may not be tied to console log level.
+  * *"Color auto-turn off"*: bme_log() should take care of turning color modes back to previous/default befor existing
 * **Documentation:**
   * Document upgrade process explicitly (with highlighted mention to *UPGRADE NOTES*).
   * Document support expectations.
@@ -52,3 +50,6 @@ Pending actions, general notes, etc. (in no particular order):
     * Review [terraform-config-inspect](https://github.com/hashicorp/terraform-config-inspect), which allows to extract configurations from terraform.
 
 ## IN PROGRESS
+* **Logging:**
+  * log function should allow either positional or by-name parameters.
+  * Ability to set logging levels (DEBUG|INFO|WARN|ERROR...) maybe on a scoped level (global vs project vs module-level)

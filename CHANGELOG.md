@@ -2,11 +2,17 @@
 
 ## Next Release
 * differences from [previous tag](/../../compare/v1.9.2…main).
-* **bme_log():** on multiline log messages it now honors the requested indentation level instead of indenting just the first line.
+* **bme_log():**
+  * on multiline log messages it now honors the requested indentation level instead of indenting just the first line.
+  * syslog-like severities honored.  Log messages below $BME_LOG_LEVEL (defaults to **INFO**) won't be printed.
+  * due to the new syslog-like feature, main DEBUG variable is deprecated.
 * all `return -1` calls updated to `return 1` for POSIX standard alignment.
 * **unit tests:** framework refactored so now it offers different pre-loaded environments for *setup*, *core* or *modules* tests (see [README](./tests/README.md)).
 * **UPGRADE NOTES:**
-  * Due to the change in *bme_log()*, you may need to review your own calls to this function with a multiline message and adjust the number of tabs you add on the 2nd line onwards.
+  * Due to the change in *bme_log()*, you may need to review your own calls to this function:
+    * multiline message may need to adjust the number of tabs you add on the 2nd line onwards.
+    * log messages between $BME_LOG_LEVEL wont' be printed.
+    * $DEBUG environment variable is not used anymore.  Use `BME_LOG_LEVEL=debug` instead.
   * If you made use of the unit testing framework you may need to review your scripts' expectations.
 
 ## v1.9.2 (2025-FEB-23)

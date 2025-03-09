@@ -10,6 +10,7 @@ BME_WHITELISTED_FILE="${BME_CONFIG_DIR}/whitelistedpaths"
 
 # Style table
 export C_BOLD='\033[1m'         # Bold text
+export C_PURPLE='\033[1;35m'    # Purple (and bold)
 export C_GREEN='\033[1;32m'     # Green (and bold)
 export C_YELLOW='\033[1;1;33m'  # Yellow (and bold)
 export C_RED='\033[1;31m'       # Red (and bold)
@@ -105,12 +106,29 @@ local log_level=${3:-0}   # third param (with a default of 0)
 # 	echo "log_type: ${log_type}"
 # 	echo "log_level: ${log_level}"
 
+# SYSLOG SEVERITIES
+# https://en.wikipedia.org/wiki/Syslog
+declare -A log_severities=(
+# RED
+	['emergency']=0  # System is unusable - A panic condition
+	['alert']=1      # Action must be taken immediately - A condition that should be corrected immediately, such as a corrupted system database
+	['critical']=2   # Critical conditions - Hard device errors
+	['error']=3      # Error conditions
+# YELLOW
+	['warning']=4    # Warning conditions
+	['notice']=5     # Normal but significant conditions - Conditions that are not error conditions, but that may require special handling
+# GREEN
+	['info']=6       # Informational messages - Confirmation that the program is working as expected
+# PURPLE
+	['debug']=7      # Debug-level messages - Messages that contain information normally of use only when debugging a program
+)
+
 # No parameters.  Show help instead
 	if (( $# == 0 )); then
 		local log_msg="'log message' ['log type' (see below)] [indentation level (0,1,2...)]"
 		log_msg+="\n${C_BOLD}'log type'${C_NC} will add a colored prefix as shown below:"
 		log_msg+="\n\t${C_GREEN}'INFO|OK|LOADING|CLEANING|FUNCTION'${C_NC}"
-		log_msg+="\n\t${C_YELLOW}'WARNING'${C_NC}"
+		log_msg+="\n\t${C_YELLOW}'WARNING|DEPRECATION'${C_NC}"
 		log_msg+="\n\t${C_RED}'FATAL|ERROR|FAIL'${C_NC}"
 		log_msg+="\n\t${C_BOLD}'any other log type'${C_NC}"
 		log_msg+="\n${C_BOLD}Color codes you can use in your messages:${C_NC}"
@@ -128,18 +146,41 @@ local log_level=${3:-0}   # third param (with a default of 0)
 		return $false
 	fi
 
+# Checks if message is printable as per its severity
+	local BME_LOG_LEVEL="${BME_LOG_LEVEL:=info}"  # sets log level default
+	BME_LOG_LEVEL="${BME_LOG_LEVEL,,}"            # to lowercase for comparation
+	local severity="${log_type,,}"
+
+	if [[ -n "${severity}" && ${log_severities[${severity}]:+1} ]]; then
+		echo "SEVERITY DECLARED AND COMPARABLE"
+		if (( ${log_severities[${BME_LOG_LEVEL}]} >= ${log_severities[${severity}]} )); then
+			echo "AND WITHIN THRESHOLD - requested '${severity}' (${log_severities[${severity}]}); not printing above '${BME_LOG_LEVEL}' (${log_severities[${BME_LOG_LEVEL}]})"
+			echo "LOG TO BE PRINTED"
+		else
+			echo "BUT NOT WITHIN THRESHOLD - requested '${severity}' (${log_severities[${severity}]}); not printing above '${BME_LOG_LEVEL}' (${log_severities[${BME_LOG_LEVEL}]})"
+			echo "LOG NOT TO BE PRINTED"
+			return 0
+		fi
+	else
+		echo "SEVERITY EITHER NOT DECLARED OR NOT COMPARABLE"
+		echo "LOG TO BE PRINTED"
+	fi
+
 # Adds message type to log message
 	case "$log_type" in
-		FATAL | ERROR | FAIL)
+		EMERGENCY | FATAL | ALERT | CRITICAL | ERROR | FAIL)
 			log_message="${C_RED}${log_type}:${C_NC} ${log_message}"
 		;;
-		WARNING)
+		WARNING | NOTICE | DEPRECATION)
 			log_message="${C_YELLOW}${log_type}:${C_NC} ${log_message}"
 		;;
 		INFO | OK \
 		| LOADING | CLEANING \
 		| FUNCTION)
 			log_message="${C_GREEN}${log_type}:${C_NC} ${log_message}"
+		;;
+		DEBUG)
+			log_message="${C_PURPLE}${log_type}:${C_NC} ${log_message}"
 		;;
 		*)
 			if [ -n "$log_type" ]; then
