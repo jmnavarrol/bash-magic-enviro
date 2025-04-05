@@ -29,7 +29,7 @@ So, in brief:
 1. [Available features](#features)<a name="feature_list"></a>
    * [jumping among projects](#jumping_projects)
    * [directory whitelisting](#whitelisting)
-   * [logging function](#log)
+   * [logging](#log)
    * [colored output](#colors)
    * [custom clean function](#custom_clean)
    * [*Bash Magic Enviro* version checking](#check-versions)
@@ -294,7 +294,7 @@ You can manually edit your *'~/.bme.d/whitelistedpaths'* file, but be aware the 
 
 <sub>[back to feature list](#feature_list).</sub>
 
-### logging function<a name="log"></a>
+### logging<a name="log"></a>
 A function named [**bme_log()**](https://github.com/jmnavarrol/bash-magic-enviro/blob/770e375bbfe593fe4e2a153feeca5ad3e7a4835a/src/bash-magic-enviro#L97) is exported so you can use it in your *'.bme_\*'* files, which accepts three (positional) params:
 1. **log message [mandatory]:** the log message itself.  It accepts codes for colored output (see [below](#colors)).
 1. **log type [optional]:** the type of log, i.e.: *warning*, *info*...  It is represented as a colored uppercase prefix to the message.  Run `bme_log` without parameters to get a list of known *log types* and the color it will be used along the prefix.
@@ -304,6 +304,22 @@ A function named [**bme_log()**](https://github.com/jmnavarrol/bash-magic-enviro
 ```bash
 bme_log "An 'INFO:' prefix will be added in green. ${C_BOLD}'this is BOLD'${C_NC} and this message will be indented once." info 1
 ```
+**BME_LOG_LEVEL:** (default **INFO**) this environment variable controls which logs will be printed by *bme_log()*.  When the *bme_log* type matches a *severity* and the severity is below the threshold set by *BME_LOG_LEVEL*, the message will **not** be printed.  In example:
+* BME_LOG_LEVEL not explicity set (therefore it gets the *INFO* default):
+   * this will be printed: `bme_log "my message" error`
+   * this will **not** be printed: `bme_log "my message" debug`
+   
+Log severities you can set by means of the **BME_LOG_LEVEL** environment variable in decreasing priority (see https://en.wikipedia.org/wiki/Syslog):
+* **EMERGENCY:** System is unusable - A panic condition.
+* **ALERT:** Action must be taken immediately - A condition that should be corrected immediately, such as a corrupted system database.
+* **CRITICAL:** Critical conditions - Hard device errors.
+* **ERROR:** Error conditions.
+* **WARNING:** Warning conditions.
+* **NOTICE:** Normal but significant conditions - Conditions that are not error conditions, but that may require special handling.
+* **INFO:** Informational messages - Confirmation that the program is working as expected.
+* **DEBUG:** Debug-level messages - Messages that contain information normally of use only when debugging a program.
+
+*log types* not matching severities above will **always** be printed, i.e.: `bme_log "custom message" my_custom_type`
 
 <sub>[back to feature list](#feature_list).</sub>
 
