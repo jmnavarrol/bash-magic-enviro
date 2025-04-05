@@ -52,3 +52,5 @@ Pending actions, general notes, etc. (in no particular order):
     * Review [terraform-config-inspect](https://github.com/hashicorp/terraform-config-inspect), which allows to extract configurations from terraform.
 
 ## IN PROGRESS
+* **Logging:**
+  * Ability to set log level (DEBUG|INFO|WARN|ERROR...) once, on a global level (new BME_LOG_LEVEL global variable)

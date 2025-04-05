@@ -5,12 +5,11 @@
 function main() {
 	source bash-magic-enviro || exit $?
 	check_log_indentation || exit $?
+	check_log_level_set || exit $?
 }
 
 
-#--
-# EVALUATES INDENTATION IS PRESERVED
-#--
+# Ensures log indentation is preserved
 function check_log_indentation() {
 	test_title ''
 
@@ -57,8 +56,21 @@ function check_log_indentation() {
 		test_log "${err_msg}" fail
 		return 1
 	else
-		test_log "Check ${C_BOLD}'bme_log indentation'${C_NC}: ${C_GREEN}OK${C_NC}" info
+		test_log "Check ${T_BOLD}'bme_log indentation'${T_NC}: ${T_GREEN}OK${T_NC}" info
 	fi
+}
+
+
+# Ensures BME_LOG_LEVEL is set
+function check_log_level_set() {
+	test_title ''
+
+	if [ -z "${BME_LOG_LEVEL}" ]; then
+		test_log "${T_BOLD}'BME_LOG_LEVEL'${T_NC} environment variable should be set." fail
+		return 1
+	fi
+
+	test_log "Check ${T_BOLD}'log level set'${T_NC}: ${T_GREEN}OK${T_NC}" info
 }
 
 main; exit $?

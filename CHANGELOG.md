@@ -2,7 +2,9 @@
 
 ## Next Release
 * differences from [previous tag](/../../compare/v1.9.2…main).
-* **bme_log():** on multiline log messages it now honors the requested indentation level instead of indenting just the first line.
+* **logs management:**
+  * **bme_log():** on multiline log messages it now honors the requested indentation level instead of indenting just the first line.
+  * New **BME_LOG_LEVEL** variable (default **INFO**) to set which logs will be printed or not.
 * all `return -1` calls updated to `return 1` for POSIX standard alignment.
 * **unit tests:** framework refactored so now it offers different pre-loaded environments for *setup*, *core* or *modules* tests (see [README](./tests/README.md)).
 * **UPGRADE NOTES:**
