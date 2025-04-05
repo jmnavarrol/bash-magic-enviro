@@ -7,13 +7,31 @@ BME_FILE='.bme_env'
 BME_HIDDEN_DIR='.bme.d'
 BME_CONFIG_DIR="${HOME}/${BME_HIDDEN_DIR}"
 BME_WHITELISTED_FILE="${BME_CONFIG_DIR}/whitelistedpaths"
+
 BME_LOG_LEVEL="${BME_LOG_LEVEL:=INFO}"  # sets log level (with default)
+# SYSLOG SEVERITIES
+# https://en.wikipedia.org/wiki/Syslog
+declare -A BME_LOG_SEVERITIES=(
+# RED
+	['EMERGENCY']=0  # System is unusable - A panic condition
+	['ALERT']=1      # Action must be taken immediately - A condition that should be corrected immediately, such as a corrupted system database
+	['CRITICAL']=2   # Critical conditions - Hard device errors
+	['ERROR']=3      # Error conditions
+# YELLOW
+	['WARNING']=4    # Warning conditions
+	['NOTICE']=5     # Normal but significant conditions - Conditions that are not error conditions, but that may require special handling
+# GREEN
+	['INFO']=6       # Informational messages - Confirmation that the program is working as expected
+# PURPLE
+	['DEBUG']=7      # Debug-level messages - Messages that contain information normally of use only when debugging a program
+)
 
 # Style table
 export C_BOLD='\033[1m'         # Bold text
 export C_GREEN='\033[1;32m'     # Green (and bold)
 export C_YELLOW='\033[1;1;33m'  # Yellow (and bold)
 export C_RED='\033[1;31m'       # Red (and bold)
+export C_PURPLE='\033[1;35m'    # Purple (and bold)
 export C_NC='\033[0m'           # No Color
 
 # Sets 'fake' boolean
@@ -106,19 +124,34 @@ local log_level=${3:-0}   # third param (with a default of 0)
 # 	echo "log_type: ${log_type}"
 # 	echo "log_level: ${log_level}"
 
+# First of all, check that BME_LOG_LEVEL is set to a valid value
+	__check_log_severity || return $?
+	if [[ " ${!BME_LOG_SEVERITIES[*]} " =~ " ${log_type} " ]]; then
+		if (( ${BME_LOG_SEVERITIES[${log_type}]} > ${BME_LOG_SEVERITIES[${BME_LOG_LEVEL}]} )); then
+			local debug_msg="${FUNCNAME[0]}: log message requested at '${log_type}' level.\n"
+			debug_msg+="\tbut current log level is '${BME_LOG_LEVEL}'.\n"
+			debug_msg+="\tThis message won't be printed:\n"
+			debug_msg+="${log_message}"
+			__bme_debug "${debug_msg}"
+			return 0
+		fi
+	fi
+
 # No parameters.  Show help instead
 	if (( $# == 0 )); then
 		local log_msg="'log message' ['log type' (see below)] [indentation level (0,1,2...)]"
 		log_msg+="\n${C_BOLD}'log type'${C_NC} will add a colored prefix as shown below:"
 		log_msg+="\n\t${C_GREEN}'INFO|OK|LOADING|CLEANING|FUNCTION'${C_NC}"
-		log_msg+="\n\t${C_YELLOW}'WARNING'${C_NC}"
-		log_msg+="\n\t${C_RED}'FATAL|ERROR|FAIL'${C_NC}"
+		log_msg+="\n\t${C_YELLOW}'WARNING|NOTICE'${C_NC}"
+		log_msg+="\n\t${C_RED}'EMERGENCY|ALERT|CRITICAL|ERROR|FATAL|FAIL'${C_NC}"
+		log_msg+="\n\t${C_PURPLE}'DEBUG'${C_NC}"
 		log_msg+="\n\t${C_BOLD}'any other log type'${C_NC}"
 		log_msg+="\n${C_BOLD}Color codes you can use in your messages:${C_NC}"
 		log_msg+="\n\t\"\${C_BOLD}${C_BOLD}'BOLD'${C_NC}\${C_NC}\""
 		log_msg+="\n\t\"\${C_GREEN}${C_GREEN}'GREEN'${C_NC}\${C_NC}\""
 		log_msg+="\n\t\"\${C_YELLOW}${C_YELLOW}'YELLOW'${C_NC}\${C_NC}\""
 		log_msg+="\n\t\"\${C_RED}${C_RED}'RED'${C_NC}\${C_NC}\""
+		log_msg+="\n\t\"\${C_PURPLE}${C_PURPLE}'PURPLE'${C_NC}\${C_NC}\""
 		bme_log "${log_msg}" ${FUNCNAME[0]}
 		return 0
 	fi
@@ -131,16 +164,21 @@ local log_level=${3:-0}   # third param (with a default of 0)
 
 # Adds message type to log message
 	case "$log_type" in
-		FATAL | ERROR | FAIL)
+		EMERGENCY | ALERT | CRITICAL | ERROR \
+		| FATAL | FAIL)
 			log_message="${C_RED}${log_type}:${C_NC} ${log_message}"
 		;;
-		WARNING)
+		WARNING | NOTICE)
 			log_message="${C_YELLOW}${log_type}:${C_NC} ${log_message}"
 		;;
-		INFO | OK \
+		INFO \
+		| OK \
 		| LOADING | CLEANING \
 		| FUNCTION)
 			log_message="${C_GREEN}${log_type}:${C_NC} ${log_message}"
+		;;
+		DEBUG)
+			log_message="${C_PURPLE}${log_type}:${C_NC} ${log_message}"
 		;;
 		*)
 			if [ -n "$log_type" ]; then
@@ -198,32 +236,10 @@ export -f bme_check_version
 
 # Checks/set log level to a valid severity
 __check_log_severity() {
-local log_severities=(
-	'EMERGENCY'
-	'ALERT'
-	'CRITICAL'
-	'ERROR'
-	'WARNING'
-	'NOTICE'
-	'INFO'
-	'DEBUG'
-# 	['emergency']=0  # System is unusable - A panic condition
-# 	['alert']=1      # Action must be taken immediately - A condition that should be corrected immediately, such as a corrupted system database
-# 	['critical']=2   # Critical conditions - Hard device errors
-# 	['error']=3      # Error conditions
-# # YELLOW
-# 	['warning']=4    # Warning conditions
-# 	['notice']=5     # Normal but significant conditions - Conditions that are not error conditions, but that may require special handling
-# # GREEN
-# 	['info']=6       # Informational messages - Confirmation that the program is working as expected
-# # PURPLE
-# 	['debug']=7      # Debug-level messages - Messages that contain information normally of use only when debugging a program
-)
-
-	# makes sure BME_LOG_LEVEL is "remapped" to uppercase
+# makes sure BME_LOG_LEVEL is "remapped" to uppercase
 	BME_LOG_LEVEL="${BME_LOG_LEVEL^^}"
-	# Checks BME_LOG_LEVEL value
-	if ! [[ " ${log_severities[*]} " =~ " ${BME_LOG_LEVEL} " ]]; then
+# Checks BME_LOG_LEVEL value
+	if ! [[ " ${!BME_LOG_SEVERITIES[*]} " =~ " ${BME_LOG_LEVEL} " ]]; then
 		local err_msg="Log level set to a wrong value ${C_BOLD}'${BME_LOG_LEVEL}'${C_NC}.\n"
 		BME_LOG_LEVEL='INFO'
 		err_msg+="\t${C_BOLD}'BME_LOG_LEVEL'${C_NC} has been reset to default value ${C_BOLD}'${BME_LOG_LEVEL}'${C_NC}."

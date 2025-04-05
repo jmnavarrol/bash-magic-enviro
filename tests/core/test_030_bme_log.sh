@@ -19,6 +19,7 @@ function main() {
 	check_log_indentation || exit $?
 	check_log_level_set || exit $?
 	check_log_level_valid || exit $?
+	check_log_level_printed || exit $?
 }
 
 
@@ -129,6 +130,56 @@ function check_log_level_valid() {
 	fi
 	unset BME_LOG_LEVEL
 	test_log "Check ${T_BOLD}'invalid log severity'${T_NC}" ok
+}
+
+
+# Validates if a log message should be printed
+function check_log_level_printed() {
+
+	source bash-magic-enviro || exit $?
+	test_title "check log messages at default log level '${BME_LOG_LEVEL}'"
+	for severity in "${valid_log_severities[@]}"; do
+		local log_output=$(bme_log "default INFO level" "${severity}" 1)
+		if ((
+			${BME_LOG_SEVERITIES[${severity^^}]} \
+			> ${BME_LOG_SEVERITIES[${BME_LOG_LEVEL}]}
+		)); then
+			if [ -n "${log_output}" ]; then
+				local err_msg="Current log level is '${BME_LOG_LEVEL}' (${BME_LOG_SEVERITIES[${BME_LOG_LEVEL}]}).\n"
+				err_msg+="Requested message level is '${severity^^}' (${BME_LOG_SEVERITIES[${severity^^}]}).\n"
+				err_msg+="Therefore it shouldnt be printed but I got:\n"
+				err_msg+="${log_output}"
+				test_log "${err_msg}" fail
+				return 1
+			fi
+		fi
+	done
+	unset severity
+	test_log "check log messages at default log level ${T_BOLD}'${BME_LOG_LEVEL}'${T_NC}" ok
+
+	test_title "check log messages at each severity"
+	for log_level in "${valid_log_severities[@]}"; do
+		BME_LOG_LEVEL="${log_level}"
+		for severity in "${valid_log_severities[@]}"; do
+			local log_output=$(bme_log "current log level: '${BME_LOG_LEVEL}' requested message level '${severity}'" "${severity}" 1)
+			if ((
+				${BME_LOG_SEVERITIES[${severity^^}]} \
+				> ${BME_LOG_SEVERITIES[${BME_LOG_LEVEL^^}]}
+			)); then
+				if [ -n "${log_output}" ]; then
+					local err_msg="Current log level is '${BME_LOG_LEVEL}' (${BME_LOG_SEVERITIES[${BME_LOG_LEVEL}]}).\n"
+					err_msg+="Requested message level is '${severity^^}' (${BME_LOG_SEVERITIES[${severity^^}]}).\n"
+					err_msg+="Therefore it shouldnt be printed but I got:\n"
+					err_msg+="${log_output}"
+					test_log "${err_msg}" fail
+					return 1
+				fi
+			fi
+		done
+	done
+	unset log_level
+	unset severity
+	test_log "check log messages at each log level" ok
 }
 
 
