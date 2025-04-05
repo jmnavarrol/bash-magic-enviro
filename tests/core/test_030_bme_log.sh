@@ -1,11 +1,24 @@
 #!/usr/bin/env bash
 # Meant to be run from maketests.sh.  See its exported variables.
 
+# See https://en.wikipedia.org/wiki/Syslog
+valid_log_severities=(
+	'emergency'
+	'alert'
+	'critical'
+	'error'
+	'warning'
+	'notice'
+	'info'
+	'debug'
+)
+
 # Tests BME_LOG features
 function main() {
 	source bash-magic-enviro || exit $?
 	check_log_indentation || exit $?
 	check_log_level_set || exit $?
+	check_log_level_valid || exit $?
 }
 
 
@@ -56,7 +69,7 @@ function check_log_indentation() {
 		test_log "${err_msg}" fail
 		return 1
 	else
-		test_log "Check ${T_BOLD}'bme_log indentation'${T_NC}: ${T_GREEN}OK${T_NC}" info
+		test_log "Check ${T_BOLD}'bme_log indentation'${T_NC}" ok
 	fi
 }
 
@@ -78,7 +91,45 @@ local default_log_level='INFO'
 		return 1
 	fi
 
-	test_log "Check ${T_BOLD}'log level set'${T_NC}: ${T_GREEN}OK${T_NC}" info
+	test_log "Check ${T_BOLD}'log level set'${T_NC}" ok
 }
+
+
+# Ensures BME_LOG_LEVEL gets a valid value
+function check_log_level_valid() {
+	test_title "'BME_LOG_LEVEL' is set a valid severity level"
+
+	for severity in "${valid_log_severities[@]}"; do
+		BME_LOG_LEVEL="${severity}"
+		# re-sources BME to set the new log severity
+		source bash-magic-enviro || exit $?
+		if [[ "${severity^^}" != "${BME_LOG_LEVEL}" ]]; then
+			local err_msg="Unexpected log level.\n"
+			err_msg+="\texpected: ${T_GREEN}'${severity^^}'${T_NC};"
+			err_msg+=" got ${T_RED}'${BME_LOG_LEVEL}'${T_NC} instead"
+			test_log "${err_msg}" fail
+			return 1
+		fi
+	done
+	unset severity
+	test_log "Check ${T_BOLD}'valid log severities'${T_NC}" ok
+
+	test_title "'BME_LOG_LEVEL' is set to an invalid value"
+
+	BME_LOG_LEVEL='foo'
+	# re-sources BME to set the new log severity
+	source bash-magic-enviro || exit $?
+	# log level should be re-set to default 'INFO' level
+	if [ "${BME_LOG_LEVEL}" != 'INFO' ]; then
+		local err_msg="Unexpected log level.\n"
+		err_msg+="\texpected: ${T_GREEN}'INFO'${T_NC};"
+		err_msg+=" got ${T_RED}'${BME_LOG_LEVEL}'${T_NC} instead"
+		test_log "${err_msg}" fail
+		return 1
+	fi
+	unset BME_LOG_LEVEL
+	test_log "Check ${T_BOLD}'invalid log severity'${T_NC}" ok
+}
+
 
 main; exit $?

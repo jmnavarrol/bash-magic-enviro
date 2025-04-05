@@ -7,7 +7,7 @@ BME_FILE='.bme_env'
 BME_HIDDEN_DIR='.bme.d'
 BME_CONFIG_DIR="${HOME}/${BME_HIDDEN_DIR}"
 BME_WHITELISTED_FILE="${BME_CONFIG_DIR}/whitelistedpaths"
-BME_LOG_LEVEL="${BME_LOG_LEVEL:=INFO}"  # sets log level default
+BME_LOG_LEVEL="${BME_LOG_LEVEL:=INFO}"  # sets log level (with default)
 
 # Style table
 export C_BOLD='\033[1m'         # Bold text
@@ -194,6 +194,42 @@ bme_check_version() {
 	fi
 }
 export -f bme_check_version
+
+
+# Checks/set log level to a valid severity
+__check_log_severity() {
+local log_severities=(
+	'EMERGENCY'
+	'ALERT'
+	'CRITICAL'
+	'ERROR'
+	'WARNING'
+	'NOTICE'
+	'INFO'
+	'DEBUG'
+# 	['emergency']=0  # System is unusable - A panic condition
+# 	['alert']=1      # Action must be taken immediately - A condition that should be corrected immediately, such as a corrupted system database
+# 	['critical']=2   # Critical conditions - Hard device errors
+# 	['error']=3      # Error conditions
+# # YELLOW
+# 	['warning']=4    # Warning conditions
+# 	['notice']=5     # Normal but significant conditions - Conditions that are not error conditions, but that may require special handling
+# # GREEN
+# 	['info']=6       # Informational messages - Confirmation that the program is working as expected
+# # PURPLE
+# 	['debug']=7      # Debug-level messages - Messages that contain information normally of use only when debugging a program
+)
+
+	# makes sure BME_LOG_LEVEL is "remapped" to uppercase
+	BME_LOG_LEVEL="${BME_LOG_LEVEL^^}"
+	# Checks BME_LOG_LEVEL value
+	if ! [[ " ${log_severities[*]} " =~ " ${BME_LOG_LEVEL} " ]]; then
+		local err_msg="Log level set to a wrong value ${C_BOLD}'${BME_LOG_LEVEL}'${C_NC}.\n"
+		BME_LOG_LEVEL='INFO'
+		err_msg+="\t${C_BOLD}'BME_LOG_LEVEL'${C_NC} has been reset to default value ${C_BOLD}'${BME_LOG_LEVEL}'${C_NC}."
+		bme_log "${err_msg}" error
+	fi
+}
 
 
 # Loads a project's configuration and the root's env_file if any
@@ -627,3 +663,5 @@ if ! [ -e "${BME_WHITELISTED_FILE}" ]; then
 	echo -e "declare -gA BME_WHITELISTED_PATHS=(\n)" > "${BME_WHITELISTED_FILE}"
 fi
 source "${BME_WHITELISTED_FILE}"
+# Checks log level
+__check_log_severity
