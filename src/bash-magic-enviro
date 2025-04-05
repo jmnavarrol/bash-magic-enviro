@@ -7,6 +7,7 @@ BME_FILE='.bme_env'
 BME_HIDDEN_DIR='.bme.d'
 BME_CONFIG_DIR="${HOME}/${BME_HIDDEN_DIR}"
 BME_WHITELISTED_FILE="${BME_CONFIG_DIR}/whitelistedpaths"
+BME_LOG_LEVEL="${BME_LOG_LEVEL:=INFO}"  # sets log level default
 
 # Style table
 export C_BOLD='\033[1m'         # Bold text

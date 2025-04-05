@@ -63,10 +63,18 @@ function check_log_indentation() {
 
 # Ensures BME_LOG_LEVEL is set
 function check_log_level_set() {
-	test_title ''
+local default_log_level='INFO'
+
+	test_title "'BME_LOG_LEVEL' is set to its default '${default_log_level}' level"
 
 	if [ -z "${BME_LOG_LEVEL}" ]; then
 		test_log "${T_BOLD}'BME_LOG_LEVEL'${T_NC} environment variable should be set." fail
+		return 1
+	elif [ "${BME_LOG_LEVEL}" != "${default_log_level}" ]; then
+		local log_msg="${T_BOLD}'BME_LOG_LEVEL'${T_NC} set to wrong value:\n"
+		log_msg+="\texpected value: ${T_BOLD}'${default_log_level}'${T_NC}.\n"
+		log_msg+="\tgot: ${T_BOLD}'${BME_LOG_LEVEL}'${T_NC}."
+		test_log "${log_msg}" fail
 		return 1
 	fi
 
