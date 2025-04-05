@@ -10,6 +10,7 @@
 * **UPGRADE NOTES:**
   * Due to the change in *bme_log()*, you may need to review your own calls to this function with a multiline message and adjust the number of tabs you add on the 2nd line onwards.
   * If you made use of the unit testing framework you may need to review your scripts' expectations.
+  * **DEBUG** level messages won't be printed anymore unless you set the **BME_LOG_LEVEL** environment variable to **DEBUG** value.
 
 ## v1.9.2 (2025-FEB-23)
 * differences from [previous tag](/../../compare/v1.9.1…main).

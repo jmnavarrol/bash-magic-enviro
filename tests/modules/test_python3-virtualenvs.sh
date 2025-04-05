@@ -84,7 +84,10 @@ load_module() {
 
 # activates the project
 	declare | grep -vE "${regex_var}" > "${HOME}/before.txt"
-	in_output=$(cd "${project_dir}" 2>&1 && bme_eval_dir 2>&1) || in_rc=$?
+	in_output=$(
+		source bash-magic-enviro || return $?
+		cd "${project_dir}" 2>&1 && bme_eval_dir 2>&1
+	) || in_rc=$?
 	${in_rc} || {
 		local err_msg="(${in_rc}) while loading project config at ${T_BOLD}'${project_dir}'${T_NC}\n"
 		err_msg+="${T_BOLD}OUTPUT >>>${T_NC}\n"
