@@ -1,7 +1,10 @@
 # CHANGELOG
 
 ## Next Release
-* differences from [previous tag](/../../compare/v1.9.2…main).
+* differences from [previous tag](/../../compare/v1.10.0…main).
+
+## v1.10.0 (2025-APR-06)
+* differences from [previous tag](/../../compare/v1.9.2…v1.10.0).
 * **logs management:**
   * **bme_log():** on multiline log messages it now honors the requested indentation level instead of indenting just the first line.
   * New **BME_LOG_LEVEL** environment variable (default **INFO**) to set which logs will be printed or not.
@@ -15,7 +18,7 @@
   * **DEBUG** level messages won't be printed anymore unless you set the **BME_LOG_LEVEL** environment variable to **DEBUG** value.
 
 ## v1.9.2 (2025-FEB-23)
-* differences from [previous tag](/../../compare/v1.9.1…main).
+* differences from [previous tag](/../../compare/v1.9.1…v1.9.2).
 * tests framework discovers test scripts on generic paths.
 * [#12](../../issues/12): BME now runs on macos.
 
