@@ -235,8 +235,8 @@ function set_tests_path() {
 	local tests_path='/usr/local/sbin:/usr/bin:/usr/sbin:/bin:/sbin'
 
 	if [[ "${OSTYPE}" == "darwin"* ]]; then
-		local brew_path=$(brew --prefix)/bin
-		tests_path="${brew_path}:${tests_path}"
+		local brew_path=$(brew --prefix)
+		tests_path="${brew_path}/bin:${tests_path}"
 
 		local gnu_packages=(
 			'coreutils'
@@ -245,11 +245,11 @@ function set_tests_path() {
 			'gnu-sed'
 		)
 		for gnu_package in ${gnu_packages[@]}; do
-			if [[ -d "/usr/local/opt/${gnu_package}" ]]; then
-				tests_path="/usr/local/opt/${gnu_package}/libexec/gnubin:${tests_path}"
+			if [[ -d "${brew_path}/opt/${gnu_package}" ]]; then
+				tests_path="${brew_path}/opt/${gnu_package}/libexec/gnubin:${tests_path}"
 			else
 				local warn_msg="WARNING: while trying to set \$PATH for '${gnu_package}':\n"
-				warn_msg+="\tdirectory '/usr/local/opt/${gnu_package}' couldn't be found.\n"
+				warn_msg+="\tdirectory '${brew_path}/opt/${gnu_package}' couldn't be found.\n"
 				warn_msg+="\tdid you 'brew install ${gnu_package}'?"
 				echo -e "${warn_msg}"
 				return 1
