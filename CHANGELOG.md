@@ -8,7 +8,7 @@
 * all `return -1` calls updated to `return 1` for POSIX standard alignment.
 * **unit tests:**
   * framework refactored so now it offers different pre-loaded environments for *setup*, *core* or *modules* tests (see [README](./tests/README.md)).
-  * [#13](../../issues/13): [tests/maketests.sh](.tests/maketests.sh/) $PATH setting on macos with homebrew corrected.
+  * [#13](../../issues/13): [tests/maketests.sh](./tests/maketests.sh/) $PATH setting on macos with homebrew corrected.
 * **UPGRADE NOTES:**
   * Due to the change in *bme_log()*, you may need to review your own calls to this function with a multiline message and adjust the number of tabs you add on the 2nd line onwards.
   * If you made use of the unit testing framework you may need to review your scripts' expectations.
