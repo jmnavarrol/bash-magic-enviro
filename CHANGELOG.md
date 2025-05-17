@@ -2,6 +2,9 @@
 
 ## Next Release
 * differences from [previous tag](/../../compare/v1.10.0…main).
+* **logs management:**
+  * README updated.
+  * **bme_log():** *log_level* variable becomes *log_indent* to better match its purpose.
 
 ## v1.10.0 (2025-APR-06)
 * differences from [previous tag](/../../compare/v1.9.2…v1.10.0).

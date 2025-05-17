@@ -114,15 +114,15 @@ local debug_msg="${1:-}"
 # Logger function
 # 1st param: 'log_message': the log message itself
 # 2st param: 'log_type': log prefix, i.e.: ERROR, WARNING, empty string...
-# 3st param: 'log_level': sets the indentation level of the log output, starting '0'
+# 3st param: 'log_indent': sets the indentation level of the log output, starting '0'
 bme_log() {
 local log_message="${1}"  # first param
 local log_type="${2^^}"   # second param (uppercased)
-local log_level=${3:-0}   # third param (with a default of 0)
+local log_indent=${3:-0}   # third param (with a default of 0)
 # Params debug
 # 	echo "log_message: ${log_message}"
 # 	echo "log_type: ${log_type}"
-# 	echo "log_level: ${log_level}"
+# 	echo "log_indent: ${log_indent}"
 
 # First of all, check that BME_LOG_LEVEL is set to a valid value
 	__check_log_severity || return $?
@@ -189,7 +189,7 @@ local log_level=${3:-0}   # third param (with a default of 0)
 
 # Sets indentation level
 	local indented_prefix=''
-	for (( i=0; i < ${log_level}; i++ )); do
+	for (( i=0; i < ${log_indent}; i++ )); do
 		indented_prefix+='\t'
 	done
 	unset i
