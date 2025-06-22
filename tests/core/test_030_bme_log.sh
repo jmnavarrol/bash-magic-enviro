@@ -52,7 +52,8 @@ function check_log_indentation() {
 		((i++))
 	done
 	# expand control codes in the expected string
-	expected_msg_string=$(echo -e "${expected_msg_string}")
+	# (bme_log adds a final ${C_NC} in case the user forgot it)
+	expected_msg_string=$(echo -e "${expected_msg_string}${C_NC}")
 
 # Process the log string
 	local output_msg=$(bme_log "${msg_string}" '' ${indentation})

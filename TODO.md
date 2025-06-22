@@ -31,7 +31,6 @@ Pending actions, general notes, etc. (in no particular order):
   * Ability to set logging levels on a scoped level (global vs project vs module-level)
   * Log to either STDOUT or STDERR (maybe two different logging functions)
   * Ability to log to file (possibly on top of console).  Also, file logging level may or may not be tied to console log level.
-  * Align non-syslog log types to syslog-like ones, i.e.: when BME_LOG_LEVEL is set above INFO (i.e.: WARNING) hide not only DEBUG and INFO messages but also OK, LOADING, etc.  In other words, make, i.e.: OK, LOADING, CLEANING, FUNCTION to work at INFO level.
 * **Documentation:**
   * Document upgrade process explicitly (with highlighted mention to *UPGRADE NOTES*).
   * Document support expectations.
@@ -53,3 +52,4 @@ Pending actions, general notes, etc. (in no particular order):
     * Review [terraform-config-inspect](https://github.com/hashicorp/terraform-config-inspect), which allows to extract configurations from terraform.
 
 ## IN PROGRESS
+* Align non-syslog log types to syslog-like ones, i.e.: when BME_LOG_LEVEL is set above INFO (i.e.: WARNING) hide not only DEBUG and INFO messages but also OK, LOADING, etc.  In other words, make, i.e.: OK, LOADING, CLEANING, FUNCTION to work at INFO level.

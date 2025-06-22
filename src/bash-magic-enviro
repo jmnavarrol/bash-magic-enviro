@@ -9,8 +9,28 @@ BME_CONFIG_DIR="${HOME}/${BME_HIDDEN_DIR}"
 BME_WHITELISTED_FILE="${BME_CONFIG_DIR}/whitelistedpaths"
 
 BME_LOG_LEVEL="${BME_LOG_LEVEL:=INFO}"  # sets log level (with default)
-# SYSLOG SEVERITIES
-# https://en.wikipedia.org/wiki/Syslog
+
+# Sets 'fake' boolean
+declare -i BOOL=(0 1)
+true=${BOOL[0]}
+false=${BOOL[1]}
+
+# DEBUG=$true
+
+# Style table
+export C_BOLD='\033[1m'         # Bold text
+export C_GREEN='\033[1;32m'     # Green (and bold)
+export C_YELLOW='\033[1;1;33m'  # Yellow (and bold)
+export C_RED='\033[1;31m'       # Red (and bold)
+export C_PURPLE='\033[1;35m'    # Purple (and bold)
+export C_NC='\033[0m'           # No Color
+
+# Three maps are required for logging:
+# 1. Severities as per standard syslog severities (see https://en.wikipedia.org/wiki/Syslog)
+# 2. Another mapping for "custom log types" to standard severities
+# 3. Finally, a map from severities to colors
+#
+# SYSLOG SEVERITIES. See https://en.wikipedia.org/wiki/Syslog
 declare -A BME_LOG_SEVERITIES=(
 # RED
 	['EMERGENCY']=0  # System is unusable - A panic condition
@@ -26,20 +46,43 @@ declare -A BME_LOG_SEVERITIES=(
 	['DEBUG']=7      # Debug-level messages - Messages that contain information normally of use only when debugging a program
 )
 
-# Style table
-export C_BOLD='\033[1m'         # Bold text
-export C_GREEN='\033[1;32m'     # Green (and bold)
-export C_YELLOW='\033[1;1;33m'  # Yellow (and bold)
-export C_RED='\033[1;31m'       # Red (and bold)
-export C_PURPLE='\033[1;35m'    # Purple (and bold)
-export C_NC='\033[0m'           # No Color
+# Other custom types mapped to standard syslog ones
+declare -A BME_CUSTOM_LOG_TYPES=(
+	['EMERGENCY']="${BME_LOG_SEVERITIES['EMERGENCY']}"
 
-# Sets 'fake' boolean
-declare -i BOOL=(0 1)
-true=${BOOL[0]}
-false=${BOOL[1]}
+	['ALERT']="${BME_LOG_SEVERITIES['ALERT']}"
 
-# DEBUG=$true
+	['CRITICAL']="${BME_LOG_SEVERITIES['CRITICAL']}"
+		['FATAL']="${BME_LOG_SEVERITIES['ERROR']}"
+
+	['ERROR']="${BME_LOG_SEVERITIES['ERROR']}"
+		['FAIL']="${BME_LOG_SEVERITIES['ERROR']}"
+
+	['WARNING']="${BME_LOG_SEVERITIES['WARNING']}"
+
+	['NOTICE']="${BME_LOG_SEVERITIES['NOTICE']}"
+		['DEPRECATION']="${BME_LOG_SEVERITIES['NOTICE']}"
+
+	['INFO']="${BME_LOG_SEVERITIES['INFO']}"
+		['OK']="${BME_LOG_SEVERITIES['INFO']}"
+		['LOADING']="${BME_LOG_SEVERITIES['INFO']}"
+		['CLEANING']="${BME_LOG_SEVERITIES['INFO']}"
+		['FUNCTION']="${BME_LOG_SEVERITIES['INFO']}"
+
+	['DEBUG']="${BME_LOG_SEVERITIES['DEBUG']}"
+)
+
+# log types mapping to colors
+declare -A BME_LOG_COLORS=(
+	["${BME_LOG_SEVERITIES['EMERGENCY']}"]="${C_RED}"
+	["${BME_LOG_SEVERITIES['ALERT']}"]="${C_RED}"
+	["${BME_LOG_SEVERITIES['CRITICAL']}"]="${C_RED}"
+	["${BME_LOG_SEVERITIES['ERROR']}"]="${C_RED}"
+	["${BME_LOG_SEVERITIES['WARNING']}"]="${C_YELLOW}"
+	["${BME_LOG_SEVERITIES['NOTICE']}"]="${C_YELLOW}"
+	["${BME_LOG_SEVERITIES['INFO']}"]="${C_GREEN}"
+	["${BME_LOG_SEVERITIES['DEBUG']}"]="${C_PURPLE}"
+)
 
 
 #--
@@ -116,18 +159,23 @@ local debug_msg="${1:-}"
 # 2st param: 'log_type': log prefix, i.e.: ERROR, WARNING, empty string...
 # 3st param: 'log_indent': sets the indentation level of the log output, starting '0'
 bme_log() {
-local log_message="${1}"  # first param
-local log_type="${2^^}"   # second param (uppercased)
-local log_indent=${3:-0}   # third param (with a default of 0)
+local log_message="${1}${C_NC}"  # first param (with color reset in case caller forgot it)
+local log_type="${2^^}"          # second param (uppercased)
+local log_indent=${3:-0}         # third param (with a default of 0)
 # Params debug
-# 	echo "log_message: ${log_message}"
-# 	echo "log_type: ${log_type}"
-# 	echo "log_indent: ${log_indent}"
+	__bme_debug "${FUNCNAME[0]}: log_message: ${log_message}"
+	__bme_debug "${FUNCNAME[0]}: log_type: ${log_type}"
+	__bme_debug "${FUNCNAME[0]}: log_indent: ${log_indent}"
 
 # First of all, check that BME_LOG_LEVEL is set to a valid value
 	__check_log_severity || return $?
-	if [[ " ${!BME_LOG_SEVERITIES[*]} " =~ " ${log_type} " ]]; then
-		if (( ${BME_LOG_SEVERITIES[${log_type}]} > ${BME_LOG_SEVERITIES[${BME_LOG_LEVEL}]} )); then
+# Then, assert the (optional) log type against severity
+	if [ -n "${log_type}" ] \
+	&& [ -n "${BME_CUSTOM_LOG_TYPES[${log_type}]}" ]; then
+		local debug_msg="${FUNCNAME[0]}: '${log_type}' is mapped to severity '${BME_CUSTOM_LOG_TYPES[${log_type}]}'"
+		__bme_debug "${debug_msg}"
+	# is printable as per requested LOG_LEVEL?
+		if (( ${BME_CUSTOM_LOG_TYPES[${log_type}]} > ${BME_LOG_SEVERITIES[${BME_LOG_LEVEL}]} )); then
 			local debug_msg="${FUNCNAME[0]}: log message requested at '${log_type}' level.\n"
 			debug_msg+="\tbut current log level is '${BME_LOG_LEVEL}'.\n"
 			debug_msg+="\tThis message won't be printed:\n"
@@ -135,15 +183,18 @@ local log_indent=${3:-0}   # third param (with a default of 0)
 			__bme_debug "${debug_msg}"
 			return 0
 		fi
+	else
+		local debug_msg="${FUNCNAME[0]}: '${log_type}' is unmapped to a syslog severity: it will always be printed."
+		__bme_debug "${debug_msg}"
 	fi
 
 # No parameters.  Show help instead
 	if (( $# == 0 )); then
 		local log_msg="'log message' ['log type' (see below)] [indentation level (0,1,2...)]"
 		log_msg+="\n${C_BOLD}'log type'${C_NC} will add a colored prefix as shown below:"
-		log_msg+="\n\t${C_GREEN}'INFO|OK|LOADING|CLEANING|FUNCTION'${C_NC}"
-		log_msg+="\n\t${C_YELLOW}'WARNING|NOTICE'${C_NC}"
 		log_msg+="\n\t${C_RED}'EMERGENCY|ALERT|CRITICAL|ERROR|FATAL|FAIL'${C_NC}"
+		log_msg+="\n\t${C_YELLOW}'WARNING|NOTICE'${C_NC}"
+		log_msg+="\n\t${C_GREEN}'INFO|OK|LOADING|CLEANING|FUNCTION'${C_NC}"
 		log_msg+="\n\t${C_PURPLE}'DEBUG'${C_NC}"
 		log_msg+="\n\t${C_BOLD}'any other log type'${C_NC}"
 		log_msg+="\n${C_BOLD}Color codes you can use in your messages:${C_NC}"
@@ -163,29 +214,14 @@ local log_indent=${3:-0}   # third param (with a default of 0)
 	fi
 
 # Adds message type to log message
-	case "$log_type" in
-		EMERGENCY | ALERT | CRITICAL | ERROR \
-		| FATAL | FAIL)
-			log_message="${C_RED}${log_type}:${C_NC} ${log_message}"
-		;;
-		WARNING | NOTICE)
-			log_message="${C_YELLOW}${log_type}:${C_NC} ${log_message}"
-		;;
-		INFO \
-		| OK \
-		| LOADING | CLEANING \
-		| FUNCTION)
-			log_message="${C_GREEN}${log_type}:${C_NC} ${log_message}"
-		;;
-		DEBUG)
-			log_message="${C_PURPLE}${log_type}:${C_NC} ${log_message}"
-		;;
-		*)
-			if [ -n "$log_type" ]; then
-				log_message="${C_BOLD}${log_type}:${C_NC} ${log_message}"
-			fi
-		;;
-	esac
+	if [ -n "${log_type}" ]; then
+		if [ -n "${BME_CUSTOM_LOG_TYPES[${log_type}]}" ]; then
+			local mapped_severity="${BME_CUSTOM_LOG_TYPES[${log_type}]}"
+			log_message="${BME_LOG_COLORS[${mapped_severity}]}${log_type}:${C_NC} ${log_message}"
+		else
+			log_message="${C_BOLD}${log_type}:${C_NC} ${log_message}"
+		fi
+	fi
 
 # Sets indentation level
 	local indented_prefix=''

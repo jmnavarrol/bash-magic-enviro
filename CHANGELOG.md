@@ -4,7 +4,10 @@
 * differences from [previous tag](/../../compare/v1.10.0…main).
 * **logs management:**
   * README updated.
-  * **bme_log():** *log_level* variable becomes *log_indent* to better match its purpose.
+  * **bme_log():**
+    * *log_level* "internal" function variable renamed to *log_indent* to better match its purpose.
+    * color is reset at the end of log message in case the caller forgot it.
+    * all known log types are mapped to a syslog severity so they are printed accordingly (or not printed at all).
 
 ## v1.10.0 (2025-APR-06)
 * differences from [previous tag](/../../compare/v1.9.2…v1.10.0).
