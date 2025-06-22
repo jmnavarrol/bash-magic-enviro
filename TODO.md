@@ -52,4 +52,3 @@ Pending actions, general notes, etc. (in no particular order):
     * Review [terraform-config-inspect](https://github.com/hashicorp/terraform-config-inspect), which allows to extract configurations from terraform.
 
 ## IN PROGRESS
-* Align non-syslog log types to syslog-like ones, i.e.: when BME_LOG_LEVEL is set above INFO (i.e.: WARNING) hide not only DEBUG and INFO messages but also OK, LOADING, etc.  In other words, make, i.e.: OK, LOADING, CLEANING, FUNCTION to work at INFO level.
