@@ -295,7 +295,7 @@ You can manually edit your *'~/.bme.d/whitelistedpaths'* file, but be aware the 
 <sub>[back to feature list](#feature_list).</sub>
 
 ### logging<a name="log"></a>
-BME provides its [**bme_log()**](https://github.com/jmnavarrol/bash-magic-enviro/blob/770e375bbfe593fe4e2a153feeca5ad3e7a4835a/src/bash-magic-enviro#L97) function that you can use in your *'.bme_\*'* files to **prefix**, **indent** and **filter** log messages.
+BME provides its [**bme_log()**](https://github.com/jmnavarrol/bash-magic-enviro/blob/770e375bbfe593fe4e2a153feeca5ad3e7a4835a/src/bash-magic-enviro#L97) function that you can use in your *'.bme_\*'* files to **colorize**, **prefix**, **indent** and **filter** log messages.
 
 *bme_log()* accepts three (positional) parameters and filters its output accordingly to the value of the **BME_LOG_LEVEL** environment variable (with an **INFO** default value).
 * **Parameters:**
@@ -318,7 +318,9 @@ BME provides its [**bme_log()**](https://github.com/jmnavarrol/bash-magic-enviro
 * **Examples:**
   * *BME_LOG_LEVEL* not explicity set (therefore it gets the *INFO* default):
     * this will be printed: `bme_log "my message" error`
-    * this will **not** be printed: `bme_log "my message" debug`
+    * these will **not** be printed:
+      * `bme_log "my message" debug`  # 'DEBUG' is below default 'INFO' thresold
+      * `BME_LOG_LEVEL=ERROR bme_log "my message" function`  # 'FUNCTION' prints at 'INFO' level which here is below thresold
     * this will **always** be printed, as it doesn't match a listed severity: `bme_log "custom message" my_custom_type`
     * a general case example: `bme_log "An 'INFO:' prefix will be added in green. ${C_BOLD}'this is BOLD'${C_NC} and this message will be indented once." info 1`
 
