@@ -261,8 +261,8 @@ function create_virtualenv_with_custom_pip() {
 # Creates a suitable requirements file
 	mkdir --parents "${project_dir}/python-virtualenvs" || return $?
 	cat <<- EOF > "${project_dir}/python-virtualenvs/with-pip.requirements"
-	example-package-name-mc==0.0.1
-	pip==21.0.1
+	example-package-name-mc==0.0.2
+	pip==25.0.1
 	EOF
 	local rc_code=$?
 	if (( $rc_code != 0 )); then
@@ -302,7 +302,7 @@ function create_virtualenv_with_custom_pip() {
 # Load the environment and check the results
 	test_title 'load virtualenv with custom pip'
 	cd "${project_dir}" && bme_eval_dir || return $?
-	pip freeze --all | grep --quiet 'pip==21.0.1' || {
+	pip freeze --all | grep --quiet 'pip==25.0.1' || {
 		test_log "virtualenv with custom pip (see above)" fail
 		pip freeze --all
 		return 1
