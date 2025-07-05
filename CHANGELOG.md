@@ -1,7 +1,10 @@
 # CHANGELOG
 
 ## Next Release
-* differences from [previous tag](/../../compare/v1.10.0…main).
+* differences from [previous tag](/../../compare/v1.10.1…main).
+
+## v1.10.1 (2025-JUL-05)
+* differences from [previous tag](/../../compare/v1.10.0…v1.10.1).
 * **logs management:**
   * README updated.
   * **bme_log():**
