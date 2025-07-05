@@ -222,12 +222,18 @@ local log_indent=${3:-0}         # third param (with a default of 0)
 
 # Adds message type to log message
 	if [ -n "${log_type}" ]; then
+		local message_header="${log_type}"
 		if [ -n "${BME_CUSTOM_LOG_TYPES[${log_type}]}" ]; then
+		# if DEBUG, add the calling function name (if any)
+			if [ "${log_type}" == 'DEBUG' ] && ((${#FUNCNAME[@]} > 1)); then
+				message_header="${message_header} - ${FUNCNAME[1]}()"
+			fi
 			local mapped_severity="${BME_CUSTOM_LOG_TYPES[${log_type}]}"
-			log_message="${BME_LOG_COLORS[${mapped_severity}]}${log_type}:${C_NC} ${log_message}"
+			message_header="${BME_LOG_COLORS[${mapped_severity}]}${message_header}:${C_NC}"
 		else
-			log_message="${C_BOLD}${log_type}:${C_NC} ${log_message}"
+			message_header="${C_BOLD}${log_type}:${C_NC}"
 		fi
+		log_message="${message_header} ${log_message}"
 	fi
 
 # Sets indentation level
@@ -286,7 +292,7 @@ __check_log_severity() {
 		local err_msg="Log level set to a wrong value ${C_BOLD}'${BME_LOG_LEVEL}'${C_NC}.\n"
 		BME_LOG_LEVEL='INFO'
 		err_msg+="\t${C_BOLD}'BME_LOG_LEVEL'${C_NC} has been reset to default value ${C_BOLD}'${BME_LOG_LEVEL}'${C_NC}."
-		bme_log "${err_msg}" error
+		bme_log "${err_msg}" warning
 	fi
 }
 

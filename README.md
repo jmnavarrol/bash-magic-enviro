@@ -5,7 +5,7 @@ Bash Magic Enviro
 
 This tool allows you to set isolated and configurable *"Bash environments"* (*"projects"*).
 
-Once installed and configured, BME will look for a file named **'.bme_project'** each time you change directories for a *"BME project definition"*, which will be *sourced* when found.  
+Once installed and configured, BME will look for a file named **'.bme_project'** each time you change directories in the console for a *"BME project definition"*, which will be *sourced* when found.  
 Once within a *"BME project"* context, it will also look for a file named **'.bme_env'** at each subdirectory to customize your environment as per its contents, which will also be sourced.
 
 BME abilities are extended by means of *"BME modules"* either global or project-level.
@@ -15,6 +15,18 @@ So, in brief:
 1. Project behaviour is attained by the contents of your *bme files* and the global or local *BME modules* loaded.
 1. Aditional *[.bme_env](./example-project/.bme_env)* files within the project's directory hierarchy may call exported functions, tweak the environment for that given directory, etc. (i.e.: you may [load a Python virtualenv](./example-project/virtualenv-example/.bme_env), [request a custom Terraform version](./example-project/terraform-example/.bme_env), even run whatever Bash code you may need).
 1. Once you *"cd out"* from the project's directory hierarchy all these customizations will be automatically cleaned out.
+
+**Quick start:**
+1. clone this repository (preferably to its latest [tag](https://github.com/jmnavarrol/bash-magic-enviro/tags), i.e.: `git clone --branch v1.10.1 https://github.com/jmnavarrol/bash-magic-enviro.git`)
+1. `cd` into the cloned sandbox and run `make install`.  Review and install dependencies as instructed.
+1. edit your *~/.bashrc* file adding to its end the following snippet:
+   ```bash
+   export PROMPT_COMMAND=bme_eval_dir
+   ```
+1. open a new bash console, `cd` into the [bash-magic-enviro/example-project/](./example-project/) subdirectory.  Follow instructions.
+1. within this new console, `cd` into the *-example* subdirectories for a hint of various BME modules' features.
+
+Now you can read these full instructions so you can manage your own BME projects.
 
 ----
 **Contents:**<a name="contents"></a>
@@ -54,7 +66,7 @@ So, in brief:
 * **Internet connectivity:** Some features and modules may access Internet at run time (i.e.: *check-version*, *terraform-support*...).
 * See each module's requirements section for other dependencies.
 
-**NOTE FOR macOS users:** this project depends heavily on GNU/GPL tooling (Bash itself, but also basic utilities like find, sed, grep...) while BSD versions are installed on this platform.  It is suggested the use of homebrew to install the proper dependencies (see [macOS' README](./docs/macos.md) for further details).
+**NOTE FOR macOS users:** this project depends heavily on GNU/GPL tooling (Bash itself, but also basic utilities like find, sed, grep...) while BSD versions are installed on this platform.  It is suggested the use of [homebrew](https://brew.sh/) to install the proper dependencies (see [macOS' README](./docs/macos.md) for further details).
 
 <sub>[back to contents](#contents).</sub>
 
@@ -152,7 +164,7 @@ Use [the included Makefile](./Makefile).  See the output of the bare `make` comm
 **NOTES:**
 * `make check` is implicitly run before `make install` so you should honor BME's mandatory requirements before succesfully installing it.  
   Pay attention to make's output for errors and hints on how to correct them.
-* You can also install/uninstall BME to a path different to your personal *~/bin/* directory with the help of the **DESTDIR** variable, i.e.:  
+* You can also install/uninstall BME to a path other than your personal *~/bin/* directory with the help of the **DESTDIR** variable, i.e.:  
   `make DESTDIR=/opt/bme install`  
   In this case, you need write permission to the target directory and you should also add *DESTDIR* to the relevant environment PATH (i.e.: system global).  
   Note that it is **highly discouraged** to install BME globally.  While it might make sense a global setup on some scenarios, like a shared container for demonstration purposes or as a helper development tool, carefully pay attention to the [security considerations](#security) anyway.
@@ -168,7 +180,7 @@ For this to happen, you need to source *Bash Magic Enviro's* main file ([*'bash-
    1. It adds your `~/bin` directory (if it exists) to your $PATH.  This way, the helper functions provided by this repository can be found and eventually loaded (of course, if you already added `~/bin` to your $PATH by other means, you won't need to do it here again).
    1. The critical part: it sources the main *bash-magic-enviro* file and alters your Bash prompt so it runs the **bme_eval_dir()** function each time your change directories, which is the one that makes possible looking for (and eventually sourcing) *.bme_\** files.  
 You can/should also use your *~/bme_includes* file to export your personal project-related variables, like *secrets*, *tokens* and other data that shouldn't be checked-in to source code management systems (make sure you protect this file with restrictive permissions).
-1. Add to the end of your `~/.bashrc` file (or whatever other file you know it gets processed/sourced at login):
+1. Add to the end of your `~/.bashrc` file (or whatever other file you know it gets processed/sourced at interactive login sessions):
    ```bash
    # Other includes
    if [ -r ~/bme_includes ]; then
