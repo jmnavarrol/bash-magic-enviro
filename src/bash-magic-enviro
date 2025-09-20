@@ -1,14 +1,20 @@
 # Main Bash Magic Enviro manager
 #
 # This file is meant to be sourced, not run
-source "${BASH_SOURCE}.version"
-BME_PROJECT_FILE='.bme_project'
-BME_FILE='.bme_env'
+export BME_SCRIPT=$(realpath ${BASH_SOURCE[0]})
+
+BME_BASEDIR=$(dirname ${BME_SCRIPT})
+BME_INCLUDES_DIR="${BME_BASEDIR}/bash-magic-enviro.d"
 BME_HIDDEN_DIR='.bme.d'
 BME_CONFIG_DIR="${HOME}/${BME_HIDDEN_DIR}"
+
 BME_WHITELISTED_FILE="${BME_CONFIG_DIR}/whitelistedpaths"
+BME_PROJECT_FILE='.bme_project'
+BME_FILE='.bme_env'
 
 BME_LOG_LEVEL="${BME_LOG_LEVEL:=INFO}"  # sets log level (with default)
+
+source "${BASH_SOURCE}.version"
 
 # Sets 'fake' boolean
 declare -i BOOL=(0 1)
@@ -162,6 +168,11 @@ bme_log() {
 local log_message="${1}${C_NC}"  # first param (with color reset in case caller forgot it)
 local log_type="${2^^}"          # second param (uppercased)
 local log_indent=${3:-0}         # third param (with a default of 0)
+
+# Exported functions may be called from a script, in which case BME may not be properly loaded into the environment
+# This will force its reload
+	[ -z "${BME_BASEDIR}" ] && source "${BME_SCRIPT}"
+
 # Params debug
 	__bme_debug "${FUNCNAME[0]}: log_message: ${log_message}"
 	__bme_debug "${FUNCNAME[0]}: log_type: ${log_type}"
@@ -718,15 +729,15 @@ local env_file="${base_dir}/${BME_FILE}"
 # MAIN
 # this is meant to be run just once, when this file is sourced
 #--
-# First time configuration
+# First time configuration# Checks log level
+__check_log_severity
+
 if ! [ -d "${BME_CONFIG_DIR}" ]; then
 	bme_log "${C_BOLD}'${BME_CONFIG_DIR}'${C_NC} directory doesn't exist.  Creating it" info
 	mkdir --parents "${BME_CONFIG_DIR}" || return $?
 fi
-if ! [ -e "${BME_WHITELISTED_FILE}" ]; then
 # Creates an "empty" white list if it didn't yet exist
+if ! [ -e "${BME_WHITELISTED_FILE}" ]; then
 	echo -e "declare -gA BME_WHITELISTED_PATHS=(\n)" > "${BME_WHITELISTED_FILE}"
 fi
 source "${BME_WHITELISTED_FILE}"
-# Checks log level
-__check_log_severity
