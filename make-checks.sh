@@ -72,7 +72,7 @@ check_os() {
 
 # Final message
 	if [ ! true == "${warning_dependencies}" ] && [ ! true == "${error_dependencies}" ]; then
-		echo -e "* ${C_BOLD}OS dependencies for '${OSTYPE}': ${C_GREEN}OK${C_NC}"
+		echo -e "${C_BOLD}* OS dependencies for '${OSTYPE}': ${C_GREEN}OK${C_NC}"
 	fi
 }
 
@@ -159,7 +159,7 @@ check_virtualenv() {
 	fi
 
 	if [ -n "${PYTHON_CMD}" ]; then
-		echo -e "* ${C_BOLD}"`${PYTHON_CMD} --version`": ${C_GREEN}OK${C_NC}"
+		echo -e "${C_BOLD}* "`${PYTHON_CMD} --version`": ${C_GREEN}OK${C_NC}"
 	else
 		local err_msg="No valid Python3 version found.\n"
 		err_msg+="\tYou won't be able to use Python virtualenv-related features."
@@ -227,7 +227,7 @@ check_virtualenv() {
 
 # Final message
 	if [ ! true == "${warning_dependencies}" ] && [ ! true == "${error_dependencies}" ]; then
-		echo -e "* ${C_BOLD}Python virtualenv management: ${C_GREEN}OK${C_NC}"
+		echo -e "${C_BOLD}* Python virtualenv management: ${C_GREEN}OK${C_NC}"
 	fi
 }
 

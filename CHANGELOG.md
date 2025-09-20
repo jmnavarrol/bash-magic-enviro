@@ -2,6 +2,7 @@
 
 ## Next Release
 * differences from [previous tag](/../../compare/v1.10.1…main).
+* New directory [bash-magic-enviro.d/](./src/bash-magic-enviro.d/) to conveniently split BME's codebase.
 
 ## v1.10.1 (2025-JUL-05)
 * differences from [previous tag](/../../compare/v1.10.0…v1.10.1).

@@ -44,6 +44,17 @@ check:
 	@./make-checks.sh
 	@echo -e "$${C_BOLD}Checking requirements:$${C_NC} $${C_GREEN}DONE!$${C_NC}"
 
+# Builds BME includes
+$(BUILDDIR)/$(BME_BASENAME).d: $(wildcard $(SRCDIR)/$(BME_BASENAME).d/*.inc.sh)
+	@echo -e "$${C_BOLD}Building BME includes...$${C_NC}"
+	@mkdir --parents $(BUILDDIR)/$(BME_BASENAME).d
+	@for include in $^; do \
+		echo -e "\tinstalling include $${C_BOLD}'$$include'$${C_NC}"; \
+		install --mode=0644 $$include $(BUILDDIR)/$(BME_BASENAME).d/; \
+	done
+	@echo -e "$${C_BOLD}Building BME includes:$${C_NC} $${C_GREEN}DONE!$${C_NC}"
+
+
 # Builds BME modules
 $(BUILDDIR)/$(BME_BASENAME)_modules: $(wildcard $(SRCDIR)/$(BME_BASENAME)_modules/*.module)
 	@echo -e "$${C_BOLD}Building BME modules...$${C_NC}"
@@ -67,7 +78,11 @@ $(BUILDDIR)/$(BME_BASENAME): $(BUILDDIR)/$(VERSION_FILE) $(SRCDIR)/$(BME_BASENAM
 	@echo -e "$${C_BOLD}Building main script:$${C_NC} $${C_GREEN}DONE!$${C_NC}"
 
 # Builds BME
-build: Makefile $(BUILDDIR)/$(BME_BASENAME)_modules $(BUILDDIR)/$(VERSION_FILE) $(BUILDDIR)/$(BME_BASENAME)
+build: Makefile $(BUILDDIR)/$(BME_BASENAME).d \
+	$(BUILDDIR)/$(BME_BASENAME)_modules \
+	$(BUILDDIR)/$(VERSION_FILE) \
+	$(BUILDDIR)/$(BME_BASENAME)
+
 	@echo -e "$${C_BOLD}Building BME:$${C_NC} $${C_GREEN}DONE!$${C_NC}"
 
 # Makes sure DESTDIR is in place

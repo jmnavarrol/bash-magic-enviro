@@ -12,6 +12,7 @@ Pending actions, general notes, etc. (in no particular order):
 * BME on non-interactive sessions:
   * Review BME-related environment variables and check which ones should be exported and so, available on subshells.
   * Auto white/blacklisting of subdirectories.
+  * `bme_log()` (or any other function) should work on scripts.
 * **Containers:**
   * publish docker container so it can be just used.
   * review how to add a *dockercompose.yml* or something to that end for easier macos development on Linux.
@@ -52,3 +53,6 @@ Pending actions, general notes, etc. (in no particular order):
     * Review [terraform-config-inspect](https://github.com/hashicorp/terraform-config-inspect), which allows to extract configurations from terraform.
 
 ## IN PROGRESS
+* BME on non-interactive sessions:
+  * Review BME-related environment variables and check which ones should be exported and so, available on subshells.
+  * `bme_log()` (or any other function) should work on scripts.
