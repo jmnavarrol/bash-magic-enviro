@@ -21,6 +21,8 @@ declare -i BOOL=(0 1)
 true=${BOOL[0]}
 false=${BOOL[1]}
 
+BME_SOURCED=$true
+
 # DEBUG=$true
 
 # Style table
@@ -171,7 +173,7 @@ local log_indent=${3:-0}         # third param (with a default of 0)
 
 # Exported functions may be called from a script, in which case BME may not be properly loaded into the environment
 # This will force its reload
-	[ -z "${BME_BASEDIR}" ] && source "${BME_SCRIPT}"
+	[ -z "${BME_SOURCED}" ] && source "${BME_SCRIPT}"
 
 # Params debug
 	__bme_debug "${FUNCNAME[0]}: log_message: ${log_message}"
@@ -268,6 +270,10 @@ export -f bme_log
 
 # BME version checker
 bme_check_version() {
+# Exported functions may be called from a script, in which case BME may not be properly loaded into the environment
+# This will force its reload
+	[ -z "${BME_SOURCED}" ] && source "${BME_SCRIPT}"
+
 # Gets the sorted list of remote tags
 	local remote_tags=(`git --git-dir "${BME_SRC_DIR}/.git" ls-remote --refs --tags --sort -version:refname ${BME_REMOTE_GIT} | cut --delimiter='/' --fields=3`)
 	__bme_debug "${FUNCNAME[0]}: REMOTE TAGS: '${remote_tags[@]}'"
