@@ -1,10 +1,21 @@
 # Meant to be sourced from main BME script
+# Logging facilities.
 
 # Three maps are required for logging:
-# 1. Severities as per standard syslog severities (see https://en.wikipedia.org/wiki/Syslog)
-# 2. Another mapping for "custom log types" to standard severities
-# 3. Finally, a map from severities to colors
-#
+# BME_LOG_SEVERITIES: Severities as per standard syslog severities (see https://en.wikipedia.org/wiki/Syslog)
+# BME_CUSTOM_LOG_TYPES: Another mapping for "custom log types" to standard severities
+# BME_LOG_COLORS: Finally, a map from severities to colors
+
+# "public" functions:
+# __bme_log() (callable from bme_log()
+# 1st param: 'log_message': the log message itself
+# 2st param: 'log_type': log prefix, i.e.: ERROR, WARNING, empty string...
+# 3st param: 'log_indent': sets the indentation level of the log output, starting '0'
+
+# "private" functions:
+# __logger_clean() Avoids polluting the environment.  Remember adding whatever is need then when developing this include.
+
+
 # SYSLOG SEVERITIES. See https://en.wikipedia.org/wiki/Syslog
 declare -A BME_LOG_SEVERITIES=(
 # RED
@@ -79,7 +90,7 @@ local log_indent=${3:-0}         # third param (with a default of 0)
 		err_msg+="Function ${C_BOLD}'${FUNCNAME[0]}()'${C_NC} is ${C_BOLD}private${C_NC}.  "
 		err_msg+="You shouldn't invoke it from ${C_BOLD}'${FUNCNAME[1]}()${C_NC}!"
 		>&2 echo -e "${err_msg}"
-		return 1
+		__logger_clean; return 1
 	fi
 
 # Checks/Sets BME_LOG_LEVEL to a proper value
@@ -103,7 +114,7 @@ local log_indent=${3:-0}         # third param (with a default of 0)
 			debug_msg+="\tThis message won't be printed:\n"
 			debug_msg+="${log_message}"
 			__bme_debug "${debug_msg}"
-			return 0
+			__logger_clean; return 0
 		fi
 	else
 		local debug_msg="${FUNCNAME[0]}: '${log_type}' is unmapped to a syslog severity: it will always be printed."
@@ -133,13 +144,13 @@ local log_indent=${3:-0}         # third param (with a default of 0)
 		log_msg+="\t\"\${C_RED}${C_RED}'RED'${C_NC}\${C_NC}\"\n"
 		log_msg+="\t\"\${C_PURPLE}${C_PURPLE}'PURPLE'${C_NC}\${C_NC}\""
 		bme_log "${log_msg}" ${FUNCNAME[0]}
-		return 0
+		__logger_clean; return 0
 	fi
 
 # Otherwise, log_message is mandatory
 	if [ -z "$log_message" ]; then
 		echo -e "${C_RED}FATAL:${C_NC} ${C_BOLD}'${FUNCNAME[0]}'${C_NC} called in code from ${C_BOLD}'${FUNCNAME[1]}'${C_NC} with no message."
-		return $false
+		__logger_clean; return $false
 	fi
 
 # Adds message type to log message
@@ -175,8 +186,17 @@ local log_indent=${3:-0}         # third param (with a default of 0)
 	unset line
 
 # Clean after myself
+	__logger_clean
+}
+
+
+# Cleans whatever is loaded on this file
+__logger_clean() {
+
 	unset BME_LOG_SEVERITIES
 	unset BME_CUSTOM_LOG_TYPES
 	unset BME_LOG_COLORS
+
 	unset -f __bme_log
+	unset -f __logger_clean
 }

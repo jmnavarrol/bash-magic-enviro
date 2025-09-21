@@ -24,8 +24,6 @@ declare -i BOOL=(0 1)
 true=${BOOL[0]}
 false=${BOOL[1]}
 
-BME_SOURCED=$true
-
 # DEBUG=$true
 
 # Style table
@@ -36,6 +34,8 @@ export C_RED='\033[1;31m'       # Red (and bold)
 export C_PURPLE='\033[1;35m'    # Purple (and bold)
 export C_NC='\033[0m'           # No Color
 
+# Reaching here implies this file has been loaded (check for BME usage on scripts)
+BME_SOURCED=$true
 
 
 #--
@@ -122,7 +122,6 @@ bme_log() {
 
 	source "${BME_INCLUDES_DIR}/logger.inc.sh"
 	__bme_log "${@}" || return $?
-	unset -f __bme_log
 }
 export -f bme_log
 
