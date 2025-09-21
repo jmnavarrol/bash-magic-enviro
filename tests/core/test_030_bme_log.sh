@@ -103,8 +103,8 @@ function check_log_level_valid() {
 
 	for severity in "${valid_log_severities[@]}"; do
 		BME_LOG_LEVEL="${severity}"
-		# re-sources BME to set the new log severity
-		source bash-magic-enviro || exit $?
+		# log level should be reset first time it's used
+		bme_log "resetting log level based on ${C_BOLD}'${severity}'${C_NC}" '' 1 > /dev/null
 		if [[ "${severity^^}" != "${BME_LOG_LEVEL}" ]]; then
 			local err_msg="Unexpected log level.\n"
 			err_msg+="\texpected: ${T_GREEN}'${severity^^}'${T_NC};"
@@ -119,9 +119,9 @@ function check_log_level_valid() {
 	test_title "'BME_LOG_LEVEL' is set to an invalid value"
 
 	BME_LOG_LEVEL='foo'
-	# re-sources BME to set the new log severity
-	source bash-magic-enviro || exit $?
-	# log level should be re-set to default 'INFO' level
+	# log level should be re-set to default 'INFO' level first time it's used
+	bme_log "resetting log level from '${BME_LOG_LEVEL}'" > /dev/null
+
 	if [ "${BME_LOG_LEVEL}" != 'INFO' ]; then
 		local err_msg="Unexpected log level.\n"
 		err_msg+="\texpected: ${T_GREEN}'INFO'${T_NC};"
@@ -136,8 +136,16 @@ function check_log_level_valid() {
 
 # Validates if a log message should be printed
 function check_log_level_printed() {
+# log level should be reset first time it's used
+	bme_log "resetting log level based on ${C_BOLD}'${severity}'${C_NC}" '' 1 > /dev/null
 
-	source bash-magic-enviro || exit $?
+# Loading '${BME_INCLUDES_DIR}/logger.inc.sh' to gain access to its internal structures
+	source "${BME_INCLUDES_DIR}/logger.inc.sh" || {
+		local rc_err=$?
+		test_log "while sourcing '${BME_INCLUDES_DIR}/logger.inc.sh'." fail
+		return $rc_err
+	}
+
 	test_title "check log messages at default log level '${BME_LOG_LEVEL}'"
 	for severity in "${valid_log_severities[@]}"; do
 		local log_output=$(bme_log "default INFO level" "${severity}" 1)
@@ -156,6 +164,7 @@ function check_log_level_printed() {
 		fi
 	done
 	unset severity
+
 	test_log "check log messages at default log level ${T_BOLD}'${BME_LOG_LEVEL}'${T_NC}" ok
 
 	test_title "check log messages at each severity"
