@@ -8,10 +8,9 @@ Pending actions, general notes, etc. (in no particular order):
 * Allow for environment-related files (i.e.: *.bme_env.production*, *.bme_env.local-development*...; consider if this should work just for *.bme_env* files only or also for the main *.bme_project* file).
 * Install dir shouldn't need to be in $PATH since we are not installing executable files.
 * Install dependencies on known platforms.
-* Review BME-related environment variables and check which ones should be exported
 * BME on non-interactive sessions:
   * Review BME-related environment variables and check which ones should be exported and so, available on subshells.
-  * Auto white/blacklisting of subdirectories.
+  * Auto white/blacklisting of subdirectories?
 * **Containers:**
   * publish docker container so it can be just used.
   * review how to add a *dockercompose.yml* or something to that end for easier macos development on Linux.
