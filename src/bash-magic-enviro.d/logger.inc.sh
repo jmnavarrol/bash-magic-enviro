@@ -13,8 +13,7 @@
 # 3st param: 'log_indent': sets the indentation level of the log output, starting '0'
 
 # "private" functions:
-# __logger_clean() Avoids polluting the environment.  Remember adding whatever is need then when developing this include.
-
+# __logger_clean() Avoids polluting the environment.  Remember adding there whatever is needed when developing this include.
 
 # SYSLOG SEVERITIES. See https://en.wikipedia.org/wiki/Syslog
 declare -A BME_LOG_SEVERITIES=(
@@ -143,7 +142,7 @@ local log_indent=${3:-0}         # third param (with a default of 0)
 		log_msg+="\t\"\${C_YELLOW}${C_YELLOW}'YELLOW'${C_NC}\${C_NC}\"\n"
 		log_msg+="\t\"\${C_RED}${C_RED}'RED'${C_NC}\${C_NC}\"\n"
 		log_msg+="\t\"\${C_PURPLE}${C_PURPLE}'PURPLE'${C_NC}\${C_NC}\""
-		bme_log "${log_msg}" ${FUNCNAME[0]}
+		echo -e "${log_msg}"
 		__logger_clean; return 0
 	fi
 
