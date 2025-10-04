@@ -126,7 +126,7 @@ bme_log() {
 export -f bme_log
 
 
-# BME version checker
+# Checks for possible version upgrades
 bme_check_version() {
 # Exported functions may be called from a script, in which case BME may not be properly loaded into the environment
 # This will force its reload
@@ -136,6 +136,19 @@ bme_check_version() {
 	__bme_check_version "${@}" || return $?
 }
 export -f bme_check_version
+
+
+# Asserts version dependencies
+# 1st param: 'version_operator': the evaluation to be done, i.e.: '>', '==', '>=', etc.
+bme_version_assert() {
+# Exported functions may be called from a script, in which case BME may not be properly loaded into the environment
+# This will force its reload
+	[ -n "${BME_SOURCED}" ] || source "${BME_SCRIPT}"
+
+	source "${BME_INCLUDES_DIR}/version.inc.sh"
+	__bme_version_assert "${@}" || return $?
+}
+export -f bme_version_assert
 
 
 # Loads a project's configuration and the root's env_file if any

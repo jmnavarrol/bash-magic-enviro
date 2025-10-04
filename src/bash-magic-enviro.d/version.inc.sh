@@ -4,6 +4,12 @@
 # "public" functions:
 # __bme_check_version() - callable from bme_check_version()
 #	Compares local BME version against remote git tags
+#
+# __bme_version_assert() - callable from bme_version_assert()
+#	Allows comparing installed BME version against an arbitrary one
+#	i.e.: assert project's module's version dependencies
+# 1st param: 'version_operator': the evaluation to be done, i.e.: '>', '==', '>=', etc.
+
 
 # Compares local BME version against remote git tags
 __bme_check_version() {
@@ -14,7 +20,7 @@ __bme_check_version() {
 		err_msg+="Function ${C_BOLD}'${FUNCNAME[0]}()'${C_NC} is ${C_BOLD}private${C_NC}.  "
 		err_msg+="You shouldn't invoke it from ${C_BOLD}'${FUNCNAME[1]}()${C_NC}!"
 		>&2 bme_log "${err_msg}" error
-		unset -f __bme_check_version
+		__version_clean
 		return 1
 	fi
 
@@ -42,5 +48,58 @@ __bme_check_version() {
 	fi
 
 # Clean after myself
-	unset -f __bme_check_version
+	__version_clean
 }
+
+
+# Asserts BME version against currently installed one
+# 1st param: 'version_operator': the evaluation to be done, i.e.: '>', '==', '>=', etc.
+__bme_version_assert() {
+local version_operator="${1}"
+
+# Params debug
+	__bme_debug "${FUNCNAME[0]}: version_operator: '${version_operator}'"
+
+# "pseudo private" function protection
+	if [ "${FUNCNAME[1]}" != 'bme_version_assert' ]; then
+		local err_msg="${C_RED}INTERNAL ERROR:${C_NC} "
+		err_msg+="Function ${C_BOLD}'${FUNCNAME[0]}()'${C_NC} is ${C_BOLD}private${C_NC}.  "
+		err_msg+="You shouldn't invoke it from ${C_BOLD}'${FUNCNAME[1]}()${C_NC}!"
+		>&2 bme_log "${err_msg}" error
+		__version_clean
+		return 1
+	fi
+
+# No parameters.  Show help instead
+	if (( $# == 0 )); then
+		local help_msg="${C_BOLD}bme_version_assert${C_NC} ['comparision string']\n"
+		help_msg+="${C_BOLD}bme_version_assert()${C_NC} helps you assert your dependencies against installed BME version.\n"
+		help_msg+="${C_BOLD}example:${C_NC} bme_version_assert '(>1.2 && <=1.2.5) || >=1.3'\n\n"
+		help_msg+="${C_BOLD}Comparision string format:${C_NC}\n"
+		help_msg+="${C_BOLD}* version operators:${C_NC} '>', '<', '==', '!=', '>=', '<='.\n"
+		help_msg+="${C_BOLD}* boolean ligatures:${C_NC} '&&', '||'.\n"
+		help_msg+="${C_BOLD}*${C_NC} parenthesis '(', ')' can be used to set precedende.\n\n"
+		help_msg+="${C_BOLD}return codes:${C_NC}\n"
+		help_msg+="${C_BOLD}* 0:${C_NC} BME version meets the condition.\n"
+		help_msg+="${C_BOLD}* 1:${C_NC} BME version does ${C_BOLD}not${C_NC} meet the condition.\n"
+		help_msg+="${C_BOLD}* 2:${C_NC} wrong/unparseable comparision string.\n"
+		help_msg+="${C_BOLD}* other values:${C_NC} unmanaged error."
+
+		bme_log "${help_msg}" function
+		__version_clean; return 0
+	fi
+
+# Clean after myself
+	__version_clean
+	unset DEBUG
+}
+
+
+# Cleans whatever is loaded on this file
+__version_clean() {
+
+	unset -f __bme_check_version
+	unset -f __bme_version_assert
+	unset -f __version_clean
+}
+

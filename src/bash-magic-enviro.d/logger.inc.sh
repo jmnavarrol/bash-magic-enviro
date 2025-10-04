@@ -122,8 +122,8 @@ local log_indent=${3:-0}         # third param (with a default of 0)
 
 # No parameters.  Show help instead
 	if (( $# == 0 )); then
-		local log_msg="'log message' [log type] [indentation level]\n"
-		log_msg+="\n${C_BOLD}bme_log${C_NC} helps you printing formatted output:\n"
+		local log_msg="${C_GREEN}FUNCTION:${C_NC} ${C_BOLD}bme_log${C_NC} 'log message' [log type] [indentation level]\n"
+		log_msg+="\n${C_BOLD}bme_log()${C_NC} helps you printing formatted output:\n"
 		log_msg+="${C_BOLD}1.${C_NC} it will only print messages with higher severity than ${C_BOLD}'BME_LOG_LEVEL'${C_NC} environment variable "
 			local severity_index="${BME_LOG_SEVERITIES[${BME_LOG_LEVEL}]}"
 			log_msg+="(current value: ${BME_LOG_COLORS[${severity_index}]}${BME_LOG_LEVEL}${C_NC}).\n"
@@ -142,6 +142,7 @@ local log_indent=${3:-0}         # third param (with a default of 0)
 		log_msg+="\t\"\${C_YELLOW}${C_YELLOW}'YELLOW'${C_NC}\${C_NC}\"\n"
 		log_msg+="\t\"\${C_RED}${C_RED}'RED'${C_NC}\${C_NC}\"\n"
 		log_msg+="\t\"\${C_PURPLE}${C_PURPLE}'PURPLE'${C_NC}\${C_NC}\""
+
 		echo -e "${log_msg}"
 		__logger_clean; return 0
 	fi
