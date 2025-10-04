@@ -6,7 +6,7 @@
 function main() {
 	source bash-magic-enviro || exit $?
 	check_version_format || exit $?
-# 	check_test_version_function || exit $?
+	check_test_version_function || exit $?
 }
 
 
@@ -66,6 +66,7 @@ function check_version_format() {
 #--
 check_test_version_function() {
 # Testing old version
+	test_title "check for older version"
 	BME_VERSION='v0.0.1'
 	local function_output=$(bme_check_version)
 	local stripped_output=$(strip_escape_codes "${function_output}")
@@ -81,12 +82,13 @@ check_test_version_function() {
 	fi
 
 # Testing unknown version
+	test_title "check for unknown version"
 	BME_VERSION='vasdf'
 	local function_output=$(bme_check_version)
 	local stripped_output=$(strip_escape_codes "${function_output}")
 
 	if [[ "${stripped_output}" =~ .*"version couldn't be found at your remote".* ]]; then
-		bme_log "Check ${C_BOLD}'BME unknown version'${C_NC}." ok 1
+		bme_log "Version ${C_BOLD}'${BME_VERSION}'${C_NC} is unknown." ok 1
 	else
 		bme_log "Check ${C_BOLD}'BME older version'${C_NC}." fail 1
 		bme_log "${C_BOLD}bme_check_version() output follows:${C_NC}"
@@ -94,6 +96,8 @@ check_test_version_function() {
 		bme_log "${C_BOLD}end of bme_check_version() output.${C_NC}"
 		return 1
 	fi
+
+	test_log "Check ${C_BOLD}'bme_check_version()'${C_NC} function: ${C_GREEN}OK${C_NC}" info
 }
 
 main; exit $?

@@ -2,9 +2,11 @@
 
 ## Next Release
 * differences from [previous tag](/../../compare/v1.10.1…main).
-* New directory [bash-magic-enviro.d/](./src/bash-magic-enviro.d/) to conveniently split BME's codebase.
+* New directory [bash-magic-enviro.d/](./src/bash-magic-enviro.d/) to conveniently split BME's codebase:
+  * *bme_log()* core code moved to an included file.
+  * *bme_check_version()* core code moved to an included file.
 * support for non-interactive runs:
-  * *bme_log()* can now be used in scripts running on BME-sourced environments.
+  * *bme_log()*, *bme_check_version()* can now be used in scripts running on BME-sourced environments.
   * exported variables:
     * BME_VERSION: shows current version in *vX.Y.Z[-modifier]* mode.
     * BME_SCRIPT: full path to the main BME file to be sourced by scripts (main [bash-magic-enviro file](./src/bash-magic-enviro)).
