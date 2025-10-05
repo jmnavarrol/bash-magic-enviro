@@ -106,10 +106,137 @@ check_test_version_function() {
 # ASSERTS CURRENT BME VERSION AGAINST A MATCHING REQUEST
 #--
 check_version_assert() {
-# TBD
-	test_title "assert version against request"
-	test_log "YET TO BE DONE" fail
-	return 1
+local valid_operators=(
+	'=='
+	'!='
+	'>='
+	'<='
+	'>'
+	'<'
+)
+local invalid_operators=(
+	''
+	'!>'
+	'asdf'
+	'1'
+)
+
+local valid_versions=(
+	'1'
+	'1.'
+	'1.2'
+	'1.2.'
+	'1.2.3'
+	'1.2.3-dev1'
+)
+local invalid_versions=(
+	''
+	'a'
+	'1a'
+	'a1'
+	'1a.'
+	'a1.'
+	'1.a'
+	'1.1a'
+	'1.2.3-'
+	'1.2.3dev1'
+	'1.2.3+dev1'
+)
+
+	test_title "assert version request operator"
+
+	for operator in "${valid_operators[@]}"; do
+		for version in "${valid_versions[@]}"; do
+			local expected_rc=0
+
+			local random_padding=$((0 + $RANDOM % 3))
+			local padding=''
+			for ((i = 0; i < $random_padding; ++i)); do
+				padding+=' '
+			done
+			unset i
+
+			local version_operator="${padding}${operator}${padding}${version}${padding}"
+			version_assert=$(bme_version_assert ${version_operator})
+			local rc=$?
+			if (( rc != $expected_rc )); then
+				local err_msg="while testing valid version operator '${version_operator}': expected rc is '${expected_rc}', got '$rc'\n"
+				err_msg+="${version_assert}"
+				test_log "$err_msg" fail
+				return $rc
+			fi
+		done
+		for version in "${invalid_versions[@]}"; do
+			local expected_rc=2
+
+			local random_padding=$((0 + $RANDOM % 3))
+			local padding=''
+			for ((i = 0; i < $random_padding; ++i)); do
+				padding+=' '
+			done
+			unset i
+
+			local version_operator="${padding}${operator}${padding}${version}${padding}"
+			version_assert=$(bme_version_assert ${version_operator})
+			local rc=$?
+			if (( rc != $expected_rc )); then
+				local err_msg="while testing invalid version operator '${version_operator}': expected rc is '${expected_rc}', got '$rc'\n"
+				err_msg+="${version_assert}"
+				test_log "$err_msg" fail
+				return $rc
+			fi
+		done
+	done
+	unset operator
+
+	for operator in "${invalid_operators[@]}"; do
+		for version in "${valid_versions[@]}"; do
+			local expected_rc=2
+
+			local random_padding=$((0 + $RANDOM % 3))
+			local padding=''
+			for ((i = 0; i < $random_padding; ++i)); do
+				padding+=' '
+			done
+			unset i
+
+			local version_operator="${padding}${operator}${padding}${version}${padding}"
+			version_assert=$(bme_version_assert ${version_operator})
+			local rc=$?
+			if (( rc != $expected_rc )); then
+				local err_msg="while testing valid version operator '${version_operator}': expected rc is '${expected_rc}', got '$rc'\n"
+				err_msg+="${version_assert}"
+				test_log "$err_msg" fail
+				return $rc
+			fi
+		done
+		for version in "${invalid_versions[@]}"; do
+			local expected_rc=2
+
+			local random_padding=$((0 + $RANDOM % 3))
+			local padding=''
+			for ((i = 0; i < $random_padding; ++i)); do
+				padding+=' '
+			done
+			unset i
+
+			local version_operator="${padding}${operator}${padding}${version}${padding}"
+			# invalid x invalid may end up requesting an empty string, which is valid (only it shows help)
+			if [ -n "${version_operator// }" ]; then
+				version_assert=$(bme_version_assert ${version_operator})
+				local rc=$?
+				if (( rc != $expected_rc )); then
+					local err_msg="while testing invalid version operator '${version_operator}': expected rc is '${expected_rc}', got '$rc'\n"
+					err_msg+="${version_assert}"
+					test_log "$err_msg" fail
+					return $rc
+				fi
+			fi
+		done
+	done
+	unset operator
+
+	test_log "Check ${C_BOLD}'bme_version_assert()'${C_NC} function: ${C_GREEN}OK${C_NC}" info
 }
 
 main; exit $?

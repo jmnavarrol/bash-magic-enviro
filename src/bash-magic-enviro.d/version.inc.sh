@@ -55,10 +55,12 @@ __bme_check_version() {
 # Asserts BME version against currently installed one
 # 1st param: 'version_operator': the evaluation to be done, i.e.: '>', '==', '>=', etc.
 __bme_version_assert() {
-local version_operator="${1}"
+local version_operator="${@}"
 
 # Params debug
 	__bme_debug "${FUNCNAME[0]}: requested match: '${version_operator}'"
+	version_operator="${version_operator//[[:space:]]/}"  # strip **all** whitespace
+	__bme_debug "${FUNCNAME[0]}: requested match after whitespace prunning: '${version_operator}'"
 
 # "pseudo private" function protection
 	if [ "${FUNCNAME[1]}" != 'bme_version_assert' ]; then
@@ -77,11 +79,10 @@ local version_operator="${1}"
 	fi
 
 # Sets apart operator from version string
-	if [[ "${version_operator}" =~ ^[[:space:]]*('=='|'!='|'>='|'<='|'>'|'<')([[:space:]]*)(.*) ]] ; then
+	if [[ "${version_operator}" =~ ^('=='|'!='|'>='|'<='|'>'|'<')(.+) ]] ; then
 		local operator="${BASH_REMATCH[1]}"
-		#${BASH_REMATCH[2]} - optional blanks: drop
-		if [ -n "${BASH_REMATCH[3]}" ]; then
-			local matching_version="${BASH_REMATCH[3]}"
+		if [ -n "${BASH_REMATCH[2]}" ]; then
+			local matching_version="${BASH_REMATCH[2]}"
 			matching_version="${matching_version#[v|V]}" # drops optional 'v'
 		else
 			local err_msg="while processing version operator ${C_BOLD}'${version_operator}'${C_NC}: matching version couldn't be extracted.\n"
@@ -100,10 +101,10 @@ local version_operator="${1}"
 # Requested version string into dictionary
 	declare -A requested_version_dict
 	# major
-	if [[ "${matching_version}" =~ ^([0-9]+)(\.*)(.*) ]]; then
+	if [[ "${matching_version}" =~ ^([0-9]+)(\.?)(.*) ]]; then
 		requested_version_dict['major']="${BASH_REMATCH[1]}"
 		__bme_debug "${FUNCNAME[0]}: major version: '${requested_version_dict['major']}'"
-		#${BASH_REMATCH[2]} - optional blanks: drop
+		#${BASH_REMATCH[2]} - optional dot: drop
 		if [ -n "${BASH_REMATCH[3]}" ]; then
 			local remainder="${BASH_REMATCH[3]}"
 			__bme_debug "${FUNCNAME[0]}: remainder after major: '${remainder}'"
@@ -121,10 +122,10 @@ local version_operator="${1}"
 	fi
 	# minor
 	if [ -n "${remainder}" ]; then
-		if [[ "${remainder}" =~ ^([0-9]+)(\.*)(.*) ]]; then
+		if [[ "${remainder}" =~ ^([0-9]+)(\.?)(.*) ]]; then
 			requested_version_dict['minor']="${BASH_REMATCH[1]}"
 			__bme_debug "${FUNCNAME[0]}: minor version: '${requested_version_dict['minor']}'"
-			#${BASH_REMATCH[2]} - optional blanks: drop
+			#${BASH_REMATCH[2]} - optional dot: drop
 			if [ -n "${BASH_REMATCH[3]}" ]; then
 				remainder="${BASH_REMATCH[3]}"
 				__bme_debug "${FUNCNAME[0]}: remainder after minor: '${remainder}'"
@@ -166,6 +167,18 @@ local version_operator="${1}"
 					__bme_version_assert_help
 					__version_clean; return 2
 				fi
+			elif [ -n "${BASH_REMATCH[3]}" ]; then
+			# if there's no ${BASH_REMATCH[2]}, then ${BASH_REMATCH[3]} should be empty
+				local err_msg="while processing version operator ${C_BOLD}'${version_operator}'${C_NC}, version string doesn't match expected pattern:\n"
+				err_msg+="* version operator: ${C_BOLD}'${operator}'${C_NC}.\n"
+				err_msg+="* major version: ${C_BOLD}'${requested_version_dict['major']}'${C_NC}.\n"
+				err_msg+="* minor version: ${C_BOLD}'${requested_version_dict['minor']}'${C_NC}.\n"
+				err_msg+="* patch version: ${C_BOLD}'${requested_version_dict['patch']}'${C_NC}.\n"
+				err_msg+="* wrong pre-release token ${C_RED}'${BASH_REMATCH[3]}'${C_NC}.\n"
+
+				bme_log "${err_msg}" error
+				__bme_version_assert_help
+				__version_clean; return 2
 			else
 				__bme_debug "${FUNCNAME[0]}: no pre-release.  Process ends here"
 				unset remainder
