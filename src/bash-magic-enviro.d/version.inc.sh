@@ -58,7 +58,7 @@ __bme_version_assert() {
 local version_operator="${1}"
 
 # Params debug
-	__bme_debug "${FUNCNAME[0]}: version_operator: '${version_operator}'"
+	__bme_debug "${FUNCNAME[0]}: requested match: '${version_operator}'"
 
 # "pseudo private" function protection
 	if [ "${FUNCNAME[1]}" != 'bme_version_assert' ]; then
@@ -72,26 +72,159 @@ local version_operator="${1}"
 
 # No parameters.  Show help instead
 	if (( $# == 0 )); then
-		local help_msg="${C_BOLD}bme_version_assert${C_NC} ['comparision string']\n"
-		help_msg+="${C_BOLD}bme_version_assert()${C_NC} helps you assert your dependencies against installed BME version.\n"
-		help_msg+="${C_BOLD}example:${C_NC} bme_version_assert '(>1.2 && <=1.2.5) || >=1.3'\n\n"
-		help_msg+="${C_BOLD}Comparision string format:${C_NC}\n"
-		help_msg+="${C_BOLD}* version operators:${C_NC} '>', '<', '==', '!=', '>=', '<='.\n"
-		help_msg+="${C_BOLD}* boolean ligatures:${C_NC} '&&', '||'.\n"
-		help_msg+="${C_BOLD}*${C_NC} parenthesis '(', ')' can be used to set precedende.\n\n"
-		help_msg+="${C_BOLD}return codes:${C_NC}\n"
-		help_msg+="${C_BOLD}* 0:${C_NC} BME version meets the condition.\n"
-		help_msg+="${C_BOLD}* 1:${C_NC} BME version does ${C_BOLD}not${C_NC} meet the condition.\n"
-		help_msg+="${C_BOLD}* 2:${C_NC} wrong/unparseable comparision string.\n"
-		help_msg+="${C_BOLD}* other values:${C_NC} unmanaged error."
-
-		bme_log "${help_msg}" function
+		__bme_version_assert_help
 		__version_clean; return 0
 	fi
+
+# Sets apart operator from version string
+	if [[ "${version_operator}" =~ ^[[:space:]]*('=='|'!='|'>='|'<='|'>'|'<')([[:space:]]*)(.*) ]] ; then
+		local operator="${BASH_REMATCH[1]}"
+		#${BASH_REMATCH[2]} - optional blanks: drop
+		if [ -n "${BASH_REMATCH[3]}" ]; then
+			local matching_version="${BASH_REMATCH[3]}"
+			matching_version="${matching_version#[v|V]}" # drops optional 'v'
+		else
+			local err_msg="while processing version operator ${C_BOLD}'${version_operator}'${C_NC}: matching version couldn't be extracted.\n"
+			bme_log "${err_msg}" error
+			__bme_version_assert_help
+			__version_clean; return 2
+		fi
+
+		__bme_debug "${FUNCNAME[0]}: operator: '${operator}'; version: '${matching_version}'"
+	else
+		bme_log "Version operator ${C_BOLD}'${version_operator}'${C_NC} didn't match the expected format.\n" error
+		__bme_version_assert_help
+		__version_clean; return 2
+	fi
+
+# Requested version string into dictionary
+	declare -A requested_version_dict
+	# major
+	if [[ "${matching_version}" =~ ^([0-9]+)(\.*)(.*) ]]; then
+		requested_version_dict['major']="${BASH_REMATCH[1]}"
+		__bme_debug "${FUNCNAME[0]}: major version: '${requested_version_dict['major']}'"
+		#${BASH_REMATCH[2]} - optional blanks: drop
+		if [ -n "${BASH_REMATCH[3]}" ]; then
+			local remainder="${BASH_REMATCH[3]}"
+			__bme_debug "${FUNCNAME[0]}: remainder after major: '${remainder}'"
+		else
+			__bme_debug "${FUNCNAME[0]}: no remainder after major."
+		fi
+	else
+		local err_msg="while processing version operator ${C_BOLD}'${version_operator}'${C_NC}, version string doesn't match expected pattern:\n"
+		err_msg+="* version operator: ${C_BOLD}'${operator}'${C_NC}.\n"
+		err_msg+="* version string: ${C_RED}'${matching_version}'${C_NC}.\n"
+
+		bme_log "${err_msg}" error
+		__bme_version_assert_help
+		__version_clean; return 2
+	fi
+	# minor
+	if [ -n "${remainder}" ]; then
+		if [[ "${remainder}" =~ ^([0-9]+)(\.*)(.*) ]]; then
+			requested_version_dict['minor']="${BASH_REMATCH[1]}"
+			__bme_debug "${FUNCNAME[0]}: minor version: '${requested_version_dict['minor']}'"
+			#${BASH_REMATCH[2]} - optional blanks: drop
+			if [ -n "${BASH_REMATCH[3]}" ]; then
+				remainder="${BASH_REMATCH[3]}"
+				__bme_debug "${FUNCNAME[0]}: remainder after minor: '${remainder}'"
+			else
+				__bme_debug "${FUNCNAME[0]}: no remainder after minor."
+				unset remainder
+			fi
+		else
+			local err_msg="while processing version operator ${C_BOLD}'${version_operator}'${C_NC}, version string doesn't match expected pattern:\n"
+			err_msg+="* version operator: ${C_BOLD}'${operator}'${C_NC}.\n"
+			err_msg+="* major version: ${C_BOLD}'${requested_version_dict['major']}'${C_NC}.\n"
+			err_msg+="* remainder: ${C_RED}'${remainder}'${C_NC}.\n"
+
+			bme_log "${err_msg}" error
+			__bme_version_assert_help
+			__version_clean; return 2
+		fi
+	fi
+	# patch level
+	if [ -n "${remainder}" ]; then
+		if [[ "${remainder}" =~ ^([0-9]+)(-*)(.*) ]]; then
+			requested_version_dict['patch']="${BASH_REMATCH[1]}"
+			__bme_debug "${FUNCNAME[0]}: patch version: '${requested_version_dict['patch']}'"
+			if [ -n "${BASH_REMATCH[2]}" ]; then
+			# There is a pre-release link, therefore there must be a pre-release
+				if [ -n "${BASH_REMATCH[3]}" ]; then
+					requested_version_dict['pre-release']="${BASH_REMATCH[3]}"
+					__bme_debug "${FUNCNAME[0]}: pre-release: '${requested_version_dict['pre-release']}'.  Process ends here"
+					unset remainder
+				else
+					local err_msg="while processing version operator ${C_BOLD}'${version_operator}'${C_NC}, version string doesn't match expected pattern:\n"
+					err_msg+="* version operator: ${C_BOLD}'${operator}'${C_NC}.\n"
+					err_msg+="* major version: ${C_BOLD}'${requested_version_dict['major']}'${C_NC}.\n"
+					err_msg+="* minor version: ${C_BOLD}'${requested_version_dict['minor']}'${C_NC}.\n"
+					err_msg+="* patch version: ${C_BOLD}'${requested_version_dict['patch']}'${C_NC}.\n"
+					err_msg+="* expecting a pre-release token after ${C_RED}'${BASH_REMATCH[2]}'${C_NC}.\n"
+
+					bme_log "${err_msg}" error
+					__bme_version_assert_help
+					__version_clean; return 2
+				fi
+			else
+				__bme_debug "${FUNCNAME[0]}: no pre-release.  Process ends here"
+				unset remainder
+			fi
+		else
+			local err_msg="while processing version operator ${C_BOLD}'${version_operator}'${C_NC}, version string doesn't match expected pattern:\n"
+			err_msg+="* version operator: ${C_BOLD}'${operator}'${C_NC}.\n"
+			err_msg+="* major version: ${C_BOLD}'${requested_version_dict['major']}'${C_NC}.\n"
+			err_msg+="* minor version: ${C_BOLD}'${requested_version_dict['minor']}'${C_NC}.\n"
+			err_msg+="* remainder: ${C_RED}'${remainder}'${C_NC}.\n"
+
+			bme_log "${err_msg}" error
+			__bme_version_assert_help
+			__version_clean; return 2
+		fi
+	fi
+	unset remainder
+	# Show matching version dictionary results
+	local matching_version_dict_msg="${FUNCNAME[0]}: version to match:\n"
+	for key in 'major' 'minor' 'patch' 'pre-release'; do
+		matching_version_dict_msg+="* ${key}: '${requested_version_dict[${key}]}'\n"
+	done
+	__bme_debug "${matching_version_dict_msg}"
+	unset key
+
+# TODO: processing BME_VERSION into dictionary
+# TODO: compare BME_VERSION against requested match
 
 # Clean after myself
 	__version_clean
 	unset DEBUG
+}
+
+
+# bme_version_assert() help
+__bme_version_assert_help() {
+		local help_msg="${C_BOLD}bme_version_assert${C_NC} ['comparision string']\n"
+		help_msg+="${C_BOLD}bme_version_assert()${C_NC} helps you asserting your dependencies against installed BME version.\n"
+		help_msg+="\n${C_BOLD}Comparision string format:${C_NC}\n"
+		help_msg+="${C_BOLD}* version operators:${C_NC} '>', '<', '==', '!=', '>=', '<='.\n"
+		help_msg+="${C_BOLD}* version string format:${C_NC} '(v)[major](.)[minor](.)[patch](-)[pre-release]\n"
+		help_msg+="\n${C_BOLD}return codes:${C_NC}\n"
+		help_msg+="${C_BOLD}* 0:${C_NC} BME version meets the condition.\n"
+		help_msg+="${C_BOLD}* 1:${C_NC} BME version does ${C_BOLD}not${C_NC} meet the condition.\n"
+		help_msg+="${C_BOLD}* 2:${C_NC} wrong/unparseable comparision string.\n"
+		help_msg+="${C_BOLD}* other values:${C_NC} unmanaged error.\n"
+		help_msg+="\n${C_BOLD}examples:${C_NC}\n"
+		help_msg+="${C_BOLD}*${C_NC} bme_version_assert '>1.2'\n"
+		help_msg+="${C_BOLD}*${C_NC} bme_version_assert '==1'\n"
+		help_msg+="${C_BOLD}*${C_NC} bme_version_assert '!=1.2.3-patch1'\n"
+		help_msg+="\n"
+
+# TODO: expected final specification
+# 		help_msg+="${C_BOLD}example:${C_NC} bme_version_assert '(>1.2 && <=1.2.5) || >=1.3'\n\n"
+# 		help_msg+="${C_BOLD}Comparision string format:${C_NC}\n"
+# 		help_msg+="${C_BOLD}* boolean ligatures:${C_NC} '&&', '||'.\n"
+# 		help_msg+="${C_BOLD}*${C_NC} parenthesis '(', ')' can be used to set precedende.\n\n"
+#
+		bme_log "${help_msg}" function
 }
 
 
@@ -100,6 +233,7 @@ __version_clean() {
 
 	unset -f __bme_check_version
 	unset -f __bme_version_assert
+	unset -f __bme_version_assert_help
 	unset -f __version_clean
 }
 
