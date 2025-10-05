@@ -7,6 +7,7 @@ function main() {
 	source bash-magic-enviro || exit $?
 	check_version_format || exit $?
 	check_test_version_function || exit $?
+	check_version_assert || exit $?
 }
 
 
@@ -98,6 +99,17 @@ check_test_version_function() {
 	fi
 
 	test_log "Check ${C_BOLD}'bme_check_version()'${C_NC} function: ${C_GREEN}OK${C_NC}" info
+}
+
+
+#--
+# ASSERTS CURRENT BME VERSION AGAINST A MATCHING REQUEST
+#--
+check_version_assert() {
+# TBD
+	test_title "assert version against request"
+	test_log "YET TO BE DONE" fail
+	return 1
 }
 
 main; exit $?
