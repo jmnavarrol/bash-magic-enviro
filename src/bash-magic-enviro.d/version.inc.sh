@@ -53,7 +53,7 @@ __bme_check_version() {
 
 
 # Asserts BME version against currently installed one
-# 1st param: 'version_operator': the evaluation to be done, i.e.: '>', '==', '>=', etc.
+# 1st param: 'version_operator': the evaluation to be done, i.e.: '>1.2', '==1.2.3', '>=3', etc.
 __bme_version_assert() {
 local version_operator="${@}"
 
@@ -204,12 +204,121 @@ local version_operator="${@}"
 	__bme_debug "${matching_version_dict_msg}"
 	unset key
 
-# TODO: processing BME_VERSION into dictionary
+# Requested BME_VERSION into dictionary
+	__bme_debug "Current BME_VERSION is '${BME_VERSION}'"
+	[ -n "${BME_VERSION}" ] || {
+		local err_msg="${C_BOLD}${FUNCNAME[0]}():${C_NC} BME_VERSION not set.  This is an internal error."
+		bme_log "${err_msg}" fatal
+		__version_clean; return 3
+	}
+	declare -A current_version_dict
+	local current_version="${BME_VERSION#[v|V]}" # drops optional 'v'
+	# major
+	if [[ "${current_version}" =~ ^([0-9]+)(\.?)(.*) ]]; then
+		current_version_dict['major']="${BASH_REMATCH[1]}"
+		__bme_debug "${FUNCNAME[0]}: current version - major: '${current_version_dict['major']}'"
+		#${BASH_REMATCH[2]} - optional dot: drop
+		if [ -n "${BASH_REMATCH[3]}" ]; then
+			local remainder="${BASH_REMATCH[3]}"
+			__bme_debug "${FUNCNAME[0]}: remainder after major: '${remainder}'"
+		else
+			__bme_debug "${FUNCNAME[0]}: no remainder after major."
+		fi
+	else
+		local err_msg="while processing BME_VERSION ${C_BOLD}'${BME_VERSION}'${C_NC}, version string doesn't match expected pattern:\n"
+		err_msg+="* version string: ${C_RED}'${current_version}'${C_NC}.\n"
+
+		bme_log "${err_msg}" error
+		__version_clean; return 3
+	fi
+	# minor
+	if [ -n "${remainder}" ]; then
+		if [[ "${remainder}" =~ ^([0-9]+)(\.?)(.*) ]]; then
+			current_version_dict['minor']="${BASH_REMATCH[1]}"
+			__bme_debug "${FUNCNAME[0]}: minor version: '${requested_version_dict['minor']}'"
+			#${BASH_REMATCH[2]} - optional dot: drop
+			if [ -n "${BASH_REMATCH[3]}" ]; then
+				remainder="${BASH_REMATCH[3]}"
+				__bme_debug "${FUNCNAME[0]}: remainder after minor: '${remainder}'"
+			else
+				__bme_debug "${FUNCNAME[0]}: no remainder after minor."
+				unset remainder
+			fi
+		else
+			local err_msg="while processing BME_VERSION ${C_BOLD}'${BME_VERSION}'${C_NC}, version string doesn't match expected pattern:\n"
+			err_msg+="* current version: ${C_BOLD}'${current_version}'${C_NC}.\n"
+			err_msg+="* major version: ${C_BOLD}'${current_version_dict['major']}'${C_NC}.\n"
+			err_msg+="* remainder: ${C_RED}'${remainder}'${C_NC}.\n"
+
+			bme_log "${err_msg}" error
+			__bme_version_assert_help
+			__version_clean; return 3
+		fi
+	fi
+	# patch level
+	if [ -n "${remainder}" ]; then
+		if [[ "${remainder}" =~ ^([0-9]+)(-*)(.*) ]]; then
+			current_version_dict['patch']="${BASH_REMATCH[1]}"
+			__bme_debug "${FUNCNAME[0]}: patch version: '${current_version_dict['patch']}'"
+			if [ -n "${BASH_REMATCH[2]}" ]; then
+			# There is a pre-release link, therefore there must be a pre-release
+				if [ -n "${BASH_REMATCH[3]}" ]; then
+					current_version_dict['pre-release']="${BASH_REMATCH[3]}"
+					__bme_debug "${FUNCNAME[0]}: pre-release: '${current_version_dict['pre-release']}'.  Process ends here"
+					unset remainder
+				else
+					local err_msg="while processing current version ${C_BOLD}'${current_version}'${C_NC}, version string doesn't match expected pattern:\n"
+					err_msg+="* current version: ${C_BOLD}'${current_version}'${C_NC}.\n"
+					err_msg+="* major version: ${C_BOLD}'${current_version_dict['major']}'${C_NC}.\n"
+					err_msg+="* minor version: ${C_BOLD}'${current_version_dict['minor']}'${C_NC}.\n"
+					err_msg+="* patch version: ${C_BOLD}'${current_version_dict['patch']}'${C_NC}.\n"
+					err_msg+="* expecting a pre-release token after ${C_RED}'${BASH_REMATCH[2]}'${C_NC}.\n"
+
+					bme_log "${err_msg}" error
+					__bme_version_assert_help
+					__version_clean; return 2
+				fi
+			elif [ -n "${BASH_REMATCH[3]}" ]; then
+			# if there's no ${BASH_REMATCH[2]}, then ${BASH_REMATCH[3]} should be empty
+				local err_msg="while processing current version ${C_BOLD}'${vcurrent_version}'${C_NC}, version string doesn't match expected pattern:\n"
+				err_msg+="* current version: ${C_BOLD}'${current_version}'${C_NC}.\n"
+				err_msg+="* major version: ${C_BOLD}'${current_version_dict['major']}'${C_NC}.\n"
+				err_msg+="* minor version: ${C_BOLD}'${current_version_dict['minor']}'${C_NC}.\n"
+				err_msg+="* patch version: ${C_BOLD}'${current_version_dict['patch']}'${C_NC}.\n"
+				err_msg+="* wrong pre-release token ${C_RED}'${BASH_REMATCH[3]}'${C_NC}.\n"
+
+				bme_log "${err_msg}" error
+				__bme_version_assert_help
+				__version_clean; return 2
+			else
+				__bme_debug "${FUNCNAME[0]}: no pre-release.  Process ends here"
+				unset remainder
+			fi
+		else
+			local err_msg="while processing version operator ${C_BOLD}'${version_operator}'${C_NC}, version string doesn't match expected pattern:\n"
+			err_msg+="* version operator: ${C_BOLD}'${operator}'${C_NC}.\n"
+			err_msg+="* major version: ${C_BOLD}'${requested_version_dict['major']}'${C_NC}.\n"
+			err_msg+="* minor version: ${C_BOLD}'${requested_version_dict['minor']}'${C_NC}.\n"
+			err_msg+="* remainder: ${C_RED}'${remainder}'${C_NC}.\n"
+
+			bme_log "${err_msg}" error
+			__bme_version_assert_help
+			__version_clean; return 2
+		fi
+	fi
+	unset remainder
+	# Show current version dictionary results
+	local current_version_dict_msg="${FUNCNAME[0]}: current version:\n"
+	for key in 'major' 'minor' 'patch' 'pre-release'; do
+		current_version_dict_msg+="* ${key}: '${current_version_dict[${key}]}'\n"
+	done
+	__bme_debug "${current_version_dict_msg}"
+	unset key
+
 # TODO: compare BME_VERSION against requested match
 
 # Clean after myself
 	__version_clean
-	unset DEBUG
 }
 
 
