@@ -9,6 +9,11 @@
 #	Allows comparing installed BME version against an arbitrary one
 #	i.e.: assert project's module's version dependencies
 # 1st param: 'version_operator': the evaluation to be done, i.e.: '>', '==', '>=', etc.
+# RETURNS:
+# 0: comparision is met
+# 1: assertion is NOT met
+# 2: wrong/unparseable comparision string
+# >2: internal error
 
 
 # Compares local BME version against remote git tags

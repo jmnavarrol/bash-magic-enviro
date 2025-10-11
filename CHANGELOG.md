@@ -10,7 +10,7 @@
   * exported variables:
     * BME_VERSION: shows current version in *vX.Y.Z[-modifier]* mode.
     * BME_SCRIPT: full path to the main BME file to be sourced by scripts (main [bash-magic-enviro file](./src/bash-magic-enviro)).
-* **bme_version_assert():** new function to check version dependencies against BME.
+* **bme_version_assert():** new function to check version dependencies against installed BME version.
 
 ## v1.10.1 (2025-JUL-05)
 * differences from [previous tag](/../../compare/v1.10.0…v1.10.1).
