@@ -7,6 +7,7 @@ function main() {
 	source bash-magic-enviro || exit $?
 	check_version_format || exit $?
 	check_test_version_function || exit $?
+	check_version_assert_format || exit $?
 	check_version_assert || exit $?
 }
 
@@ -68,7 +69,7 @@ function check_version_format() {
 check_test_version_function() {
 # Testing old version
 	test_title "check for older version"
-	BME_VERSION='v0.0.1'
+	local BME_VERSION='v0.0.1'
 	local function_output=$(bme_check_version)
 	local stripped_output=$(strip_escape_codes "${function_output}")
 
@@ -84,7 +85,7 @@ check_test_version_function() {
 
 # Testing unknown version
 	test_title "check for unknown version"
-	BME_VERSION='vasdf'
+	local BME_VERSION='vasdf'
 	local function_output=$(bme_check_version)
 	local stripped_output=$(strip_escape_codes "${function_output}")
 
@@ -105,7 +106,10 @@ check_test_version_function() {
 #--
 # ASSERTS CURRENT BME VERSION AGAINST A MATCHING REQUEST
 #--
-check_version_assert() {
+# Validates the comparision string format
+check_version_assert_format() {
+local invalid_format_rc=2
+
 local valid_operators=(
 	'=='
 	'!='
@@ -147,8 +151,6 @@ local invalid_versions=(
 
 	for operator in "${valid_operators[@]}"; do
 		for version in "${valid_versions[@]}"; do
-			local expected_rc=0
-
 			local random_padding=$((0 + $RANDOM % 3))
 			local padding=''
 			for ((i = 0; i < $random_padding; ++i)); do
@@ -159,16 +161,14 @@ local invalid_versions=(
 			local version_operator="${padding}${operator}${padding}${version}${padding}"
 			version_assert=$(bme_version_assert ${version_operator})
 			local rc=$?
-			if (( rc != $expected_rc )); then
-				local err_msg="while testing valid version operator '${version_operator}': expected rc is '${expected_rc}', got '$rc'\n"
+			if (( rc >= $invalid_format_rc )); then
+				local err_msg="while testing valid version operator '${BME_VERSION}${version_operator}': expected rc is >= '${invalid_format_rc}', got '$rc'\n"
 				err_msg+="${version_assert}"
 				test_log "$err_msg" fail
 				return $rc
 			fi
 		done
 		for version in "${invalid_versions[@]}"; do
-			local expected_rc=2
-
 			local random_padding=$((0 + $RANDOM % 3))
 			local padding=''
 			for ((i = 0; i < $random_padding; ++i)); do
@@ -179,8 +179,8 @@ local invalid_versions=(
 			local version_operator="${padding}${operator}${padding}${version}${padding}"
 			version_assert=$(bme_version_assert ${version_operator})
 			local rc=$?
-			if (( rc != $expected_rc )); then
-				local err_msg="while testing invalid version operator '${version_operator}': expected rc is '${expected_rc}', got '$rc'\n"
+			if (( rc != $invalid_format_rc )); then
+				local err_msg="while testing invalid version operator '${version_operator}': expected rc is '${invalid_format_rc}', got '$rc'\n"
 				err_msg+="${version_assert}"
 				test_log "$err_msg" fail
 				return $rc
@@ -191,8 +191,6 @@ local invalid_versions=(
 
 	for operator in "${invalid_operators[@]}"; do
 		for version in "${valid_versions[@]}"; do
-			local expected_rc=2
-
 			local random_padding=$((0 + $RANDOM % 3))
 			local padding=''
 			for ((i = 0; i < $random_padding; ++i)); do
@@ -203,7 +201,7 @@ local invalid_versions=(
 			local version_operator="${padding}${operator}${padding}${version}${padding}"
 			version_assert=$(bme_version_assert ${version_operator})
 			local rc=$?
-			if (( rc != $expected_rc )); then
+			if (( rc != $invalid_format_rc )); then
 				local err_msg="while testing valid version operator '${version_operator}': expected rc is '${expected_rc}', got '$rc'\n"
 				err_msg+="${version_assert}"
 				test_log "$err_msg" fail
@@ -211,8 +209,6 @@ local invalid_versions=(
 			fi
 		done
 		for version in "${invalid_versions[@]}"; do
-			local expected_rc=2
-
 			local random_padding=$((0 + $RANDOM % 3))
 			local padding=''
 			for ((i = 0; i < $random_padding; ++i)); do
@@ -225,8 +221,8 @@ local invalid_versions=(
 			if [ -n "${version_operator// }" ]; then
 				version_assert=$(bme_version_assert ${version_operator})
 				local rc=$?
-				if (( rc != $expected_rc )); then
-					local err_msg="while testing invalid version operator '${version_operator}': expected rc is '${expected_rc}', got '$rc'\n"
+				if (( rc != $invalid_format_rc )); then
+					local err_msg="while testing invalid version operator '${version_operator}': expected rc is '${invalid_format_rc}', got '$rc'\n"
 					err_msg+="${version_assert}"
 					test_log "$err_msg" fail
 					return $rc
@@ -237,6 +233,127 @@ local invalid_versions=(
 	unset operator
 
 	test_log "Check ${C_BOLD}'bme_version_assert()'${C_NC} function: ${C_GREEN}OK${C_NC}" info
+}
+
+# Asserts the requested comparision itself
+check_version_assert() {
+local BME_VERSION='v1.10.2-dev1'
+local equal_versions=(
+	'1' 'v1'
+	'1.10' 'v1.10'
+	'1.10.2' 'v1.10.2'
+	'1.10.2-dev1' 'v1.10.2-dev1'
+	'1.10.2-other' 'v1.10.2-other'
+)
+local less_than_versions=(
+	'0' 'v0'
+	'1.9' 'v1.9'
+	'1.09' 'v1.09'
+	'1.10.1' 'v1.10.1'
+	'1.10.1-dev2' 'v1.10.1-dev2'
+)
+local greater_than_versions=(
+	'2' 'v2'
+	'1.11' 'v1.11'
+	'1.10.3' 'v1.10.3'
+	'1.10.03' 'v1.10.03'
+)
+declare -A valid_operators=(
+	'=='
+	'!='
+	'>='
+	'<='
+	'>'
+	'<'
+)
+
+	test_title "assert version comparisions"
+
+	local expected_rc=''
+	local got_rc=''
+
+	for version in "${equal_versions[@]}"; do
+		expected_rc=0
+		for comparator in '==' '>=' '<='; do
+			bme_version_assert "${comparator}${version}"
+			got_rc=$?
+			if (( $got_rc != $expected_rc )); then
+				local err_msg="while equal-like testing '${BME_VERSION} ${comparator} ${version}'': "
+				err_msg+="expected rc is '${expected_rc}', got '$got_rc'.\n"
+				test_log "$err_msg" fail
+				return 1
+			fi
+		done
+
+		expected_rc=1
+		for comparator in '>' '<'; do
+			bme_version_assert "${comparator}${version}"
+			got_rc=$?
+			if (( $got_rc != $expected_rc )); then
+				local err_msg="while unequal-like testing '${BME_VERSION} ${comparator} ${version}'': "
+				err_msg+="expected rc is '${expected_rc}', got '$got_rc'-\n"
+				test_log "$err_msg" fail
+				return 1
+			fi
+		done
+	done
+
+	for version in "${less_than_versions[@]}"; do
+		expected_rc=0
+		for comparator in '!=' '>=' '>'; do
+			bme_version_assert "${comparator}${version}"
+			got_rc=$?
+			if (( $got_rc != $expected_rc )); then
+				local err_msg="while less-than testing '${BME_VERSION} ${comparator} ${version}' (true): "
+				err_msg+="expected rc is '${expected_rc}', got '$got_rc'.\n"
+				test_log "$err_msg" fail
+				return 1
+			fi
+		done
+
+		expected_rc=1
+		for comparator in  '==' '<=' '<'; do
+			bme_version_assert "${comparator}${version}"
+			got_rc=$?
+			if (( $got_rc != $expected_rc )); then
+				local err_msg="while less-than testing '${BME_VERSION} ${comparator} ${version}' (false): "
+				err_msg+="expected rc is '${expected_rc}', got '$got_rc'-\n"
+				test_log "$err_msg" fail
+				return 1
+			fi
+		done
+	done
+
+
+	for version in "${greater_than_versions[@]}"; do
+		expected_rc=0
+		for comparator in '!=' '<=' '<'; do
+			bme_version_assert "${comparator}${version}"
+			got_rc=$?
+			if (( $got_rc != $expected_rc )); then
+				local err_msg="while greater-than testing '${BME_VERSION} ${comparator} ${version}' (true): "
+				err_msg+="expected rc is '${expected_rc}', got '$got_rc'.\n"
+				test_log "$err_msg" fail
+				return 1
+			fi
+		done
+
+		expected_rc=1
+		for comparator in '==' '>=' '>'; do
+			bme_version_assert "${comparator}${version}"
+			got_rc=$?
+			if (( $got_rc != $expected_rc )); then
+				local err_msg="while less-than testing '${BME_VERSION} ${comparator} ${version}' (false): "
+				err_msg+="expected rc is '${expected_rc}', got '$got_rc'-\n"
+				test_log "$err_msg" fail
+				return 1
+			fi
+		done
+	done
+
+# Clean after myself
+	unset BME_VERSION version comparator
+	test_log "Check ${C_BOLD}'check_version_assert()'${C_NC} function: ${C_GREEN}OK${C_NC}" info
 }
 
 main; exit $?

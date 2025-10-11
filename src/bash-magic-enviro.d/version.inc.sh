@@ -54,6 +54,11 @@ __bme_check_version() {
 
 # Asserts BME version against currently installed one
 # 1st param: 'version_operator': the evaluation to be done, i.e.: '>1.2', '==1.2.3', '>=3', etc.
+# RETURNS:
+# 0: comparision is met
+# 1: assertion is NOT met
+# 2: wrong/unparseable comparision string
+# >2: internal error
 __bme_version_assert() {
 local version_operator="${@}"
 
@@ -315,7 +320,30 @@ local version_operator="${@}"
 	__bme_debug "${current_version_dict_msg}"
 	unset key
 
-# TODO: compare BME_VERSION against requested match
+# BME_VERSION comparision against requested match
+	__bme_debug "ABOUT TO COMPARE CURRENT '${current_version}' '${operator}' DESIRED '${matching_version}'"
+	local current_padded requested_padded
+	for key in 'major' 'minor' 'patch'; do
+		if [ -n "${requested_version_dict[${key}]}" ]; then
+			__bme_debug "Requested '${key}' is '${requested_version_dict[${key}]}'"
+
+			current_padded+=$(printf "%03d\n" "${current_version_dict[${key}]}")
+			requested_padded+=$(printf "%03d\n" "$((10#${requested_version_dict[${key}]}))")
+		else
+			__bme_debug "Requested '${key}' is UNSET.'"
+			current_padded+=$(printf "%03d\n" "${requested_version_dict[${key}]}")
+			requested_padded+=$(printf "%03d\n" "${requested_version_dict[${key}]}")
+		fi
+	done
+	# the comparision itself
+	__bme_debug "OPERATION: '${current_padded}' ('${current_version}') '${operator}' '${requested_padded}' ('${matching_version}')"
+	if (( 10#${current_padded} ${operator} 10#${requested_padded} )); then
+		__bme_debug "'${current_padded}' is '${operator}' '${requested_padded}'"
+		return 0
+	else
+		__bme_debug "'${current_padded}' is NOT '${operator}' '${requested_padded}'"
+		return 1
+	fi
 
 # Clean after myself
 	__version_clean

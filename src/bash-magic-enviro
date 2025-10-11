@@ -138,8 +138,13 @@ bme_check_version() {
 export -f bme_check_version
 
 
-# Asserts version dependencies
-# 1st param: 'version_operator': the evaluation to be done, i.e.: '>', '==', '>=', etc.
+# Asserts BME version against currently installed one
+# 1st param: 'version_operator': the evaluation to be done, i.e.: '>1.2', '==1.2.3', '>=3', etc.
+# RETURNS:
+# 0: assertion is met
+# 1: assertion is NOT met
+# 2: wrong/unparseable comparision string
+# >2: internal error
 bme_version_assert() {
 # Exported functions may be called from a script, in which case BME may not be properly loaded into the environment
 # This will force its reload
