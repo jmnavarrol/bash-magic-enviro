@@ -344,9 +344,11 @@ local version_operator="${@}"
 	__bme_debug "OPERATION: '${current_padded}' ('${current_version}') '${operator}' '${requested_padded}' ('${matching_version}')"
 	if (( 10#${current_padded} ${operator} 10#${requested_padded} )); then
 		__bme_debug "'${current_padded}' is '${operator}' '${requested_padded}'"
+		bme_log "current BME version ${C_BOLD}'${BME_VERSION}'${C_NC} matches ${C_BOLD}'${version_operator}'${C_NC} request." info
 		return 0
 	else
-		__bme_debug "'${current_padded}' is NOT '${operator}' '${requested_padded}'"
+		__bme_debug "'${current_padded}' is NOT '${operator}' '${requested_padded}'" info
+		bme_log "Current BME version ${C_BOLD}'${BME_VERSION}'${C_NC} does ${C_BOLD}NOT${C_NC} match ${C_BOLD}'${version_operator}'${C_NC} request." warning
 		return 1
 	fi
 
