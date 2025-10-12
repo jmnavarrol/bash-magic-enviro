@@ -56,3 +56,4 @@ Pending actions, general notes, etc. (in no particular order):
 * **BME version pinning:** both projects and modules should be able to declare a range of compatible BME versions.
   * Working on new **bme_version_assert()** function.  Pending:
     * Refactoring to make it more compact/understandable.
+* GitHub release
