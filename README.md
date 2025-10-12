@@ -47,7 +47,7 @@ Now you can read these full instructions so you can manage your own BME projects
    * [*Bash Magic Enviro* version checking](#check-versions)
    * [Per-project custom modules](#custom-modules)
 1. [Available modules](#modules)<a name="module_list"></a>
-   * [load project's bin dir](#bindir)
+   * [load project's *bin/* dir](#bindir)
    * [load Python3 *virtualenvs*](#virtualenvs)
    * [AWS support](#aws)
    * [git client-side hooks support](#githooks)
@@ -60,13 +60,13 @@ Now you can read these full instructions so you can manage your own BME projects
 ----
 
 ## Requirements<a name="requirements"></a>
-* **[Git](https://git-scm.com/) >= 2.9**. Needed to checkout this project and some other features.
 * **[Bash](https://www.gnu.org/software/bash/) >= 4**.  Make sure you are using a full Bash shell.
+* **[Git](https://git-scm.com/) >= 2.9**. Needed to checkout this project and some other features.
 * **[GNU make](https://www.gnu.org/software/make/) >= 4.2**. Used by this tool's install process.
 * **Internet connectivity:** Some features and modules may access Internet at run time (i.e.: *check-version*, *terraform-support*...).
 * See each module's requirements section for other dependencies.
 
-**NOTE FOR macOS users:** this project depends heavily on GNU/GPL tooling (Bash itself, but also basic utilities like find, sed, grep...) while BSD versions are installed on this platform.  It is suggested the use of [homebrew](https://brew.sh/) to install the proper dependencies (see [macOS' README](./docs/macos.md) for further details).
+**NOTE FOR macOS users:** this project depends heavily on GNU/GPL tooling (Bash itself, but also basic utilities like find, sed, grep...) while BSD versions are installed on this platform by default.  It is suggested the use of [homebrew](https://brew.sh/) to install the proper dependencies (see [macOS' README](./docs/macos.md) for further details).
 
 <sub>[back to contents](#contents).</sub>
 
@@ -298,16 +298,16 @@ $ cd ~/unknown_project_root/subdir  # this project's root is still unknown.  You
 
 ### directory whitelisting<a name="whitelisting"></a>
 The first time a **'.bme_project'** file is found in a directory hierarchy, you'll be prompted to either allow or forbid BME to source it.  
-Your answer will apply to that directory and **all the project's subdirectories** and it will be stored in the **'~/.bme.d/whitelistedpaths'** file, in the form of an associative array.
+Your answer will apply to that directory and **all the project's subdirectories** and it will be stored in the **'~/.bme.d/whitelistedpaths'** file, in the form of an [associative array](https://www.gnu.org/software/bash/manual/html_node/Arrays.html).
 
 You can manually edit your *'~/.bme.d/whitelistedpaths'* file, but be aware the file will be overwritten each time the answer for a new directory is collected (so, i.e.: your comments won't be preserved).
 
-**WARNING:** as already stated at [the Security section](#security), be aware this is by no means is a secure protection, but more of a convenience to avoid glaring overlooks.  You still are fully responsible to review all *.bme_\** contents before entering a directory.  Be also aware of tricks like symlinks, etc. that can fool you into sourcing unexpected code.
+**WARNING:** as already stated at [the Security section](#security), be aware this is by no means a secure protection, but more of a convenience to avoid glaring overlooks.  You still are fully responsible to review all *.bme_\** contents before entering a directory.  Be also aware of tricks like symlinks, etc. that can fool you into sourcing unexpected code.
 
 <sub>[back to feature list](#feature_list).</sub>
 
 ### logging<a name="log"></a>
-BME provides its [**bme_log()**](https://github.com/jmnavarrol/bash-magic-enviro/blob/770e375bbfe593fe4e2a153feeca5ad3e7a4835a/src/bash-magic-enviro#L97) function that you can use in your *'.bme_\*'* files to **colorize**, **prefix**, **indent** and **filter** log messages.
+BME provides its [**bme_log()**](https://github.com/jmnavarrol/bash-magic-enviro/blob/7de2f9d6e64b2cbae5da7f820e4c6a3ed201cbe3/src/bash-magic-enviro#L118) function that you can use in your *'.bme_\*'* files to **colorize**, **prefix**, **indent** and **filter** log messages.
 
 *bme_log()* accepts three (positional) parameters and filters its output accordingly to the value of the **BME_LOG_LEVEL** environment variable (with an **INFO** default value).
 * **Parameters:**
@@ -359,11 +359,16 @@ Once *bme_custom_clean* is run, it will also be *unset* to avoid cluttering your
 <sub>[back to feature list](#feature_list).</sub>
 
 ### *Bash Magic Enviro* version checking<a name="check-versions"></a>
-As the name implies, helps you noticing if your current *Bash Magic Enviro* version is up to date.
+Helps you noticing if your current *Bash Magic Enviro* version is up to date as well as managing version dependencies.
 
-A function named [**bme_check_version()**](https://github.com/jmnavarrol/bash-magic-enviro/blob/e69fb64217aaf3844997edd6ca19e905d2e33401/src/bash-magic-enviro#L155) (no parameters) is exported so you can call it wherever you feel proper (i.e.: *.bme_project* and *.bme_env* files or command prompt).
-
-This function compares your current *Bash Magic Enviro's* version against the highest version available, defined as *git tags* at your *git remote*.  Shows a message about current version status.
+Two functions are exported that you may call whenever you feel proper (i.e.: *.bme_project* and *.bme_env* files or command prompt):
+* **[bme_check_version()](https://github.com/jmnavarrol/bash-magic-enviro/blob/e69fb64217aaf3844997edd6ca19e905d2e33401/src/bash-magic-enviro#L155) (no parameters):** this function compares your current *Bash Magic Enviro's* version against the highest version available, defined as *git tags* at your *git remote*.  Shows a message about current version status.  It requires Internet access.
+* **[bme_version_assert()](https://github.com/jmnavarrol/bash-magic-enviro/blob/be8e45b753872240274d3f00582a08001fe2b29a/src/bash-magic-enviro#L148) *bme_version_assert [comparision string (no default)]*:** compares currently installed BME version against a match (i.e.: `bme_version_assert '>=1.3'`).  It produces an informational message to the console and its return code helps you checking version dependencies for your projects and/or custom modules, etc.  
+  Function's return codes:
+  * **0:** current BME_VERSION matches the assertion.
+  * **1:** current BME_VERSION does **not** match the assertion.
+  * **2:** wrong matching assertion.
+  * **>2:** other/internal errors.
 
 **NOTE:** BME follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html) with an exception: since this is pure scripted software with version identifiers published as git tags, version is always preceeded with the *'v'* character, i.e.: *v1.2.3* instead of semver fully compatible *1.2.3*.
 
@@ -372,7 +377,7 @@ This function compares your current *Bash Magic Enviro's* version against the hi
 ### Per-project custom modules<a name="custom-modules"></a>
 If there's a [bme-modules/ directory](./example-project/bme-modules/) within the root of your BME project, it will be honored and you can load modules from files within in exactly the same conditions and **with precedence** to *global* modules of same name.
 
-You may use this feature when you want module-management abilities (autoloading, preparing an environment, exporting functions, etc.) for things that doesn't make sense out of the limited scope of your project or if/when you need to *overload* the way a global module works.
+You may use this feature when you want module-management abilities (autoloading, preparing an environment, exporting functions, etc.) for things that don't make sense out of the limited scope of your project or if/when you need to *overload* the way a global module works.
 
 The standard conditions for modules are supported (i.e.: [naming](#available-modules), [loading](#available-modules), [development](#dev-modules)...).
 
@@ -387,7 +392,7 @@ On top of this README, you can also check your **'~/bin/bash-magic-enviro_module
 
 **NOTE:** As you may notice, modules are loaded/unloaded by means of a Bash array.  As such, sorting order matters (i.e.: if you want to activate *'aws-support'* loading *awscli* by means of a python virtualenv, make sure you list *'python3-virtualenvs'* module **before** *'aws-support'*).
 
-### project's bin dir<a name="bindir"></a>
+### load project's *bin/* dir<a name="bindir"></a>
 **[bindir module](./src/bash-magic-enviro_modules/bindir.module):** the **'bin/'** directory relative to the project's root will be added to $PATH, so custom script helpers, binaries, etc. are automatically available to the environment.
 
 **NOTE:** if *bindir* is requested but the directory doesn't exist, this module will create it on the fly.

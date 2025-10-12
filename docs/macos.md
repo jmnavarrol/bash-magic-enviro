@@ -23,8 +23,8 @@ Once *Terminal Profile* and homebrew dependencies are properly installed and con
 **In brief:**  
 Session steps on macOS:
 1. set in place proper `~/.bash_profile`, `~/.bashrc`, `~/.secrets`, `~/bme_includes` and `~/bme_macos_includes` files.
-1. import and review the proper *BME Terminal Profile*.
-1. open a console with that *BME Terminal Profile*.  Upon start, it will:
+1. import and review the proper *'BME Terminal Profile'*.
+1. open a console with said *'BME Terminal Profile'*.  Upon start, it will:
    1. run Bash in login mode.
    1. Bash will source your `~/.bash_profile`.
    1. `~/.bash_profile` will source `~/.bashrc`.

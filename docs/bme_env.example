@@ -10,9 +10,10 @@ load_virtualenv 'bme-example-virtualenv' || return $?
 bme_log "This is an informational message" info
 
 # You may want to export an environment variable here
+# (do not forget to unset it using the project's bme_custom_clean() function defined on its .bme_project file)
 export MY_CUSTOM_VARIABLE='some_value'
 
 # You could even run custom commands
 ls -la .
 
-# Always remember cleaning after you, most possibly taking advantage of the provided 'bme_custom_clean()' support.
+# Always remember cleaning after you taking advantage of the provided 'bme_custom_clean()' support.

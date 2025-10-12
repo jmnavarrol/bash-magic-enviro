@@ -18,6 +18,8 @@ Pending actions, general notes, etc. (in no particular order):
   * `make install` may offer to tweak your environment for BME autoconfiguration.
   * Consider new target for checks prior to close a version, i.e.: VERSION, CHANGELOG, Dockerfile, tests... are properly updated, etc.
   * Consider new target to close version, i.e.: `git tag -a [version from VERSION file] -m...`
+  * Detect OS (linux/macos) and architecture (amd/arm).  In case of macos, offer tweaked *bme_includes* file and/or custom console profile based on *homebrew* setup.
+  * Template [Dockerfile](./docker-container/Dockerfile) so it always points to current version.
 * dotfiles integration?
   * [stow](https://www.jakewiesler.com/blog/managing-dotfiles)
   * [bare git](https://www.atlassian.com/git/tutorials/dotfiles)
@@ -54,4 +56,3 @@ Pending actions, general notes, etc. (in no particular order):
 * **BME version pinning:** both projects and modules should be able to declare a range of compatible BME versions.
   * Working on new **bme_version_assert()** function.  Pending:
     * Refactoring to make it more compact/understandable.
-    * README covering it.
