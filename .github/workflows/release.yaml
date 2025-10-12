@@ -24,4 +24,9 @@ jobs:
         GH_TOKEN: ${{ github.token }}
         GH_REPO: ${{ github.repository }}
       run: |
-        gh release create --help
+        gh release create v1.10.1 ./build/* \
+          --draft \
+          --latest \
+          --prerelease \
+          --title 'A test release'
+        gh release --help
