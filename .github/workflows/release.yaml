@@ -6,7 +6,7 @@ on:
     - 'github-release**'
   workflow_dispatch:  # this allows manual triggering for testing
 jobs:
-  build:
+  publish_release:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v4
@@ -14,11 +14,6 @@ jobs:
       run: |
         make build
         ls -la build/
-  release:
-    name: Create GitHub Release
-    needs: [build]
-    runs-on: ubuntu-latest
-    steps:
     - name: publish release
       env:
         GH_TOKEN: ${{ github.token }}
