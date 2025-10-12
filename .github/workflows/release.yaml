@@ -25,4 +25,4 @@ jobs:
           --latest \
           --prerelease \
           --title 'A test release'
-        gh release --help
+        #gh release --help
