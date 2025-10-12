@@ -19,14 +19,14 @@ Pending actions, general notes, etc. (in no particular order):
   * Consider new target for checks prior to close a version, i.e.: VERSION, CHANGELOG, Dockerfile, tests... are properly updated, etc.
   * Consider new target to close version, i.e.: `git tag -a [version from VERSION file] -m...`
   * Detect OS (linux/macos) and architecture (amd/arm).  In case of macos, offer tweaked *bme_includes* file and/or custom console profile based on *homebrew* setup.
-  * Template [Dockerfile](./docker-container/Dockerfile) so it always points to current version.
+  * Templating process should be more generic (i.e.: find all tpl files and act on them)
+    * Template [Dockerfile](./docker-container/Dockerfile) so it always points to current version.
 * dotfiles integration?
   * [stow](https://www.jakewiesler.com/blog/managing-dotfiles)
   * [bare git](https://www.atlassian.com/git/tutorials/dotfiles)
   * https://github.com/deadc0de6/dotdrop
 * **Unit tests:**
   * More support functions to load/unload BME, etc.
-* **BME version pinning:** both projects and modules should be able to declare a range of compatible BME versions.
 * **Logging:**
   * log function should allow either positional or by-name parameters.
   * Ability to set logging levels on a scoped level (global vs project vs module-level)

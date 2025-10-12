@@ -17,22 +17,23 @@ COPY --chown=root:root --chmod=0755 entrypoint.sh /entrypoint.sh
 
 # Install packaged utilities
 RUN echo "Installing utilities..." \
-    && apt-get update \
-    && apt-get install -y \
-    # local user management
-		curl wget sudo \
-    # development utilities
+	&& apt-get update \
+	&& apt-get install -y \
+	# local user management
+		sudo \
+	# development utilities
 		git make jq python3.13-venv virtualenvwrapper \
-    # other utilities
-		nano tree libffi-dev \
-    # final clean
-    && apt-get clean
+	# other utilities
+		curl nano tree \
+# 		curl nano tree libffi-dev \
+	# final clean
+	&& apt-get clean
 
 # Install BME under /opt/bme
 RUN cd /usr/local/src/ \
-    && git clone --depth 1 --branch ${BME_VERSION} ${BME_REPO} \
-    && cd bash-magic-enviro \
-    && export PATH=/opt/bme:$PATH && make DESTDIR=/opt/bme install
+	&& git clone --depth 1 --branch ${BME_VERSION} ${BME_REPO} \
+	&& cd bash-magic-enviro \
+	&& export PATH=/opt/bme:$PATH && make DESTDIR=/opt/bme install
 
 # Final drop to entrypoint
 CMD ["bash"]
