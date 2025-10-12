@@ -58,3 +58,4 @@ Pending actions, general notes, etc. (in no particular order):
 * [shellx project](https://github.com/0ghny/shellx): it may provide ideas on plugins management and general interface.
 
 ## IN PROGRESS
+
