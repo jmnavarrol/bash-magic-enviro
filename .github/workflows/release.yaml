@@ -25,4 +25,5 @@ jobs:
           --latest \
           --prerelease \
           --title 'A test release'
+        gh release upload v1.10.1 fichero.tar.gz
         #gh release --help
