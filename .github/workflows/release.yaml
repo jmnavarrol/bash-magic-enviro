@@ -20,7 +20,7 @@ jobs:
         GH_TOKEN: ${{ github.token }}
         GH_REPO: ${{ github.repository }}
       run: |
-        gh release upload v1.10.1 fichero.tar.gz \
+        gh release create v1.10.1 \
           --draft \
           --latest \
           --prerelease \
