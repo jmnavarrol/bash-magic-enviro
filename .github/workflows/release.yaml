@@ -7,7 +7,7 @@ on:
   workflow_dispatch:  # this allows manual triggering for testing
 jobs:
   create_release:
-    runs-on: trixie-slim
+    runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v4
     - name: Hello World
