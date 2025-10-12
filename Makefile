@@ -8,6 +8,7 @@ export SRCDIR := src
 export BUILDDIR := ${MAKEFILEDIR}/build
 export BME_BASENAME := bash-magic-enviro
 export VERSION_FILE := ${BME_BASENAME}.version
+export DEFAULT_REMOTE_GIT := https://github.com/jmnavarrol/bash-magic-enviro.git
 
 # Style table
 export C_BOLD := \033[1m

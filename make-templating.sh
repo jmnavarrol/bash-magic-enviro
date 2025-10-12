@@ -9,6 +9,7 @@
 # BUILDDIR: the output directory (output file will be ${BUILDDIR}/${SCRIPT})
 
 # Gets current remote origin
+readonly DEFAULT_REMOTE_GIT="${DEFAULT_REMOTE_GIT:=https://github.com/jmnavarrol/bash-magic-enviro.git}"
 REMOTE_GIT=`git ls-remote --get-url`
 
 readonly MANDATORY_VARS=(
@@ -26,6 +27,9 @@ for mandatory_var in ${MANDATORY_VARS[@]}; do
 		exit 1
 	fi
 done
+
+# Checks proper git remote (for builds that don't come from a git clone)
+[ -n "${REMOTE_GIT}" ] || REMOTE_GIT="${DEFAULT_REMOTE_GIT}"
 
 # Make sure the output directory exists and the output file is empty
 # mkdir -p "${BUILDDIR}"
