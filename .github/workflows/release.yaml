@@ -1,13 +1,14 @@
 ---
 name: Create BME release
 on:
-	push:
-		branches:
-		- 'github-release**'
-	workflow_dispatch:  # this allows manual triggering for testing
-jobs:
-	create_release:
-		runs-on: trixie-slim
-		steps:
-			run: |
-				ls -la
+  push:
+    branches:
+    - 'github-release**'
+  workflow_dispatch:  # this allows manual triggering for testing
+  jobs:
+    create_release:
+      runs-on: trixie-slim
+      steps:
+      - uses: actions/checkout@v4
+        run: |
+          ls -la
