@@ -11,6 +11,7 @@
     * BME_VERSION: shows current version in *vX.Y.Z[-modifier]* mode.
     * BME_SCRIPT: full path to the main BME file to be sourced by scripts (main [bash-magic-enviro file](./src/bash-magic-enviro)).
 * **[bme_version_assert()](./README.md#check-versions):** new function to check version dependencies against installed BME version.
+* [Dockerfile](./docker-container/Dockerfile) updated to Debian *"trixie"* and format updated to current docker version.
 
 ## v1.10.1 (2025-JUL-05)
 * differences from [previous tag](/../../compare/v1.10.0…v1.10.1).

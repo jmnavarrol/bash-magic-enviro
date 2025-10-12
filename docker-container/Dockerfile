@@ -1,15 +1,15 @@
 # Creates a docker container to exhibit BME features
 # See https://github.com/jmnavarrol/bash-magic-enviro/blob/main/docker-container/README.md
-FROM debian:bookworm-slim
+FROM debian:trixie-slim
 
 # Standard container labels (See http://label-schema.org/rc1/)
-LABEL org.label-schema.name        = "BME"
-LABEL org.label-schema.description = "Bash Magic Enviro container"
-LABEL org.label-schema.url         = "https://github.com/jmnavarrol/bash-magic-enviro"
+LABEL org.label-schema.name="BME"
+LABEL org.label-schema.description="Bash Magic Enviro container"
+LABEL org.label-schema.url="https://github.com/jmnavarrol/bash-magic-enviro"
 
 # Define variables
 ARG BME_REPO='https://github.com/jmnavarrol/bash-magic-enviro.git'
-ARG BME_VERSION='v1.10.2'
+ARG BME_VERSION='v1.10.1'
 
 # Copy data from local repository
 COPY --chown=root:root etc /etc
@@ -20,11 +20,11 @@ RUN echo "Installing utilities..." \
     && apt-get update \
     && apt-get install -y \
     # local user management
-    sudo \
+		curl wget sudo \
     # development utilities
-    git make jq virtualenvwrapper \
+		git make jq python3.13-venv virtualenvwrapper \
     # other utilities
-    nano tree libffi-dev \
+		nano tree libffi-dev \
     # final clean
     && apt-get clean
 
@@ -35,5 +35,5 @@ RUN cd /usr/local/src/ \
     && export PATH=/opt/bme:$PATH && make DESTDIR=/opt/bme install
 
 # Final drop to entrypoint
-CMD bash
+CMD ["bash"]
 ENTRYPOINT ["/entrypoint.sh"]
