@@ -14,12 +14,13 @@ jobs:
       run: |
         make build
         ls -la build/
+        tar czvf fichero.tar.gz build/
     - name: publish release
       env:
         GH_TOKEN: ${{ github.token }}
         GH_REPO: ${{ github.repository }}
       run: |
-        gh release create v1.10.1 ./build/* \
+        gh release create v1.10.1 fichero.tar.gz \
           --draft \
           --latest \
           --prerelease \
