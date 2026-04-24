@@ -21,6 +21,7 @@ Pending actions, general notes, etc. (in no particular order):
   * Detect OS (linux/macos) and architecture (amd/arm).  In case of macos, offer tweaked *bme_includes* file and/or custom console profile based on *homebrew* setup.
   * Templating process should be more generic (i.e.: find all tpl files and act on them)
     * Template [Dockerfile](./docker-container/Dockerfile) so it always points to current version.
+    * Template [macos terminal profiles](./docs/macos/) so they end up pointing to proper homebrew path upon installation.
 * dotfiles integration?
   * [stow](https://www.jakewiesler.com/blog/managing-dotfiles)
   * [bare git](https://www.atlassian.com/git/tutorials/dotfiles)
