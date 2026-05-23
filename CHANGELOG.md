@@ -1,7 +1,10 @@
 # CHANGELOG
 
 ## Next Release
-* differences from [previous tag](/../../compare/v1.10.1…main).
+* differences from [previous tag](/../../compare/v1.10.2…main).
+
+## v1.10.2 (2026-MAY-23)
+* differences from [previous tag](/../../compare/v1.10.1…v1.10.2).
 * New directory [bash-magic-enviro.d/](./src/bash-magic-enviro.d/) to conveniently split BME's codebase:
   * *bme_log()* core code moved to an included file.
   * *bme_check_version()* core code moved to an included file.
