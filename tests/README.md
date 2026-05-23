@@ -14,7 +14,7 @@ As BME grows more complex, the need for unit tests arises.  While there are some
 * [maketests.sh](./maketests.sh) script without parameters will run all tests it finds under the ['tests/' directory](./) and subdirectories within.
 * [maketests.sh](./maketests.sh) also accepts paths (either absolute or relative to current directory) and in that case it will run tests found within those.  
   i.e.: `./maketests.sh core` or `./maketests.sh ../../alternate_dir/modules/something/test_sometest.sh core`.
-* [maketests.sh](./maketests.sh) sets a *scratch directory* for each script and runs it a clean subshell with helper functions and some environment variables:
+* [maketests.sh](./maketests.sh) sets a *scratch directory* for each script and runs it in a clean subshell with helper functions and some environment variables:
   * **helper functions:** the [helper functions file](./helper_functions.sh) is sourced into the tests' environment so its included functions can be used by scripts.  Review its contents.
   * **environment variables:** only those needed to launch the test scripts.  A general description follows:
     * **PATH:** set to a default, minimal path: *'/usr/local/sbin:/usr/bin:/usr/sbin:/bin:/sbin'*.

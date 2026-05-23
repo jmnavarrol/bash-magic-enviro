@@ -54,6 +54,3 @@ Pending actions, general notes, etc. (in no particular order):
     * Review [terraform-config-inspect](https://github.com/hashicorp/terraform-config-inspect), which allows to extract configurations from terraform.
 
 ## IN PROGRESS
-* **BME version pinning:** both projects and modules should be able to declare a range of compatible BME versions.
-  * Working on new **bme_version_assert()** function.  Pending:
-    * Refactoring to make it more compact/understandable.
