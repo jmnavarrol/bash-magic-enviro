@@ -4,7 +4,6 @@ Pending actions, general notes, etc. (in no particular order):
 * Easier/global management of whitelisting and projects' root directories.
 * Dynamic load/unload of functions/variables that are only needed within a project environment.
 * Per-directory clean function (on top of or instead of the global one?)
-* Review the [bashlog project](https://github.com/Zordrak/bashlog).  Authored by the same person than tfenv, seems quite powerful.
 * Allow for environment-related files (i.e.: *.bme_env.production*, *.bme_env.local-development*...; consider if this should work just for *.bme_env* files only or also for the main *.bme_project* file).
 * Install dir shouldn't need to be in $PATH since we are not installing executable files.
 * Install dependencies on known platforms.
@@ -39,6 +38,7 @@ Pending actions, general notes, etc. (in no particular order):
 * **Modules:**
   * Allow to put them in subdirectories
     * **WORKAROUND:** within the module itself, calculate its base dir and then source relative to it (already successfully tested on a private module).
+    * Something like a BME_MODULES_PATH environment variable with sensible default (as of now) that can be tweaked for module finding preferences? i.e.: see https://modules.readthedocs.io/en/stable/index.html
   * Heavy refactor: `modulename [load|unload|version|help]`
   * Find a way for modules to provide their own (formatted) help.
   * More flexible searching process for modules.  From higher to lower priority:
@@ -52,5 +52,9 @@ Pending actions, general notes, etc. (in no particular order):
   * **[terraform-support module](./src/bash-magic-enviro_modules/terraform-support.module):**
     * self-management of *.gitignore* entries for ~/bin/[terraform,tfvenv] symlinks.
     * Review [terraform-config-inspect](https://github.com/hashicorp/terraform-config-inspect), which allows to extract configurations from terraform.
+
+## Interesting projects
+* [bashlog project](https://github.com/Zordrak/bashlog): authored by the same person than tfenv, seems quite powerful.
+* [shellx project](https://github.com/0ghny/shellx): it may provide ideas on plugins management and general interface.
 
 ## IN PROGRESS
